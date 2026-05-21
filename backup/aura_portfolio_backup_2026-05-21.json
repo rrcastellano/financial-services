@@ -1,0 +1,169 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-05-21T17:21:52.878Z",
+  "exchangeRate": "5.0318",
+  "ledgerUs": {
+    "NVDA": {
+      "ticker": "NVDA",
+      "qty": 60,
+      "avgPrice": 97.34
+    },
+    "GOOGL": {
+      "ticker": "GOOGL",
+      "qty": 35,
+      "avgPrice": 159.18
+    },
+    "AVGO": {
+      "ticker": "AVGO",
+      "qty": 35,
+      "avgPrice": 149.88
+    },
+    "FISV": {
+      "ticker": "FISV",
+      "qty": 597.1,
+      "avgPrice": 0.01
+    },
+    "GEV": {
+      "ticker": "GEV",
+      "qty": 15,
+      "avgPrice": 559.98
+    },
+    "LLY": {
+      "ticker": "LLY",
+      "qty": 12,
+      "avgPrice": 722.89
+    },
+    "META": {
+      "ticker": "META",
+      "qty": 14,
+      "avgPrice": 566.11
+    },
+    "OMF": {
+      "ticker": "OMF",
+      "qty": 170,
+      "avgPrice": 48.39
+    },
+    "PLTR": {
+      "ticker": "PLTR",
+      "qty": 55,
+      "avgPrice": 149.59
+    },
+    "RCL": {
+      "ticker": "RCL",
+      "qty": 22.49629,
+      "avgPrice": 308.17
+    },
+    "HSBC": {
+      "ticker": "HSBC",
+      "qty": 135,
+      "avgPrice": 80.66
+    },
+    "STX": {
+      "ticker": "STX",
+      "qty": 25,
+      "avgPrice": 418.02
+    },
+    "LITE": {
+      "ticker": "LITE",
+      "qty": 16,
+      "avgPrice": 974.79
+    },
+    "SNDK": {
+      "ticker": "SNDK",
+      "qty": 9,
+      "avgPrice": 1406
+    },
+    "ETHA": {
+      "ticker": "ETHA",
+      "qty": 124.66211,
+      "avgPrice": 34.45
+    }
+  },
+  "ledgerBr": {
+    "PETR4": {
+      "ticker": "PETR4",
+      "qty": 5000,
+      "avgPrice": 33.74
+    },
+    "VALE3": {
+      "ticker": "VALE3",
+      "qty": 103,
+      "avgPrice": 65.24
+    },
+    "BBDC4": {
+      "ticker": "BBDC4",
+      "qty": 700,
+      "avgPrice": 12.09
+    },
+    "ITSA4": {
+      "ticker": "ITSA4",
+      "qty": 1041,
+      "avgPrice": 9.47
+    },
+    "BBAS3": {
+      "ticker": "BBAS3",
+      "qty": 400,
+      "avgPrice": 27.17
+    },
+    "QBTC11": {
+      "ticker": "QBTC11",
+      "qty": 1000,
+      "avgPrice": 13.11
+    },
+    "KNCA11": {
+      "ticker": "KNCA11",
+      "qty": 650,
+      "avgPrice": 101.65
+    },
+    "HGCR11": {
+      "ticker": "HGCR11",
+      "qty": 815,
+      "avgPrice": 103.16
+    },
+    "HGLG11": {
+      "ticker": "HGLG11",
+      "qty": 120,
+      "avgPrice": 160.54
+    },
+    "HGRU11": {
+      "ticker": "HGRU11",
+      "qty": 130,
+      "avgPrice": 118.83
+    },
+    "ITRI11": {
+      "ticker": "ITRI11",
+      "qty": 1500,
+      "avgPrice": 91.11
+    },
+    "KNCR11": {
+      "ticker": "KNCR11",
+      "qty": 1031,
+      "avgPrice": 102.97
+    },
+    "KNIP11": {
+      "ticker": "KNIP11",
+      "qty": 800,
+      "avgPrice": 89.11
+    },
+    "KNSC11": {
+      "ticker": "KNSC11",
+      "qty": 8670,
+      "avgPrice": 8.8
+    },
+    "MCCI11": {
+      "ticker": "MCCI11",
+      "qty": 965,
+      "avgPrice": 89.11
+    },
+    "RZAK11": {
+      "ticker": "RZAK11",
+      "qty": 940,
+      "avgPrice": 84.39
+    },
+    "XPML11": {
+      "ticker": "XPML11",
+      "qty": 410,
+      "avgPrice": 115.52
+    }
+  }
+}
