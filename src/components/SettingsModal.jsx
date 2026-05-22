@@ -28,11 +28,11 @@ export default function SettingsModal({
   const handleProviderSelect = (provider) => {
     setTempFinProvider(provider);
     if (provider === 'finnhub') {
-      setTempFinKey(localStorage.getItem('fsi_finnhub_api_key') || 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g');
+      setTempFinKey(localStorage.getItem('fsi_finnhub_api_key') || import.meta.env.VITE_FINHUB || '');
     } else if (provider === 'twelvedata') {
-      setTempFinKey(localStorage.getItem('fsi_twelvedata_api_key') || 'eeeac747bf5547c9aa38659bc2905ea7');
+      setTempFinKey(localStorage.getItem('fsi_twelvedata_api_key') || import.meta.env.VITE_TWELVEDATA || '');
     } else if (provider === 'brapi') {
-      setTempFinKey(localStorage.getItem('fsi_brapi_api_key') || '3NQyj7ujtTwoq84s7vQTsL');
+      setTempFinKey(localStorage.getItem('fsi_brapi_api_key') || import.meta.env.VITE_BRAPI || '');
     } else {
       setTempFinKey('');
     }

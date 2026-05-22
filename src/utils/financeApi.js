@@ -1008,26 +1008,26 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
     activeApiKey = localStorage.getItem('fsi_finnhub_api_key') || '';
     if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 40) {
       const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
-      activeApiKey = (generic && generic.length === 40) ? generic : 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g';
+      activeApiKey = (generic && generic.length === 40) ? generic : (import.meta.env.VITE_FINHUB || '');
     }
   } else if (activeProvider === 'twelvedata') {
     activeApiKey = localStorage.getItem('fsi_twelvedata_api_key') || '';
     if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 32) {
       const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
-      activeApiKey = (generic && generic.length === 32) ? generic : 'eeeac747bf5547c9aa38659bc2905ea7';
+      activeApiKey = (generic && generic.length === 32) ? generic : (import.meta.env.VITE_TWELVEDATA || '');
     }
   } else if (activeProvider === 'brapi') {
     activeApiKey = localStorage.getItem('fsi_brapi_api_key') || '';
     if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 22) {
       const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
-      activeApiKey = (generic && generic.length === 22) ? generic : '3NQyj7ujtTwoq84s7vQTsL';
+      activeApiKey = (generic && generic.length === 22) ? generic : (import.meta.env.VITE_BRAPI || '');
     }
   }
 
   // Ensure BRAPI key is resolved properly for BR assets
   const brapiKey = localStorage.getItem('fsi_brapi_api_key') || 
                    (activeProvider === 'brapi' ? activeApiKey : null) || 
-                   '3NQyj7ujtTwoq84s7vQTsL';
+                   (import.meta.env.VITE_BRAPI || '');
 
   let isRateLimited = false;
   let priceMap = {};

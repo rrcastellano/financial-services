@@ -32,8 +32,9 @@ export default function App() {
     const saved = localStorage.getItem('fsi_api_key');
     // If the saved key is the old leaked one, or empty, automatically upgrade to the new active key
     if (saved && saved !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && saved !== '') return saved;
-    localStorage.setItem('fsi_api_key', 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw');
-    return 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw';
+    const defaultGemini = import.meta.env.VITE_GEMINI || '';
+    localStorage.setItem('fsi_api_key', defaultGemini);
+    return defaultGemini;
   });
   const [apiMode, setApiMode] = useState(() => {
     const saved = localStorage.getItem('fsi_api_mode');
@@ -57,22 +58,24 @@ export default function App() {
   const [financeApiKey, setFinanceApiKey] = useState(() => {
     const saved = localStorage.getItem('fsi_finance_api_key');
     // Se a chave já existir e não for a genérica de simulação, usa ela
-    if (saved && saved !== '3NQyj7ujtTwoq84s7vQTsL' && saved !== '') return saved;
+    const defaultBrapi = import.meta.env.VITE_BRAPI || '';
+    if (saved && saved !== defaultBrapi && saved !== '') return saved;
     
     // Configura chave da Finnhub como padrão para ações globais, e salva a da BRAPI em seu espaço dedicado
-    localStorage.setItem('fsi_finance_api_key', 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g');
-    localStorage.setItem('fsi_brapi_api_key', '3NQyj7ujtTwoq84s7vQTsL');
-    return 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g';
+    const defaultFinnhub = import.meta.env.VITE_FINHUB || '';
+    localStorage.setItem('fsi_finance_api_key', defaultFinnhub);
+    localStorage.setItem('fsi_brapi_api_key', defaultBrapi);
+    return defaultFinnhub;
   });
 
   // Forceful API Connection Migration & Pre-populating of real keys on mount
   React.useEffect(() => {
     const keys = {
-      fsi_api_key: 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw',
-      fsi_gemini_api_key: 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw',
-      fsi_finnhub_api_key: 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g',
-      fsi_twelvedata_api_key: 'eeeac747bf5547c9aa38659bc2905ea7',
-      fsi_brapi_api_key: '3NQyj7ujtTwoq84s7vQTsL'
+      fsi_api_key: import.meta.env.VITE_GEMINI || '',
+      fsi_gemini_api_key: import.meta.env.VITE_GEMINI || '',
+      fsi_finnhub_api_key: import.meta.env.VITE_FINHUB || '',
+      fsi_twelvedata_api_key: import.meta.env.VITE_TWELVEDATA || '',
+      fsi_brapi_api_key: import.meta.env.VITE_BRAPI || ''
     };
 
     // Pre-populate keys if empty, unset, or contain the old leaked key
