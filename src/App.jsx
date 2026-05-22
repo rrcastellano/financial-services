@@ -28,18 +28,71 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   // API Key State (loaded from localStorage by default)
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('fsi_api_key') || '');
-  const [apiMode, setApiMode] = useState(() => localStorage.getItem('fsi_api_mode') || 'simulated');
+  const [apiKey, setApiKey] = useState(() => {
+    const saved = localStorage.getItem('fsi_api_key');
+    if (saved && saved !== '') return saved;
+    localStorage.setItem('fsi_api_key', 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8');
+    return 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8';
+  });
+  const [apiMode, setApiMode] = useState(() => {
+    const saved = localStorage.getItem('fsi_api_mode');
+    if (saved && saved !== 'simulated') return saved;
+    localStorage.setItem('fsi_api_mode', 'gemini');
+    return 'gemini';
+  });
   
   // Real-Time Market Data API State
-  const [financeApiProvider, setFinanceApiProvider] = useState(() => localStorage.getItem('fsi_finance_api_provider') || 'simulated');
+  const [financeApiProvider, setFinanceApiProvider] = useState(() => {
+    const saved = localStorage.getItem('fsi_finance_api_provider');
+    if (saved && saved !== 'simulated') return saved;
+    localStorage.setItem('fsi_finance_api_provider', 'finnhub');
+    return 'finnhub';
+  });
   const [financeApiKey, setFinanceApiKey] = useState(() => {
     const saved = localStorage.getItem('fsi_finance_api_key');
-    if (saved) return saved;
-    // Pré-carrega a chave BRAPI do usuário Ronaldo para experiência out-of-the-box
-    localStorage.setItem('fsi_finance_api_key', '3NQyj7ujtTwoq84s7vQTsL');
-    return '3NQyj7ujtTwoq84s7vQTsL';
+    // Se a chave já existir e não for a genérica de simulação, usa ela
+    if (saved && saved !== '3NQyj7ujtTwoq84s7vQTsL' && saved !== '') return saved;
+    
+    // Configura chave da Finnhub como padrão para ações globais, e salva a da BRAPI em seu espaço dedicado
+    localStorage.setItem('fsi_finance_api_key', 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g');
+    localStorage.setItem('fsi_brapi_api_key', '3NQyj7ujtTwoq84s7vQTsL');
+    return 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g';
   });
+
+  // Forceful API Connection Migration & Pre-populating of real keys on mount
+  React.useEffect(() => {
+    const keys = {
+      fsi_api_key: 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8',
+      fsi_gemini_api_key: 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8',
+      fsi_finnhub_api_key: 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g',
+      fsi_twelvedata_api_key: 'eeeac747bf5547c9aa38659bc2905ea7',
+      fsi_brapi_api_key: '3NQyj7ujtTwoq84s7vQTsL'
+    };
+
+    // Pre-populate keys if empty or unset
+    Object.entries(keys).forEach(([key, val]) => {
+      const current = localStorage.getItem(key);
+      if (!current || current === 'undefined' || current === '') {
+        localStorage.setItem(key, val);
+      }
+    });
+
+    // Migrate provider from simulated to finnhub to exit sandbox mode
+    const activeProvider = localStorage.getItem('fsi_finance_api_provider');
+    if (!activeProvider || activeProvider === 'simulated') {
+      localStorage.setItem('fsi_finance_api_provider', 'finnhub');
+      localStorage.setItem('fsi_finance_api_key', keys.fsi_finnhub_api_key);
+      
+      setFinanceApiProvider('finnhub');
+      setFinanceApiKey(keys.fsi_finnhub_api_key);
+      
+      // Trigger price update event
+      window.dispatchEvent(new Event('fsi_prices_updated'));
+      
+      // Force single page reload to establish consistency
+      window.location.reload();
+    }
+  }, []);
 
   const agents = [
     {

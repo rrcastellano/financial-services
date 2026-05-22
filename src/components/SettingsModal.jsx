@@ -24,6 +24,20 @@ export default function SettingsModal({
 
   if (!isOpen) return null;
 
+  // Dynamic API Key switcher based on active provider selection
+  const handleProviderSelect = (provider) => {
+    setTempFinProvider(provider);
+    if (provider === 'finnhub') {
+      setTempFinKey(localStorage.getItem('fsi_finnhub_api_key') || 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g');
+    } else if (provider === 'twelvedata') {
+      setTempFinKey(localStorage.getItem('fsi_twelvedata_api_key') || 'eeeac747bf5547c9aa38659bc2905ea7');
+    } else if (provider === 'brapi') {
+      setTempFinKey(localStorage.getItem('fsi_brapi_api_key') || '3NQyj7ujtTwoq84s7vQTsL');
+    } else {
+      setTempFinKey('');
+    }
+  };
+
   const handleSave = () => {
     setApiKey(tempKey);
     setApiMode(tempMode);
@@ -35,7 +49,13 @@ export default function SettingsModal({
     setFinanceApiKey(tempFinKey);
     localStorage.setItem('fsi_finance_api_provider', tempFinProvider);
     localStorage.setItem('fsi_finance_api_key', tempFinKey);
-    if (tempFinProvider === 'brapi') {
+    
+    // Persist provider-specific key to prevent over-writing other providers
+    if (tempFinProvider === 'finnhub') {
+      localStorage.setItem('fsi_finnhub_api_key', tempFinKey);
+    } else if (tempFinProvider === 'twelvedata') {
+      localStorage.setItem('fsi_twelvedata_api_key', tempFinKey);
+    } else if (tempFinProvider === 'brapi') {
       localStorage.setItem('fsi_brapi_api_key', tempFinKey);
     }
     
@@ -147,7 +167,7 @@ export default function SettingsModal({
                   ...styles.modeCard,
                   ...(tempFinProvider === 'simulated' ? styles.modeCardActive : {})
                 }}
-                onClick={() => setTempFinProvider('simulated')}
+                onClick={() => handleProviderSelect('simulated')}
               >
                 <div style={styles.modeCardHeader}>
                   <span style={styles.modeDot}></span>
@@ -163,10 +183,7 @@ export default function SettingsModal({
                   ...styles.modeCard,
                   ...(tempFinProvider === 'finnhub' ? styles.modeCardActive : {})
                 }}
-                onClick={() => {
-                  setTempFinProvider('finnhub');
-                  if (tempFinKey === '3NQyj7ujtTwoq84s7vQTsL') setTempFinKey('');
-                }}
+                onClick={() => handleProviderSelect('finnhub')}
               >
                 <div style={styles.modeCardHeader}>
                   <span style={{...styles.modeDot, background: '#06b6d4'}}></span>
@@ -182,10 +199,7 @@ export default function SettingsModal({
                   ...styles.modeCard,
                   ...(tempFinProvider === 'twelvedata' ? styles.modeCardActive : {})
                 }}
-                onClick={() => {
-                  setTempFinProvider('twelvedata');
-                  if (tempFinKey === '3NQyj7ujtTwoq84s7vQTsL') setTempFinKey('');
-                }}
+                onClick={() => handleProviderSelect('twelvedata')}
               >
                 <div style={styles.modeCardHeader}>
                   <span style={{...styles.modeDot, background: '#a855f7'}}></span>
@@ -201,10 +215,7 @@ export default function SettingsModal({
                   ...styles.modeCard,
                   ...(tempFinProvider === 'brapi' ? styles.modeCardActive : {})
                 }}
-                onClick={() => {
-                  setTempFinProvider('brapi');
-                  if (!tempFinKey || tempFinKey === '') setTempFinKey('3NQyj7ujtTwoq84s7vQTsL');
-                }}
+                onClick={() => handleProviderSelect('brapi')}
               >
                 <div style={styles.modeCardHeader}>
                   <span style={{...styles.modeDot, background: '#818cf8'}}></span>
@@ -336,10 +347,12 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
+    overflowY: 'auto',
   },
   modal: {
     width: '600px',
     maxWidth: '90%',
+    maxHeight: '85vh',
     padding: '0',
     display: 'flex',
     flexDirection: 'column',
@@ -378,6 +391,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 20,
+    overflowY: 'auto',
   },
   section: {
     display: 'flex',

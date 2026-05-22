@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Sparkles, Filter, Database, TrendingUp, BarChart3, Info, AlertTriangle, Shield, Globe, Activity } from 'lucide-react';
-import { fetchCompanyData, updateLivePricesCache } from '../utils/financeApi';
+import { fetchCompanyData, updateLivePricesCache, formatDateTime } from '../utils/financeApi';
 
 const DEFAULT_PORTFOLIO = ['AVGO', 'FISV', 'GEV', 'GOOGL', 'LLY', 'META', 'NVDA', 'OMF', 'PLTR', 'RCL', 'HSBC', 'STX', 'LITE', 'SNDK'];
 
@@ -47,6 +47,9 @@ export default function MarketResearcher() {
     if (provider !== 'simulated' && apiKey) {
       updateLivePricesCache(portfolioTickers, provider, apiKey).then(res => {
         if (res.success) {
+          if (res.rateLimited) {
+            console.warn("[Market Researcher Background] Aviso: Limite de requisições atingido (429) em algumas cotações. Usando cache.");
+          }
           setPriceUpdateTrigger(prev => prev + 1);
         }
       });
@@ -101,7 +104,11 @@ export default function MarketResearcher() {
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const addLog = (msg) => {
-      setLogs(prev => [...prev, `[RESEARCH] ${msg}`]);
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      setLogs(prev => [...prev, `[${hh}:${mm}:${ss}] [RESEARCH] ${msg}`]);
     };
 
     try {
@@ -120,7 +127,11 @@ export default function MarketResearcher() {
         try {
           const res = await updateLivePricesCache(tickers, provider, apiKey);
           if (res.success) {
-            addLog(`Cotações em tempo real atualizadas com sucesso para: ${tickers.slice(0, 5).join(', ')}${tickers.length > 5 ? ' e mais...' : ''}!`);
+            if (res.rateLimited) {
+              addLog("Aviso: Limite de requisições atingido (429). Ativando caching/fallback parcial.");
+            } else {
+              addLog(`Cotações em tempo real atualizadas com sucesso para: ${tickers.slice(0, 5).join(', ')}${tickers.length > 5 ? ' e mais...' : ''}!`);
+            }
             setPriceUpdateTrigger(prev => prev + 1);
           } else {
             addLog(`Aviso de Limite/Erro da API (${res.reason || 'Sem resposta'}). Ativando Simulated Sandbox Fallback...`);
@@ -509,6 +520,7 @@ export default function MarketResearcher() {
                           <th className="spreadsheet-th">YoY Growth %</th>
                           <th className="spreadsheet-th">Gross Margin %</th>
                           <th className="spreadsheet-th">EBITDA ($M)</th>
+                          <th className="spreadsheet-th" style={{ textAlign: 'center', width: '120px' }}>Sincronização</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -531,6 +543,20 @@ export default function MarketResearcher() {
                             </td>
                             <td className="spreadsheet-td" style={{ textAlign: 'right' }}>
                               {c.ebitda.toLocaleString()}
+                            </td>
+                            <td className="spreadsheet-td" style={{ textAlign: 'center', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                              {c.updatedAt ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                  <span style={{ color: '#38bdf8', fontWeight: '600', fontFamily: 'monospace' }}>
+                                    {formatDateTime(c.updatedAt).split(' ')[1]}
+                                  </span>
+                                  <span style={{ fontSize: '9px', color: '#94a3b8' }}>
+                                    {formatDateTime(c.updatedAt).split(' ')[0].substring(0, 5)} ({c.provider === 'simulated' ? 'Simulado' : c.provider === 'brapi' ? 'BRAPI' : c.provider === 'twelvedata' ? 'TwelveData' : c.provider === 'finnhub' ? 'Finnhub' : c.provider || '-'})
+                                  </span>
+                                </div>
+                              ) : (
+                                <span style={{ color: '#64748b' }}>-</span>
+                              )}
                             </td>
                           </tr>
                         ))}

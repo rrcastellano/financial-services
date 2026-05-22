@@ -23,9 +23,12 @@ import {
   Download,
   Upload,
   Eye,
-  EyeOff
+  EyeOff,
+  Cpu,
+  Key,
+  Sparkles
 } from 'lucide-react';
-import { fetchCompanyData, updateLivePricesCache } from '../utils/financeApi';
+import { fetchCompanyData, updateLivePricesCache, formatDateTime } from '../utils/financeApi';
 
 const DEFAULT_PORTFOLIO_LEDGER = {
   NVDA: { ticker: 'NVDA', qty: 15, avgPrice: 820.00 },
@@ -268,6 +271,8 @@ export default function PortfolioTracker() {
   const [successMessage, setSuccessMessage] = useState('');
   const [selectedNewsFilter, setSelectedNewsFilter] = useState('all');
   const [priceUpdateTrigger, setPriceUpdateTrigger] = useState(0);
+  // Farol de status por ticker: { GEV: 'ok', AVGO: 'failed', ... }
+  const [tickerStatus, setTickerStatus] = useState({});
 
   // Simulador de Rebalanceamento
   const [simTicker, setSimTicker] = useState('NVDA');
@@ -275,6 +280,103 @@ export default function PortfolioTracker() {
   const [simPrice, setSimPrice] = useState('');
   const [simType, setSimType] = useState('buy'); // buy or sell
   const [simulationResult, setSimulationResult] = useState(null);
+
+  // Gemini API Geopolitical News Correlation States
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('fsi_gemini_api_key') || '');
+  const [showKeyConfig, setShowKeyConfig] = useState(false);
+  const [customScenario, setCustomScenario] = useState('');
+  const [isSimulatingNews, setIsSimulatingNews] = useState(false);
+  const [newsSimError, setNewsSimError] = useState('');
+  const [aiReport, setAiReport] = useState(null);
+
+  const analyzeScenarioWithGemini = async (scenarioText) => {
+    if (!geminiApiKey) {
+      setNewsSimError('Por favor, configure sua chave API do Gemini primeiro.');
+      return;
+    }
+    if (!scenarioText || !scenarioText.trim()) {
+      setNewsSimError('Por favor, digite um cenário válido para simulação.');
+      return;
+    }
+    
+    setIsSimulatingNews(true);
+    setNewsSimError('');
+    setAiReport(null);
+    
+    // Prepare tickers data for current active holdings
+    const holdingsData = activeHoldings.map(h => {
+      const totalVal = activeHoldings.reduce((acc, curr) => acc + curr.currentValuation, 0);
+      const share = totalVal > 0 ? (h.currentValuation / totalVal) * 100 : 0;
+      return `${h.ticker} (${h.name}, participacao: ${share.toFixed(1)}%)`;
+    }).join(', ');
+    
+    const promptText = `Você é um analista macroeconômico e geopolítico sênior especializado em mercado de capitais global.
+    
+Analise o seguinte cenário/evento e determine o impacto direcional potencial e a justificativa para cada um dos ativos na carteira do usuário.
+
+Cenário Geopolítico/Macro: "${scenarioText}"
+
+Carteira de Ativos sob análise: [ ${holdingsData} ]
+
+Por favor, analise a correlação macro de cada ativo de forma rigorosa e realista:
+- Identifique a exposição a insumos, restrições comerciais, volatilidade cambial, taxa de juros ou demanda setorial.
+- Defina o impacto de cada ativo em uma destas 5 categorias:
+  1. "critical" (impacto severamente negativo)
+  2. "high-risk" (impacto moderadamente negativo, requer atenção)
+  3. "positive" (impacto altamente benéfico/ganho de margem)
+  4. "hedge" (porto seguro clássico contra esse tipo de crise ou volatilidade)
+  5. "neutral" (pouco ou nenhum impacto esperado)
+
+Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco de código (\`\`\`json ...) ou qualquer outro texto explicativo fora do JSON:
+{
+  "summary": "Resumo analítico profissional de alto nível (2 a 3 frases) em português, detalhando a geopolítica do cenário e o impacto agregado nesta carteira de investimentos específica.",
+  "tickers": [
+    {
+      "ticker": "NVDA",
+      "impact": "critical",
+      "reason": "Explicação macro/operacional em 1 frase curta e concisa (máximo 15 palavras) em português."
+    }
+  ]
+}`;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: promptText }]
+          }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `HTTP ${response.status}`);
+      }
+      
+      const resData = await response.json();
+      const resText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!resText) {
+        throw new Error('Formato de resposta inválido recebido da API Gemini.');
+      }
+      
+      const parsedData = JSON.parse(resText.trim());
+      setAiReport(parsedData);
+      setSuccessMessage('Simulação geopolítica concluída com sucesso!');
+      setTimeout(() => setSuccessMessage(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setNewsSimError(`Falha na simulação: ${err.message}`);
+    } finally {
+      setIsSimulatingNews(false);
+    }
+  };
 
   // Escuta cotações
   useEffect(() => {
@@ -314,6 +416,13 @@ export default function PortfolioTracker() {
     const provider = localStorage.getItem('fsi_finance_api_provider') || 'simulated';
     const apiKey = localStorage.getItem('fsi_finance_api_key') || '';
     
+    // Limpa o cache de preços e o marcador de provedor para forçar uma consulta fresca à API
+    // Isso garante que cada clique em "Atualizar" sempre busca os preços mais recentes
+    if (provider !== 'simulated') {
+      localStorage.removeItem('fsi_prices_cache');
+      localStorage.removeItem('fsi_last_used_provider');
+    }
+    
     let exchangeUpdated = false;
     let exchangeRateStr = '';
     
@@ -352,15 +461,34 @@ export default function PortfolioTracker() {
     
     try {
       const res = await updateLivePricesCache(tickers, provider, apiKey);
+      
+      // Atualiza o farol de status por ticker
+      if (res.updatedSymbols !== undefined) {
+        const updatedSet = new Set(res.updatedSymbols);
+        const newStatus = {};
+        tickers.forEach(t => {
+          newStatus[t] = updatedSet.has(t) ? 'ok' : 'failed';
+        });
+        setTickerStatus(newStatus);
+      }
+      
       if (res.success) {
-        const msg = exchangeUpdated 
-          ? `Cotações e câmbio USD/BRL (R$ ${exchangeRateStr}) atualizados com sucesso!`
-          : `Cotações atualizadas via ${provider.toUpperCase()} com sucesso!`;
-        setSuccessMessage(msg);
+        if (res.rateLimited) {
+          setErrorMessage(`Aviso: Limite de requisições atingido (429). ${res.updatedCount || 0}/${tickers.length} cotações atualizadas.`);
+        } else {
+          const msg = exchangeUpdated 
+            ? `Cotações e câmbio USD/BRL (R$ ${exchangeRateStr}) atualizados com sucesso! (${res.updatedCount}/${tickers.length} ativos)`
+            : `Cotações atualizadas via ${provider.toUpperCase()}! (${res.updatedCount || 0}/${tickers.length} ativos)`;
+          setSuccessMessage(msg);
+        }
         setPriceUpdateTrigger(prev => prev + 1);
         window.dispatchEvent(new Event('fsi_prices_updated'));
       } else {
-        setErrorMessage(`Aviso: ${res.reason || 'Usando cache ou cotações simuladas locais'}`);
+        if (res.rateLimited) {
+          setErrorMessage("Aviso: Limite de requisições atingido (429) em algumas cotações. Usando cache para posições restantes.");
+        } else {
+          setErrorMessage(`Aviso: ${res.reason || 'Usando cache ou cotações simuladas locais'}`);
+        }
       }
     } catch (e) {
       setErrorMessage(`Erro ao atualizar cotações: ${e.message}`);
@@ -369,7 +497,7 @@ export default function PortfolioTracker() {
       setTimeout(() => {
         setSuccessMessage('');
         setErrorMessage('');
-      }, 4000);
+      }, 6000);
     }
   };
 
@@ -657,7 +785,9 @@ export default function PortfolioTracker() {
       dailyChangePct: simulatedDailyChange,
       dailyChangeVal: dailyChangeVal,
       currency: 'USD',
-      country: 'US'
+      country: 'US',
+      updatedAt: comp.updatedAt,
+      provider: comp.provider
     };
   });
 
@@ -691,7 +821,9 @@ export default function PortfolioTracker() {
       dailyChangePct: simulatedDailyChange,
       dailyChangeVal: dailyChangeVal,
       currency: 'BRL',
-      country: 'BR'
+      country: 'BR',
+      updatedAt: comp.updatedAt,
+      provider: comp.provider
     };
   });
 
@@ -773,6 +905,9 @@ export default function PortfolioTracker() {
       } else if (sortField === 'country') {
         aVal = a.country || '';
         bVal = b.country || '';
+      } else if (sortField === 'updatedAt') {
+        aVal = a.updatedAt || '';
+        bVal = b.updatedAt || '';
       } else {
         return 0;
       }
@@ -1063,6 +1198,43 @@ export default function PortfolioTracker() {
     );
   };
 
+  // Encontra a cotação com o timestamp mais recente da base
+  const lastGlobalUpdate = React.useMemo(() => {
+    let mostRecent = null;
+    
+    // First, check activeHoldings
+    activeHoldings.forEach(h => {
+      if (h.updatedAt) {
+        const d = new Date(h.updatedAt);
+        if (!mostRecent || d > mostRecent) {
+          mostRecent = d;
+        }
+      }
+    });
+    
+    // Then fallback to parsing fsi_prices_cache directly to be extra comprehensive
+    try {
+      const cacheStr = localStorage.getItem('fsi_prices_cache');
+      if (cacheStr) {
+        const cache = JSON.parse(cacheStr);
+        if (cache) {
+          Object.values(cache).forEach(entry => {
+            if (entry && typeof entry === 'object' && entry.updatedAt) {
+              const d = new Date(entry.updatedAt);
+              if (!mostRecent || d > mostRecent) {
+                mostRecent = d;
+              }
+            }
+          });
+        }
+      }
+    } catch (e) {
+      // Ignored
+    }
+    
+    return mostRecent ? mostRecent.toISOString() : null;
+  }, [activeHoldings]);
+
   return (
     <div style={styles.container} className="animate-fade">
       
@@ -1216,6 +1388,42 @@ export default function PortfolioTracker() {
         >
           🌐 Visão Consolidada (Global)
         </button>
+      </div>
+
+      {/* Global Local Database Status Indicator */}
+      <div 
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          background: 'rgba(30, 41, 59, 0.4)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(8px)',
+          marginBottom: '16px',
+          fontSize: '12px',
+          color: '#cbd5e1'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ 
+            width: '8px', 
+            height: '8px', 
+            borderRadius: '50%', 
+            backgroundColor: '#10b981', 
+            boxShadow: '0 0 8px #10b981',
+            display: 'inline-block'
+          }}></span>
+          <span style={{ fontWeight: '600', color: '#38bdf8' }}>Base de Dados Local:</span>
+          <span>SQLite/localStorage Engine Ativa</span>
+        </div>
+        <div>
+          <span style={{ color: '#94a3b8' }}>Última Sincronização Geral: </span>
+          <strong style={{ color: '#ffffff', fontFamily: 'monospace' }}>
+            {lastGlobalUpdate ? formatDateTime(lastGlobalUpdate) : 'Nenhuma consulta realizada'}
+          </strong>
+        </div>
       </div>
 
       {/* GLOBAL Custody Summary Breakdown Cards */}
@@ -1442,6 +1650,7 @@ export default function PortfolioTracker() {
                   >
                     Retorno{renderSortIndicator('profitLossPct')}
                   </th>
+
                   {activePortfolio !== 'GLOBAL' && <th className="spreadsheet-th" style={{ width: '80px', textAlign: 'center' }}>Ações</th>}
                 </tr>
               </thead>
@@ -1479,7 +1688,38 @@ export default function PortfolioTracker() {
                         )}
 
                         <td className="spreadsheet-td" style={{ fontWeight: '800', color: '#ffffff', textAlign: 'center' }}>
-                          {h.ticker}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                            {/* Farol de status da cotação */}
+                            {tickerStatus[h.ticker] !== undefined ? (
+                              <span 
+                                title={tickerStatus[h.ticker] === 'ok' ? 'Cotação atualizada via API' : 'Não atualizado — usando cache'}
+                                style={{
+                                  width: '7px',
+                                  height: '7px',
+                                  borderRadius: '50%',
+                                  flexShrink: 0,
+                                  display: 'inline-block',
+                                  backgroundColor: tickerStatus[h.ticker] === 'ok' ? '#10b981' : '#ef4444',
+                                  boxShadow: tickerStatus[h.ticker] === 'ok' 
+                                    ? '0 0 6px rgba(16,185,129,0.8)' 
+                                    : '0 0 6px rgba(239,68,68,0.8)'
+                                }}
+                              />
+                            ) : (
+                              <span 
+                                title="Aguardando atualização"
+                                style={{
+                                  width: '7px',
+                                  height: '7px',
+                                  borderRadius: '50%',
+                                  flexShrink: 0,
+                                  display: 'inline-block',
+                                  backgroundColor: '#475569'
+                                }}
+                              />
+                            )}
+                            {h.ticker}
+                          </div>
                         </td>
                         <td className="spreadsheet-td" style={{ fontSize: '11px', color: '#cbd5e1', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {h.name}
@@ -1571,6 +1811,8 @@ export default function PortfolioTracker() {
                               : formatVal(h.profitLoss, h.currency)}
                           </div>
                         </td>
+
+
 
                         {/* Ações */}
                         {activePortfolio !== 'GLOBAL' && (
@@ -1844,14 +2086,39 @@ export default function PortfolioTracker() {
       {/* Correlated News & Geopolitical Impact Aggregator Feed */}
       <div style={styles.newsPanel} className="glass-panel">
         
-        <div style={styles.newsPanelHeader}>
-          <div>
-            <h3 style={{ fontSize: '15px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Newspaper color="#fbbf24" size={16} /> Correlated Geopolitical News & Impact Engine
-            </h3>
-            <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: 2 }}>
-              Comunicados e relatórios macroeconômicos cruzados com sensibilidade aos ativos e setores da sua carteira.
-            </p>
+        <div style={{ ...styles.newsPanelHeader, flexDirection: 'column', alignItems: 'stretch', gap: 15 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <h3 style={{ fontSize: '15px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
+                <Newspaper color="#fbbf24" size={16} /> Correlated Geopolitical News & Impact Engine
+              </h3>
+              <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: 2, margin: 0 }}>
+                Comunicados e relatórios macroeconômicos cruzados com sensibilidade aos ativos e setores da sua carteira.
+              </p>
+            </div>
+            
+            <button 
+              onClick={() => setShowKeyConfig(!showKeyConfig)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '6px 12px',
+                borderRadius: '6px',
+                background: geminiApiKey ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid',
+                borderColor: geminiApiKey ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                color: geminiApiKey ? '#10b981' : '#94a3b8',
+                fontSize: '11px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'all 0.2s',
+                outline: 'none',
+              }}
+            >
+              <Cpu size={14} color={geminiApiKey ? '#10b981' : '#94a3b8'} />
+              {geminiApiKey ? 'Gemini AI Ativo' : 'Configurar Gemini'}
+            </button>
           </div>
 
           {/* Filtering row */}
@@ -1884,6 +2151,269 @@ export default function PortfolioTracker() {
             </select>
           </div>
         </div>
+
+        {/* Gemini API Key Configuration Panel */}
+        {showKeyConfig && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '12px 16px',
+            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.01)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            marginBottom: 20,
+          }}>
+            <span style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+              <Key size={12} /> Gemini API Key:
+            </span>
+            <input 
+              type="password"
+              value={geminiApiKey}
+              onChange={(e) => {
+                setGeminiApiKey(e.target.value);
+                localStorage.setItem('fsi_gemini_api_key', e.target.value);
+              }}
+              placeholder="Insira sua chave AI do Gemini..."
+              style={{
+                flex: 1,
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '4px',
+                padding: '6px 10px',
+                color: '#ffffff',
+                fontSize: '11px',
+                outline: 'none',
+              }}
+            />
+            <button 
+              onClick={() => {
+                setGeminiApiKey('');
+                localStorage.removeItem('fsi_gemini_api_key');
+                setAiReport(null);
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '4px',
+                background: 'rgba(244, 63, 94, 0.1)',
+                border: '1px solid rgba(244, 63, 94, 0.2)',
+                color: '#f43f5e',
+                fontSize: '11px',
+                cursor: 'pointer',
+              }}
+            >
+              Limpar
+            </button>
+          </div>
+        )}
+
+        {/* Geopolitical Stress Simulator Panel */}
+        {geminiApiKey && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.04) 0%, rgba(251, 191, 36, 0) 100%)',
+            border: '1px solid rgba(251, 191, 36, 0.1)',
+            borderRadius: '10px',
+            padding: '16px',
+            marginBottom: 20,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h4 style={{ fontSize: '13px', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
+                <Sparkles size={14} color="#fbbf24" /> Simulador de Estresse Geopolítico & Macro AI
+              </h4>
+              {aiReport && (
+                <button 
+                  onClick={() => {
+                    setAiReport(null);
+                    setCustomScenario('');
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Resetar Simulação
+                </button>
+              )}
+            </div>
+
+            {!aiReport ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>
+                  Digite qualquer acontecimento geopolítico, elevação de impostos, conflitos ou choques macroeconômicos. A inteligência do Gemini cruzará as exposições operacionais imediatas e projetará os impactos diretos em cada holding do seu portfólio de <strong>{activePortfolio === 'GLOBAL' ? 'BRL + USD' : activePortfolio}</strong> ativo.
+                </p>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <textarea 
+                    value={customScenario}
+                    onChange={(e) => setCustomScenario(e.target.value)}
+                    placeholder="Ex: Escalada súbita no Mar da China gera embargo total nas exportações de terras raras e eleva taxas alfandegárias de semicondutores em 40%..."
+                    style={{
+                      flex: 1,
+                      minHeight: '60px',
+                      background: 'rgba(0, 0, 0, 0.25)',
+                      border: '1px solid rgba(251, 191, 36, 0.15)',
+                      borderRadius: '6px',
+                      padding: '10px',
+                      color: '#ffffff',
+                      fontSize: '12px',
+                      lineHeight: '1.4',
+                      resize: 'vertical',
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
+                {newsSimError && (
+                  <span style={{ fontSize: '11px', color: '#f43f5e', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    ⚠️ {newsSimError}
+                  </span>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button 
+                    onClick={() => analyzeScenarioWithGemini(customScenario)}
+                    disabled={isSimulatingNews || !customScenario.trim()}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      background: isSimulatingNews 
+                        ? 'rgba(251, 191, 36, 0.2)' 
+                        : 'linear-gradient(90deg, #fbbf24 0%, #d97706 100%)',
+                      border: 'none',
+                      color: '#000000',
+                      fontWeight: 'bold',
+                      fontSize: '11px',
+                      cursor: isSimulatingNews || !customScenario.trim() ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 4px 12px rgba(251, 191, 36, 0.15)',
+                    }}
+                  >
+                    {isSimulatingNews ? (
+                      <>
+                        <div className="spinner" style={{
+                          width: 12,
+                          height: 12,
+                          border: '2px solid #000000',
+                          borderTopColor: 'transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 0.8s linear infinite',
+                          marginRight: 4
+                        }} />
+                        Analisando com Gemini...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={12} /> Executar Análise Cognitiva AI
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Dynamic AI Simulation Report Display */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  background: 'rgba(251, 191, 36, 0.05)',
+                  borderLeft: '4px solid #fbbf24',
+                }}>
+                  <strong style={{ fontSize: '11px', color: '#fbbf24', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Cenário Simulado:</strong>
+                  <span style={{ fontSize: '12px', color: '#e2e8f0', fontStyle: 'italic' }}>"{customScenario}"</span>
+                </div>
+
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.04)',
+                }}>
+                  <strong style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+                    <Cpu size={12} /> Diagnóstico Macroeconômico AI:
+                  </strong>
+                  <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
+                    {aiReport.summary}
+                  </p>
+                </div>
+
+                <div>
+                  <strong style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
+                    Análise por Ativo da Carteira ({activePortfolio}):
+                  </strong>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {aiReport.tickers?.map(item => {
+                      const h = activeHoldings.find(ah => ah.ticker === item.ticker);
+                      const shares = h ? `${h.qty} ações` : '';
+                      
+                      let color = '#94a3b8';
+                      let label = 'Neutro';
+                      let bgColor = 'rgba(255, 255, 255, 0.05)';
+                      
+                      if (item.impact === 'critical') {
+                        color = '#f43f5e';
+                        label = 'Risco Crítico';
+                        bgColor = 'rgba(244, 63, 94, 0.1)';
+                      } else if (item.impact === 'high-risk') {
+                        color = '#fbbf24';
+                        label = 'Aviso Risco';
+                        bgColor = 'rgba(251, 191, 36, 0.1)';
+                      } else if (item.impact === 'positive') {
+                        color = '#10b981';
+                        label = 'Ganho Est.';
+                        bgColor = 'rgba(16, 185, 129, 0.1)';
+                      } else if (item.impact === 'hedge') {
+                        color = '#6366f1';
+                        label = 'Porto Seguro';
+                        bgColor = 'rgba(99, 102, 241, 0.1)';
+                      }
+
+                      return (
+                        <div 
+                          key={item.ticker}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            padding: '10px 12px',
+                            borderRadius: '6px',
+                            background: 'rgba(255,255,255,0.01)',
+                            border: '1px solid rgba(255,255,255,0.03)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <strong style={{ fontSize: '12px', color: '#ffffff', minWidth: '55px' }}>{item.ticker}</strong>
+                            {shares && <span style={{ fontSize: '10px', color: '#64748b', minWidth: '80px' }}>{shares}</span>}
+                            <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{item.reason}</span>
+                          </div>
+                          
+                          <div style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: bgColor,
+                            border: '1px solid',
+                            borderColor: `${color}30`,
+                            color: color,
+                            fontSize: '10px',
+                            fontWeight: '600',
+                          }}>
+                            {label}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* News Feed Grid */}
         <div style={styles.newsGrid}>
