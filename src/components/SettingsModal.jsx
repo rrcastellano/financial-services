@@ -42,6 +42,7 @@ export default function SettingsModal({
     setApiKey(tempKey);
     setApiMode(tempMode);
     localStorage.setItem('fsi_api_key', tempKey);
+    localStorage.setItem('fsi_gemini_api_key', tempKey);
     localStorage.setItem('fsi_api_mode', tempMode);
     
     // Save Real-Time Finance API Config

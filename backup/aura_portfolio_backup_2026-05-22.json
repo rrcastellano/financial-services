@@ -1,22 +1,25 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-22T15:08:09.362Z",
+  "timestamp": "2026-05-22T21:15:16.133Z",
   "exchangeRate": "5.0052",
   "ledgerUs": {
     "NVDA": {
       "ticker": "NVDA",
       "qty": 60,
-      "avgPrice": 97.34
+      "avgPrice": 97.34,
+      "dividends": 2.83
     },
     "GOOGL": {
       "ticker": "GOOGL",
       "qty": 35,
-      "avgPrice": 159.18
+      "avgPrice": 159.18,
+      "dividends": 42.01
     },
     "AVGO": {
       "ticker": "AVGO",
       "qty": 35,
-      "avgPrice": 149.88
+      "avgPrice": 149.88,
+      "dividends": 161.6
     },
     "FISV": {
       "ticker": "FISV",
@@ -31,17 +34,20 @@
     "LLY": {
       "ticker": "LLY",
       "qty": 12,
-      "avgPrice": 722.89
+      "avgPrice": 722.89,
+      "dividends": 67.52
     },
     "META": {
       "ticker": "META",
       "qty": 14,
-      "avgPrice": 566.11
+      "avgPrice": 566.11,
+      "dividends": 28.76
     },
     "OMF": {
       "ticker": "OMF",
       "qty": 170,
-      "avgPrice": 48.39
+      "avgPrice": 48.39,
+      "dividends": 883.06
     },
     "PLTR": {
       "ticker": "PLTR",
@@ -51,7 +57,8 @@
     "RCL": {
       "ticker": "RCL",
       "qty": 22.49629,
-      "avgPrice": 308.17
+      "avgPrice": 308.17,
+      "dividends": 125.71
     },
     "HSBC": {
       "ticker": "HSBC",
@@ -83,27 +90,32 @@
     "PETR4": {
       "ticker": "PETR4",
       "qty": 5000,
-      "avgPrice": 33.74
+      "avgPrice": 33.74,
+      "dividends": 49991.79
     },
     "VALE3": {
       "ticker": "VALE3",
       "qty": 103,
-      "avgPrice": 65.24
+      "avgPrice": 65.24,
+      "dividends": 1029.39
     },
     "BBDC4": {
       "ticker": "BBDC4",
       "qty": 700,
-      "avgPrice": 12.09
+      "avgPrice": 12.09,
+      "dividends": 1224.21
     },
     "ITSA4": {
       "ticker": "ITSA4",
       "qty": 1041,
-      "avgPrice": 9.47
+      "avgPrice": 9.47,
+      "dividends": 2874.18
     },
     "BBAS3": {
       "ticker": "BBAS3",
       "qty": 400,
-      "avgPrice": 27.17
+      "avgPrice": 27.17,
+      "dividends": 2663.39
     },
     "QBTC11": {
       "ticker": "QBTC11",
@@ -113,57 +125,74 @@
     "KNCA11": {
       "ticker": "KNCA11",
       "qty": 650,
-      "avgPrice": 101.65
+      "avgPrice": 101.65,
+      "dividends": 16704
     },
     "HGCR11": {
       "ticker": "HGCR11",
       "qty": 815,
-      "avgPrice": 103.16
+      "avgPrice": 103.16,
+      "dividends": 15657.3
     },
     "HGLG11": {
       "ticker": "HGLG11",
       "qty": 120,
-      "avgPrice": 160.54
+      "avgPrice": 160.54,
+      "dividends": 5122.9
     },
     "HGRU11": {
       "ticker": "HGRU11",
       "qty": 130,
-      "avgPrice": 118.83
+      "avgPrice": 118.83,
+      "dividends": 5196.1
     },
     "ITRI11": {
       "ticker": "ITRI11",
       "qty": 1500,
-      "avgPrice": 91.11
+      "avgPrice": 91.11,
+      "dividends": 27420.72
     },
     "KNCR11": {
       "ticker": "KNCR11",
       "qty": 1031,
-      "avgPrice": 102.97
+      "avgPrice": 102.97,
+      "dividends": 33549.05
     },
     "KNIP11": {
       "ticker": "KNIP11",
       "qty": 800,
-      "avgPrice": 89.11
+      "avgPrice": 89.11,
+      "dividends": 9600
     },
     "KNSC11": {
       "ticker": "KNSC11",
       "qty": 8670,
-      "avgPrice": 8.8
+      "avgPrice": 8.8,
+      "dividends": 8592
     },
     "MCCI11": {
       "ticker": "MCCI11",
       "qty": 965,
-      "avgPrice": 89.11
+      "avgPrice": 89.11,
+      "dividends": 22837.9
     },
     "RZAK11": {
       "ticker": "RZAK11",
       "qty": 940,
-      "avgPrice": 84.39
+      "avgPrice": 84.39,
+      "dividends": 26835.7
     },
     "XPML11": {
       "ticker": "XPML11",
       "qty": 410,
-      "avgPrice": 115.52
+      "avgPrice": 115.52,
+      "dividends": 10142.46
+    },
+    "KNRI11": {
+      "ticker": "KNRI11",
+      "qty": 200,
+      "avgPrice": 159.49,
+      "dividends": 0
     }
   }
 }

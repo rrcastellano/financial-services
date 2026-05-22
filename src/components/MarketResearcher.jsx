@@ -727,7 +727,7 @@ export default function MarketResearcher() {
                               <br />
                               1. <strong>Sensibilidade a Taxas de Juros (Múltiplos):</strong> Com múltiplos de valuation em níveis exigentes (como NVDA e PLTR), a carteira possui alta volatilidade sistemática relacionada a taxas macroeconômicas.
                               <br />
-                              2. <strong>Risco Geopolítico em Taiwan:</strong> Uma parcela crítica das holdings (como AVGO, NVDA, STX, LITE, SNDK) depende diretamente do suprimento de chips de alta performance e silício asiáticos.
+                              2. <strong>Sensibilidade à Cadeia de Suprimentos Global:</strong> Diversas holdings tecnológicas e industriais dependem de fundições e insumos logísticos integrados, exigindo monitoramento ativo de volatilidades geopolíticas de fronteira.
                             </p>
                             <p>
                               <strong>Recomendação de Rebalanceamento (Hedge):</strong> Para mitigar a volatilidade de cauda esquerda, sugerimos a incorporação gradual de ativos anticíclicos. Aumentar a exposição a farmacêuticas defensivas (como <strong>LLY</strong>) ou utilities resilientes de transição energética (como <strong>GEV</strong>) trará proteção e blindagem aos fluxos operacionais consolidados.

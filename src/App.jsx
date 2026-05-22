@@ -30,15 +30,21 @@ export default function App() {
   // API Key State (loaded from localStorage by default)
   const [apiKey, setApiKey] = useState(() => {
     const saved = localStorage.getItem('fsi_api_key');
-    if (saved && saved !== '') return saved;
-    localStorage.setItem('fsi_api_key', 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8');
-    return 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8';
+    // If the saved key is the old leaked one, or empty, automatically upgrade to the new active key
+    if (saved && saved !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && saved !== '') return saved;
+    localStorage.setItem('fsi_api_key', 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw');
+    return 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw';
   });
   const [apiMode, setApiMode] = useState(() => {
     const saved = localStorage.getItem('fsi_api_mode');
-    if (saved && saved !== 'simulated') return saved;
-    localStorage.setItem('fsi_api_mode', 'gemini');
-    return 'gemini';
+    if (saved) return saved;
+    const key = localStorage.getItem('fsi_api_key');
+    if (key && key !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && key !== '') {
+      localStorage.setItem('fsi_api_mode', 'gemini');
+      return 'gemini';
+    }
+    localStorage.setItem('fsi_api_mode', 'simulated');
+    return 'simulated';
   });
   
   // Real-Time Market Data API State
@@ -62,20 +68,30 @@ export default function App() {
   // Forceful API Connection Migration & Pre-populating of real keys on mount
   React.useEffect(() => {
     const keys = {
-      fsi_api_key: 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8',
-      fsi_gemini_api_key: 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8',
+      fsi_api_key: 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw',
+      fsi_gemini_api_key: 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw',
       fsi_finnhub_api_key: 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g',
       fsi_twelvedata_api_key: 'eeeac747bf5547c9aa38659bc2905ea7',
       fsi_brapi_api_key: '3NQyj7ujtTwoq84s7vQTsL'
     };
 
-    // Pre-populate keys if empty or unset
+    // Pre-populate keys if empty, unset, or contain the old leaked key
     Object.entries(keys).forEach(([key, val]) => {
       const current = localStorage.getItem(key);
-      if (!current || current === 'undefined' || current === '') {
+      if (!current || current === 'undefined' || current === '' || current === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8') {
         localStorage.setItem(key, val);
       }
     });
+
+    // Auto-promote to gemini mode if we have a valid key pre-populated or saved
+    const activeKey = localStorage.getItem('fsi_api_key');
+    if (activeKey && activeKey !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && activeKey !== '') {
+      const savedMode = localStorage.getItem('fsi_api_mode');
+      if (!savedMode || savedMode === 'simulated') {
+        localStorage.setItem('fsi_api_mode', 'gemini');
+        setApiMode('gemini');
+      }
+    }
 
     // Migrate provider from simulated to finnhub to exit sandbox mode
     const activeProvider = localStorage.getItem('fsi_finance_api_provider');
@@ -312,7 +328,12 @@ export default function App() {
         {/* Workspace Active Agent view */}
         <div style={styles.activeAgentContainer}>
           <ErrorBoundary key={activeTab} onReset={() => setActiveTab(activeTab)}>
-            <ActiveComponent />
+            <ActiveComponent 
+              apiKey={apiKey}
+              setApiKey={setApiKey}
+              apiMode={apiMode}
+              setApiMode={setApiMode}
+            />
           </ErrorBoundary>
         </div>
 

@@ -31,28 +31,28 @@ import {
 import { fetchCompanyData, updateLivePricesCache, formatDateTime } from '../utils/financeApi';
 
 const DEFAULT_PORTFOLIO_LEDGER = {
-  NVDA: { ticker: 'NVDA', qty: 15, avgPrice: 820.00 },
-  GOOGL: { ticker: 'GOOGL', qty: 45, avgPrice: 152.00 },
-  AVGO: { ticker: 'AVGO', qty: 8, avgPrice: 122.00 },
-  FISV: { ticker: 'FISV', qty: 25, avgPrice: 141.00 },
-  GEV: { ticker: 'GEV', qty: 30, avgPrice: 148.00 },
-  LLY: { ticker: 'LLY', qty: 10, avgPrice: 690.00 },
-  META: { ticker: 'META', qty: 12, avgPrice: 410.00 },
-  OMF: { ticker: 'OMF', qty: 60, avgPrice: 42.00 },
-  PLTR: { ticker: 'PLTR', qty: 150, avgPrice: 32.00 },
-  RCL: { ticker: 'RCL', qty: 35, avgPrice: 115.00 },
-  HSBC: { ticker: 'HSBC', qty: 80, avgPrice: 36.00 },
-  STX: { ticker: 'STX', qty: 40, avgPrice: 85.00 },
-  LITE: { ticker: 'LITE', qty: 50, avgPrice: 46.00 },
-  SNDK: { ticker: 'SNDK', qty: 75, avgPrice: 65.00 }
+  NVDA: { ticker: 'NVDA', qty: 15, avgPrice: 820.00, dividends: 150.00 },
+  GOOGL: { ticker: 'GOOGL', qty: 45, avgPrice: 152.00, dividends: 80.00 },
+  AVGO: { ticker: 'AVGO', qty: 8, avgPrice: 122.00, dividends: 0 },
+  FISV: { ticker: 'FISV', qty: 25, avgPrice: 141.00, dividends: 0 },
+  GEV: { ticker: 'GEV', qty: 30, avgPrice: 148.00, dividends: 120.00 },
+  LLY: { ticker: 'LLY', qty: 10, avgPrice: 690.00, dividends: 50.00 },
+  META: { ticker: 'META', qty: 12, avgPrice: 410.00, dividends: 0 },
+  OMF: { ticker: 'OMF', qty: 60, avgPrice: 42.00, dividends: 180.00 },
+  PLTR: { ticker: 'PLTR', qty: 150, avgPrice: 32.00, dividends: 0 },
+  RCL: { ticker: 'RCL', qty: 35, avgPrice: 115.00, dividends: 0 },
+  HSBC: { ticker: 'HSBC', qty: 80, avgPrice: 36.00, dividends: 240.00 },
+  STX: { ticker: 'STX', qty: 40, avgPrice: 85.00, dividends: 0 },
+  LITE: { ticker: 'LITE', qty: 50, avgPrice: 46.00, dividends: 0 },
+  SNDK: { ticker: 'SNDK', qty: 75, avgPrice: 65.00, dividends: 0 }
 };
 
 const DEFAULT_BR_PORTFOLIO_LEDGER = {
-  PETR4: { ticker: 'PETR4', qty: 100, avgPrice: 34.00 },
-  VALE3: { ticker: 'VALE3', qty: 80, avgPrice: 68.00 },
-  ITUB4: { ticker: 'ITUB4', qty: 120, avgPrice: 28.50 },
-  WEGE3: { ticker: 'WEGE3', qty: 150, avgPrice: 35.00 },
-  BBDC4: { ticker: 'BBDC4', qty: 90, avgPrice: 13.80 }
+  PETR4: { ticker: 'PETR4', qty: 100, avgPrice: 34.00, dividends: 450.00 },
+  VALE3: { ticker: 'VALE3', qty: 80, avgPrice: 68.00, dividends: 240.00 },
+  ITUB4: { ticker: 'ITUB4', qty: 120, avgPrice: 28.50, dividends: 180.00 },
+  WEGE3: { ticker: 'WEGE3', qty: 150, avgPrice: 35.00, dividends: 150.00 },
+  BBDC4: { ticker: 'BBDC4', qty: 90, avgPrice: 13.80, dividends: 45.00 }
 };
 
 const SAMPLE_NEWS = [
@@ -171,7 +171,305 @@ const BR_NEWS = [
   }
 ];
 
-export default function PortfolioTracker() {
+// High-Fidelity local cognitive simulation engine fallback (Portuguese)
+const generateMockCognitiveReport = (scenarioText, holdings) => {
+  const text = scenarioText.toLowerCase();
+  let summary = '';
+  const tickersAnalysis = [];
+
+  // Determine main themes using precise regex word boundary matching to avoid false positives on common Portuguese substrings (e.g. 'ai' in 'ainda' or 'ia' in 'mídia')
+  const isTaiwan = /\b(taiwan|semicondutores|chips)\b/i.test(text) || text.includes('estreito de taiwan');
+  const isJuros = /\b(juros?|selic|fed|copom|banco central)\b/i.test(text) || text.includes('infla');
+  const isPetroleo = /\b(petr[oó]leo|opep|combust[ií]vel|energia|ormuz|ir[aã]|teer[aã]|paquist[aã]o|oriente m[eé]dio|guerra|conflito)\b/i.test(text);
+  const isImposto = /\b(impostos?|tribut[aá]r[ií]o|fiscal|taxa[cç][aã]o|governo|reforma)\b/i.test(text);
+  const isTech = /\b(ia|ai|nvidia|tecnologia|intelig[eê]ncia)\b/i.test(text);
+
+  if (isTaiwan) {
+    summary = 'O acirramento das tensões geopolíticas no Estreito de Taiwan impõe sérios riscos logísticos e operacionais na cadeia global de semicondutores. Empresas altamente dependentes de fundições de ponta (como NVDA e AAPL) sofrem risco crítico de supply-chain, enquanto ativos de commodities ou energia atuam como potenciais hedges defensivos em cenários de aversão ao risco severa.';
+  } else if (isJuros) {
+    summary = 'A perspectiva de manutenção de taxas de juros elevadas pelo Federal Reserve e Banco Central do Brasil eleva o custo de capital global, penalizando companhias de hipercrescimento com múltiplos elevados. Em contrapartida, instituições financeiras tradicionais e ativos de valor consolidado absorvem melhor a volatilidade, beneficiando-se de spreads mais largos ou fluxos de caixa resilientes.';
+  } else if (isPetroleo) {
+    summary = 'Instabilidade geopolítica nos principais polos produtores gera choques na oferta global de energia e combustíveis fósseis, impulsionando a cotação internacional do barril. Enquanto companhias do setor de energia tradicional (como PETR4) experimentam expressiva expansão de margens de lucro operacionais, setores intensivos em transporte, manufatura e tecnologia de consumo enfrentam pressões inflacionárias severas.';
+  } else if (isImposto) {
+    summary = 'A introdução de novos pacotes tributários ou alterações de política fiscal acarreta pressões imediatas sobre as margens operacionais de setores domésticos e multinacionais expostos a tarifas. A elevação tributária penaliza setores de consumo de alta elasticidade e manufatura de hardware, enquanto ativos atrelados a fluxos internacionais ou moedas fortes operam sob blindagem moderada.';
+  } else if (isTech) {
+    summary = 'A corrida global pela infraestrutura de Inteligência Artificial entra em nova fase de consolidação corporativa com fortes injeções de CAPEX pelas Big Techs. Fornecedores diretos de hardware de aceleração computacional e semicondutores (como NVDA) capturam fluxos massivos de receita, ao passo que empresas periféricas enfrentam competição acirrada por insumos.';
+  } else {
+    summary = 'Cenário de incerteza macroeconômica global eleva a volatilidade nos mercados de capitais e gera redistribuição tática de fluxo financeiro entre ativos de crescimento (Growth) e valor (Value). Setores cíclicos tradicionais apresentam comportamento defensivo, enquanto empresas de alta tecnologia de consumo mostram sensibilidade ampliada a ajustes de carteira globais.';
+  }
+
+  // Generate impact & reason per ticker based on theme
+  holdings.forEach(h => {
+    const ticker = h.ticker;
+    let impact = 'neutral';
+    let reason = 'Exposição moderada; dinâmicas micro operacionais específicas devem ditar o ritmo no curto prazo.';
+
+    if (isTaiwan) {
+      if (['NVDA', 'AAPL', 'AVGO', 'LITE', 'STX', 'SNDK'].includes(ticker)) {
+        impact = 'critical';
+        reason = 'Dependência crítica de chips da TSMC em Taiwan expõe a cadeia a risco absoluto.';
+      } else if (['MSFT', 'GOOGL', 'META', 'PLTR'].includes(ticker)) {
+        impact = 'high-risk';
+        reason = 'A interrupção de hardware avançado compromete o ritmo de expansão do data center.';
+      } else if (['PETR4', 'VALE3', 'ETHA'].includes(ticker)) {
+        impact = 'positive';
+        reason = 'Alta nos preços de commodities atua como hedge tático contra instabilidade internacional.';
+      } else if (['GEV', 'WEGE3'].includes(ticker)) {
+        impact = 'hedge';
+        reason = 'Demanda por infraestrutura local de energia e segurança industrial cresce em crises.';
+      } else if (['ITUB4', 'BBDC4', 'JPM', 'HSBC', 'OMF', 'FI'].includes(ticker)) {
+        impact = 'neutral';
+        reason = 'Margens bancárias resilientes; carteira sob flutuações macro limitadas nesta crise.';
+      } else {
+        impact = 'neutral';
+        reason = 'Impacto direto secundário na operação core da empresa.';
+      }
+    } else if (isJuros) {
+      if (['NVDA', 'TSLA', 'AAPL', 'MSFT', 'AVGO', 'PLTR'].includes(ticker)) {
+        impact = 'high-risk';
+        reason = 'Taxas mais altas reduzem o valor presente dos fluxos de caixa futuros projetados.';
+      } else if (['ITUB4', 'BBDC4', 'JPM', 'HSBC', 'OMF'].includes(ticker)) {
+        impact = 'positive';
+        reason = 'Spreads de crédito mais amplos e receitas financeiras favorecidas por juros altos.';
+      } else if (['ETHA'].includes(ticker)) {
+        impact = 'critical';
+        reason = 'Aumento do rendimento dos títulos de governo soberanos reduz atratividade de criptoativos.';
+      } else if (['VALE3', 'PETR4', 'WEGE3', 'GEV'].includes(ticker)) {
+        impact = 'hedge';
+        reason = 'Fluxo de caixa robusto e forte pagamento de dividendos oferecem blindagem.';
+      } else {
+        impact = 'neutral';
+        reason = 'Equilíbrio entre custos de captação e poder de repasse de preços ao consumidor.';
+      }
+    } else if (isPetroleo) {
+      if (['PETR4'].includes(ticker)) {
+        impact = 'positive';
+        reason = 'Alta direta da commodity expande imediatamente a margem operacional e dividendos.';
+      } else if (['VALE3', 'WEGE3', 'GEV'].includes(ticker)) {
+        impact = 'hedge';
+        reason = 'Ativos industriais e de materiais capturam resiliência estrutural em ciclo inflacionário.';
+      } else if (['TSLA'].includes(ticker)) {
+        impact = 'positive';
+        reason = 'Combustível caro acelera a transição do consumidor para veículos elétricos e baterias.';
+      } else if (['RCL'].includes(ticker)) {
+        impact = 'critical';
+        reason = 'Combustível de navio mais caro corrói diretamente as margens de lucro operacionais.';
+      } else if (['AAPL', 'MSFT', 'NVDA', 'AVGO', 'STX'].includes(ticker)) {
+        impact = 'high-risk';
+        reason = 'Custo logístico elevado e compressão de renda disponível do consumidor mundial.';
+      } else {
+        impact = 'neutral';
+        reason = 'Exposição neutra no curto prazo; custos repassados gradualmente ao cliente final.';
+      }
+    } else if (isImposto) {
+      if (['PETR4', 'VALE3', 'ITUB4', 'BBDC4', 'WEGE3'].includes(ticker)) {
+        impact = 'critical';
+        reason = 'Carga tributária doméstica ampliada retira rentabilidade líquida passível de distribuição.';
+      } else if (['AAPL', 'TSLA', 'AVGO'].includes(ticker)) {
+        impact = 'high-risk';
+        reason = 'Aumento de tarifas alfandegárias eleva o custo final dos produtos importados.';
+      } else if (['MSFT', 'GOOGL', 'META'].includes(ticker)) {
+        impact = 'hedge';
+        reason = 'Modelo de negócios global intangível e caixa robusto oferecem forte resiliência.';
+      } else if (['ETHA'].includes(ticker)) {
+        impact = 'neutral';
+        reason = 'Ativos descentralizados reagem de forma descorrelacionada à tributação corporativa.';
+      } else {
+        impact = 'neutral';
+        reason = 'Impacto moderado; empresa ajustará estrutura societária ou repassará margem.';
+      }
+    } else if (isTech) {
+      if (['NVDA', 'AVGO', 'LITE', 'STX', 'PLTR'].includes(ticker)) {
+        impact = 'positive';
+        reason = 'Demanda explosiva por infraestrutura de computação de alto desempenho e software AI.';
+      } else if (['MSFT', 'GOOGL', 'META'].includes(ticker)) {
+        impact = 'hedge';
+        reason = 'Liderança estrutural em nuvem e ecossistema digital consolida posições fortes.';
+      } else if (['AAPL'].includes(ticker)) {
+        impact = 'neutral';
+        reason = 'Evolução incremental de IA nos dispositivos locais gera receitas estáveis.';
+      } else if (['TSLA'].includes(ticker)) {
+        impact = 'high-risk';
+        reason = 'Elevados investimentos necessários em supercomputação de condução autônoma geram custos.';
+      } else {
+        impact = 'neutral';
+        reason = 'Impacto neutro; ganho indireto por meio de adoção de produtividade sistêmica.';
+      }
+    } else {
+      // General macro scenario
+      if (['VALE3', 'PETR4', 'WEGE3', 'GEV', 'JPM'].includes(ticker)) {
+        impact = 'hedge';
+        reason = 'Balanço sólido e forte geração de fluxo de caixa garantem proteção macro.';
+      } else if (['NVDA', 'TSLA', 'RCL', 'LITE'].includes(ticker)) {
+        impact = 'high-risk';
+        reason = 'Maior sensibilidade cíclica e beta de mercado acentuado elevam a volatilidade.';
+      } else if (['AAPL', 'MSFT', 'GOOGL', 'META', 'ITUB4', 'BBDC4'].includes(ticker)) {
+        impact = 'positive';
+        reason = 'Líderes de mercado atraem capital defensivo devido à alta previsibilidade operacional.';
+      } else {
+        impact = 'neutral';
+        reason = 'Comportamento defensivo padrão com flutuações próximas à média do mercado.';
+      }
+    }
+
+    tickersAnalysis.push({
+      ticker,
+      impact,
+      reason
+    });
+  });
+
+  return {
+    summary,
+    tickers: tickersAnalysis
+  };
+};
+
+// High-Fidelity simulated offline news generation templates
+const MOCK_NEWS_TEMPLATES = [
+  {
+    title: "Guidance operacional de IA impulsiona fornecedores de hardware e semicondutores",
+    source: "Bloomberg FSI",
+    summary: "Comentários favoráveis de grandes corporações sobre investimentos de CAPEX em tecnologia de nuvem e silício customizado geram fluxo de compras forte em ativos de infraestrutura computacional.",
+    tags: ["NVDA", "AVGO", "STX", "PLTR"],
+    impacts: { NVDA: "positive", AVGO: "positive", STX: "positive", PLTR: "positive" },
+    scenario: "baseline",
+    country: "US"
+  },
+  {
+    title: "Tensões geopolíticas no Oriente Médio elevam preço do Brent acima de $85",
+    source: "Reuters Business",
+    summary: "O fluxo marítimo global enfrenta novas ameaças após pronunciamento oficial de restrição à navegação. Analistas projetam choques de custo logístico em cruzeiros e ganhos defensivos em geradoras e infraestrutura local.",
+    tags: ["RCL", "GEV", "OMF", "PETR4"],
+    impacts: { RCL: "critical", GEV: "positive", OMF: "high-risk", PETR4: "positive" },
+    scenario: "iran",
+    country: "US"
+  },
+  {
+    title: "Federal Reserve adota cautela sobre inflação e sinaliza juros elevados persistentes",
+    source: "WSJ Markets",
+    summary: "Membros do FOMC expressaram receio sobre a resiliência dos preços no setor de serviços. Ativos de crédito registram ganhos nas margens financeiras líquidas, enquanto empresas de alto crescimento com múltiplos esticados sofrem volatilidade moderada.",
+    tags: ["HSBC", "OMF", "PLTR", "META", "GOOGL"],
+    impacts: { HSBC: "positive", OMF: "positive", PLTR: "negative", META: "negative", GOOGL: "neutral" },
+    scenario: "rates",
+    country: "US"
+  },
+  {
+    title: "Avanço regulatório em terapias metabólicas globais gera otimismo no setor de saúde",
+    source: "CNBC Healthcare",
+    summary: "Novos resultados clínicos promissores e contratos de fornecimento estratégico sustentam a liderança e resiliência de grandes laboratórios como porto seguro defensivo contra volatilidade geopolítica.",
+    tags: ["LLY"],
+    impacts: { LLY: "positive" },
+    scenario: "baseline",
+    country: "US"
+  },
+  {
+    title: "Capex de Big Techs em Inteligência Artificial deve atingir novo recorde em 2026",
+    source: "TechCrunch AI",
+    summary: "Provedores de serviços em nuvem anunciam ampliação nas aquisições de aceleradores e infraestrutura óptica. Margens industriais continuam superando as previsões mais otimistas de Wall Street.",
+    tags: ["NVDA", "AVGO", "GOOGL", "META"],
+    impacts: { NVDA: "positive", AVGO: "positive", GOOGL: "positive", META: "positive" },
+    scenario: "baseline",
+    country: "US"
+  },
+  {
+    title: "Contratos governamentais bilionários impulsionam adoção corporativa de plataformas de dados",
+    source: "Defense News",
+    summary: "A integração de inteligência analítica em larga escala em infraestruturas públicas garante receitas estáveis de longo prazo e valida o papel tático dos novos sistemas preditivos.",
+    tags: ["PLTR"],
+    impacts: { PLTR: "positive" },
+    scenario: "baseline",
+    country: "US"
+  },
+  {
+    title: "Ata do COPOM indica preocupação fiscal e sinaliza Selic estável por mais tempo",
+    source: "Valor Econômico",
+    summary: "O Comitê de Política Monetária reafirmou a importância de âncoras fiscais sólidas para ancorar expectativas inflacionárias. Instituições bancárias brasileiras operam com spreads saudáveis e carteiras de crédito robustas.",
+    tags: ["ITUB4", "BBDC4"],
+    impacts: { ITUB4: "positive", BBDC4: "positive" },
+    scenario: "selic",
+    country: "BR"
+  },
+  {
+    title: "Preço do minério de ferro reage na bolsa de Dalian após anúncios de incentivo econômico",
+    source: "InfoMoney",
+    summary: "Novas medidas de estímulo à infraestrutura e habitação impulsionam compras físicas de matérias-primas básicas. Exportadoras brasileiras capturam elevação nos preços e anunciam novos patamares de geração de caixa.",
+    tags: ["VALE3"],
+    impacts: { VALE3: "positive" },
+    scenario: "commodities",
+    country: "BR"
+  },
+  {
+    title: "Petrobras bate recorde operacional de extração em blocos profundos do pré-sal",
+    source: "Estadão Economia",
+    summary: "A estatal reportou eficiência operacional máxima em meio a flutuações nas cotações de referência internacional. Forte dividend yield projeta atratividade ampliada perante fundos internacionais.",
+    tags: ["PETR4"],
+    impacts: { PETR4: "positive" },
+    scenario: "oil",
+    country: "BR"
+  },
+  {
+    title: "Expansão de parques industriais globais acelera pedidos de bens de capital e equipamentos",
+    source: "Exame",
+    summary: "Empresas com exposição industrial internacional e alto retorno sobre capital investido (ROIC) colhem frutos da descarbonização global, expandindo plantas e receitas dolarizadas.",
+    tags: ["WEGE3"],
+    impacts: { WEGE3: "positive" },
+    scenario: "baseline",
+    country: "BR"
+  },
+  {
+    title: "B3 registra fluxo positivo de investimentos internacionais no mercado secundário",
+    source: "G1 Economia",
+    summary: "Investidores estrangeiros ampliam a exposição a papéis de valor altamente líquidos na bolsa brasileira. Múltiplos atraentes e yields saudáveis continuam sustentando a atração de capital global.",
+    tags: ["ITUB4", "VALE3", "PETR4", "WEGE3"],
+    impacts: { ITUB4: "positive", VALE3: "positive", PETR4: "positive", WEGE3: "positive" },
+    scenario: "baseline",
+    country: "BR"
+  }
+];
+
+const generateMockNewsFeed = (activeHoldings) => {
+  const activeTickers = activeHoldings.map(h => h.ticker);
+  
+  if (activeTickers.length === 0) {
+    return MOCK_NEWS_TEMPLATES.sort(() => 0.5 - Math.random()).slice(0, 4).map((item, idx) => ({
+      ...item,
+      id: 2000 + idx,
+      time: `${idx * 15 + 5}min atrás`
+    }));
+  }
+
+  const matchingTemplates = MOCK_NEWS_TEMPLATES.filter(t => t.tags.some(tag => activeTickers.includes(tag)));
+  const pool = matchingTemplates.length > 0 ? matchingTemplates : MOCK_NEWS_TEMPLATES;
+
+  const chosen = [...pool].sort(() => 0.5 - Math.random()).slice(0, 4);
+
+  while (chosen.length < 4 && chosen.length < MOCK_NEWS_TEMPLATES.length) {
+    const nextItem = MOCK_NEWS_TEMPLATES.find(t => !chosen.some(c => c.title === t.title));
+    if (nextItem) {
+      chosen.push(nextItem);
+    } else {
+      break;
+    }
+  }
+
+  return chosen.sort(() => 0.5 - Math.random()).map((item, idx) => {
+    const minutes = Math.floor(Math.random() * 15) + idx * 20 + 3;
+    const timeStr = minutes < 60 ? `${minutes}min atrás` : `${Math.floor(minutes/60)}h atrás`;
+    return {
+      ...item,
+      id: 3000 + idx + (Date.now() % 1000),
+      time: timeStr
+    };
+  });
+};
+
+export default function PortfolioTracker({
+  apiKey,
+  setApiKey,
+  apiMode,
+  setApiMode,
+} = {}) {
   const [ledgerUs, setLedgerUs] = useState(() => {
     const savedUs = localStorage.getItem('fsi_user_portfolio_ledger_us');
     if (savedUs) {
@@ -231,14 +529,24 @@ export default function PortfolioTracker() {
   const [tickerInput, setTickerInput] = useState('');
   const [qtyInput, setQtyInput] = useState('');
   const [avgPriceInput, setAvgPriceInput] = useState('');
+  const [dividendsInput, setDividendsInput] = useState('');
   
   const [editingKey, setEditingKey] = useState(null);
   const [editQty, setEditQty] = useState('');
   const [editAvgPrice, setEditAvgPrice] = useState('');
+  const [editDividends, setEditDividends] = useState('');
 
   const [hideValues, setHideValues] = useState(() => {
     return localStorage.getItem('fsi_hide_values') === 'true';
   });
+
+  const [adjustWithDividends, setAdjustWithDividends] = useState(() => {
+    return localStorage.getItem('fsi_adjust_with_dividends') === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('fsi_adjust_with_dividends', adjustWithDividends ? 'true' : 'false');
+  }, [adjustWithDividends]);
 
   const [sortField, setSortField] = useState(null); // 'ticker', 'name', 'qty', 'avgPrice', 'investedCost', 'currentPrice', 'currentValuation', 'profitLossPct', 'country'
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
@@ -282,26 +590,72 @@ export default function PortfolioTracker() {
   const [simulationResult, setSimulationResult] = useState(null);
 
   // Gemini API Geopolitical News Correlation States
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('fsi_gemini_api_key') || '');
+  const [geminiApiKey, setGeminiApiKey] = useState(() => {
+    return localStorage.getItem('fsi_api_key') || localStorage.getItem('fsi_gemini_api_key') || '';
+  });
   const [showKeyConfig, setShowKeyConfig] = useState(false);
   const [customScenario, setCustomScenario] = useState('');
   const [isSimulatingNews, setIsSimulatingNews] = useState(false);
   const [newsSimError, setNewsSimError] = useState('');
   const [aiReport, setAiReport] = useState(null);
+  const [showOfflineFallback, setShowOfflineFallback] = useState(false);
+
+  // Dynamic news feed state & loaders
+  const [newsFeed, setNewsFeed] = useState(() => [
+    ...SAMPLE_NEWS.map(n => ({ ...n, country: 'US' })),
+    ...BR_NEWS.map(n => ({ ...n, country: 'BR' }))
+  ]);
+  const [isRefreshingNews, setIsRefreshingNews] = useState(false);
+  const [newsLastUpdated, setNewsLastUpdated] = useState(() => {
+    return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  });
+  const [activeNewsArticle, setActiveNewsArticle] = useState(null);
+
+  // Keep state in sync with external settings modal updates
+  useEffect(() => {
+    if (apiKey) {
+      setGeminiApiKey(apiKey);
+    }
+  }, [apiKey]);
 
   const analyzeScenarioWithGemini = async (scenarioText) => {
-    if (!geminiApiKey) {
-      setNewsSimError('Por favor, configure sua chave API do Gemini primeiro.');
-      return;
-    }
     if (!scenarioText || !scenarioText.trim()) {
       setNewsSimError('Por favor, digite um cenário válido para simulação.');
       return;
     }
+
+    const activeMode = apiMode || localStorage.getItem('fsi_api_mode') || 'simulated';
+    const activeKey = apiKey || localStorage.getItem('fsi_api_key') || localStorage.getItem('fsi_gemini_api_key') || geminiApiKey;
     
     setIsSimulatingNews(true);
     setNewsSimError('');
     setAiReport(null);
+    setShowOfflineFallback(false);
+
+    // Se estiver em modo gemini, a chave de API deve ser válida e presente. Caso contrário, gera erro explícito.
+    if (activeMode === 'gemini') {
+      if (!activeKey || activeKey === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8') {
+        setNewsSimError('Erro: Chave API do Gemini ausente ou inválida. Por favor, configure uma chave Gemini ativa no menu de Configurações no canto superior direito para poder utilizar o modo Gemini AI Ativo.');
+        setIsSimulatingNews(false);
+        return;
+      }
+    }
+
+    // Se estiver em modo simulado, usa a simulação local diretamente
+    if (activeMode === 'simulated') {
+      await new Promise(resolve => setTimeout(resolve, 1200)); // Premium processing delay
+      try {
+        const report = generateMockCognitiveReport(scenarioText, activeHoldings);
+        setAiReport(report);
+        setSuccessMessage('Simulação concluída com sucesso (Processada via Simulação Local/Offline)!');
+        setTimeout(() => setSuccessMessage(''), 4000);
+      } catch (err) {
+        setNewsSimError(`Erro ao gerar simulação offline: ${err.message}`);
+      } finally {
+        setIsSimulatingNews(false);
+      }
+      return;
+    }
     
     // Prepare tickers data for current active holdings
     const holdingsData = activeHoldings.map(h => {
@@ -317,6 +671,8 @@ Analise o seguinte cenário/evento e determine o impacto direcional potencial e 
 Cenário Geopolítico/Macro: "${scenarioText}"
 
 Carteira de Ativos sob análise: [ ${holdingsData} ]
+
+INSTRUÇÃO CRÍTICA DE ESCOPO: Limite a sua análise geopolítica estritamente ao evento e aos países/regiões explicitamente mencionados na notícia. NÃO mencione e NÃO traga à tona crises, países ou cenários adicionais que não constem na notícia (por exemplo, se a notícia fala apenas de tensões ou conflitos envolvendo o Irã, o Paquistão, o Estreito de Ormuz ou os EUA, NÃO mencione, NÃO traga à tona e NÃO invente tensões ou crises envolvendo a China, Taiwan, TSMC ou suprimento de semicondutores/chips asiáticos sob hipótese alguma. Mantenha o foco 100% no contexto geopolítico fornecido).
 
 Por favor, analise a correlação macro de cada ativo de forma rigorosa e realista:
 - Identifique a exposição a insumos, restrições comerciais, volatilidade cambial, taxa de juros ou demanda setorial.
@@ -341,7 +697,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
 
     try {
       const baseUrl = typeof window !== 'undefined' ? '/api-proxy/gm' : 'https://generativelanguage.googleapis.com';
-      const url = `${baseUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+      const url = `${baseUrl}/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`;
       
       let response;
       try {
@@ -361,7 +717,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
         });
       } catch (err) {
         console.warn('[Proxy Fallback] Local proxy failed for Gemini. Falling back to direct URL.', err);
-        const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`;
         response = await fetch(directUrl, {
           method: 'POST',
           headers: {
@@ -391,13 +747,174 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
       
       const parsedData = JSON.parse(resText.trim());
       setAiReport(parsedData);
-      setSuccessMessage('Simulação geopolítica concluída com sucesso!');
+      setSuccessMessage('Simulação concluída com sucesso (Processada via Gemini AI Ativa)!');
       setTimeout(() => setSuccessMessage(''), 4000);
     } catch (err) {
       console.error(err);
-      setNewsSimError(`Falha na simulação: ${err.message}`);
+      const isConnectionError = err.message.toLowerCase().includes('failed to fetch') || 
+                                 err.message.toLowerCase().includes('network error') ||
+                                 err.message.toLowerCase().includes('cors') ||
+                                 err.message.toLowerCase().includes('load failed') ||
+                                 err.message.toLowerCase().includes('404') ||
+                                 err.message.toLowerCase().includes('not found') ||
+                                 err.message.toLowerCase().includes('not supported for generatecontent');
+
+      const isKeyBlocked = err.message.toLowerCase().includes('leaked') || 
+                           err.message.toLowerCase().includes('invalid key') || 
+                           err.message.toLowerCase().includes('key not valid') ||
+                           err.message.toLowerCase().includes('api_key_invalid') ||
+                           err.message.toLowerCase().includes('api key') ||
+                           (err.message.toLowerCase().includes('403') && !err.message.toLowerCase().includes('model') && !err.message.toLowerCase().includes('quota'));
+      
+      if (isKeyBlocked) {
+        setNewsSimError('A chave API do Gemini foi rejeitada pelo Google (ou relatada como vazada/inválida).');
+        setShowOfflineFallback(true);
+      } else if (isConnectionError) {
+        setNewsSimError('Falha na simulação: Erro de conexão, erro de roteamento (ex: modelo inexistente no v1beta) ou bloqueio de CORS. Certifique-se de que a aplicação está sendo servida pelo Vite (ex: executando "npm run dev") para que as requisições passem pelo proxy reverso "/api-proxy/gm". Se a aplicação for aberta como arquivo estático ou sem o servidor ativo, o navegador impedirá o acesso direto à API do Google.');
+      } else {
+        setNewsSimError(`Falha na simulação: ${err.message}`);
+      }
     } finally {
       setIsSimulatingNews(false);
+    }
+  };
+
+  const handleRefreshNews = async () => {
+    setIsRefreshingNews(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    const activeMode = apiMode || localStorage.getItem('fsi_api_mode') || 'simulated';
+    const activeKey = apiKey || localStorage.getItem('fsi_api_key') || localStorage.getItem('fsi_gemini_api_key') || geminiApiKey;
+
+    // Build active holdings text context
+    const holdingsData = activeHoldings.map(h => {
+      const totalVal = activeHoldings.reduce((acc, curr) => acc + curr.currentValuation, 0);
+      const share = totalVal > 0 ? (h.currentValuation / totalVal) * 100 : 0;
+      return `${h.ticker} (${h.name}, participacao: ${share.toFixed(1)}%)`;
+    }).join(', ');
+
+    if (activeMode === 'gemini') {
+      if (!activeKey || activeKey === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8') {
+        setErrorMessage('Erro: Chave API do Gemini ausente ou inválida. Por favor, configure uma chave Gemini ativa no menu de Configurações para poder atualizar via Gemini.');
+        setIsRefreshingNews(false);
+        return;
+      }
+
+      const promptText = `Você é um correspondente financeiro e analista macroeconômico sênior. 
+Gere um conjunto de 4 notícias recentes e altamente realistas escritas em português, focando em eventos macroeconômicos globais e brasileiros que impactam diretamente a seguinte carteira de investimentos ativa do usuário: [ ${holdingsData} ]
+
+Cada notícia deve ter o potencial de influenciar significativamente a precificação ou risco de um ou mais ativos dessa carteira. 
+
+A notícia deve ser estruturada estritamente de acordo com o seguinte formato JSON, retornando um array de objetos que atenda às seguintes condições:
+1. Pelo menos 2 notícias com "country": "BR" (se houver ativos brasileiros na carteira) e pelo menos 2 notícias com "country": "US" (se houver ativos dos EUA na carteira). Se houver apenas uma das classes, gere todas as 4 focadas nesse mercado.
+2. As tags de cada notícia devem corresponder EXATAMENTE a tickers presentes na carteira fornecida.
+3. O campo "scenario" deve ser um dos seguintes: "taiwan", "iran", "rates", "selic", "baseline", "commodities", "oil".
+4. O campo "impacts" é um objeto que mapeia cada ticker listado nas "tags" ao seu respectivo impacto, que deve ser um dos: "critical", "high-risk", "positive", "hedge", "neutral".
+
+Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de código, crases, \`\`\`json ou qualquer outro texto explicativo fora do JSON):
+[
+  {
+    "id": 1001,
+    "title": "Ata do COPOM indica preocupação fiscal e sinaliza Selic estável",
+    "source": "Valor Econômico",
+    "time": "Agora mesmo",
+    "summary": "O Comitê de Política Monetária reafirmou a importância de âncoras fiscais sólidas.",
+    "tags": ["ITUB4", "BBDC4"],
+    "impacts": { "ITUB4": "positive", "BBDC4": "positive" },
+    "scenario": "selic",
+    "country": "BR"
+  }
+]`;
+
+      try {
+        const baseUrl = typeof window !== 'undefined' ? '/api-proxy/gm' : 'https://generativelanguage.googleapis.com';
+        const url = `${baseUrl}/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`;
+        
+        let response;
+        try {
+          response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{ text: promptText }]
+              }],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            })
+          });
+        } catch (err) {
+          console.warn('[Proxy Fallback] Local proxy failed for Gemini news. Falling back to direct URL.', err);
+          const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`;
+          response = await fetch(directUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{ text: promptText }]
+              }],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            })
+          });
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const resData = await response.json();
+        const resText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!resText) {
+          throw new Error('Formato de resposta inválido recebido da API Gemini.');
+        }
+
+        const parsedData = JSON.parse(resText.trim());
+        if (Array.isArray(parsedData) && parsedData.length > 0) {
+          setNewsFeed(parsedData);
+          setNewsLastUpdated(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+          setSuccessMessage('Feed de Notícias atualizado com sucesso via Gemini AI Ativo!');
+        } else {
+          throw new Error('Formato JSON de notícias inválido retornado.');
+        }
+      } catch (err) {
+        console.warn('Gemini news refresh failed, falling back to simulated news generation', err);
+        const simulated = generateMockNewsFeed(activeHoldings);
+        setNewsFeed(simulated);
+        setNewsLastUpdated(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        setSuccessMessage('Feed de Notícias atualizado via Simulação Local (Fallback do Gemini)!');
+      } finally {
+        setIsRefreshingNews(false);
+        setTimeout(() => {
+          setSuccessMessage('');
+          setErrorMessage('');
+        }, 4000);
+      }
+      return;
+    }
+
+    // Modo Offline (Simulação)
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay premium de carregamento
+    try {
+      const simulated = generateMockNewsFeed(activeHoldings);
+      setNewsFeed(simulated);
+      setNewsLastUpdated(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setSuccessMessage('Feed de Notícias atualizado via Simulação Local!');
+    } catch (err) {
+      setErrorMessage(`Erro ao gerar notícias locais: ${err.message}`);
+    } finally {
+      setIsRefreshingNews(false);
+      setTimeout(() => {
+        setSuccessMessage('');
+        setErrorMessage('');
+      }, 4000);
     }
   };
 
@@ -408,6 +925,14 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     };
     window.addEventListener('fsi_prices_updated', handleUpdate);
     return () => window.removeEventListener('fsi_prices_updated', handleUpdate);
+  }, []);
+
+  // Auto-refresh news feed silently on mount (1.5s delay to let positions settle)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleRefreshNews();
+    }, 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Reseta a ordenação ao mudar de portfólio ativo
@@ -616,6 +1141,12 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
           if (isNaN(qty) || qty <= 0 || isNaN(avgPrice) || avgPrice <= 0) {
             throw new Error(`Dados de quantidade ou preço médio inválidos para ${ticker} na carteira EUA.`);
           }
+          if (asset.dividends !== undefined) {
+            const divs = parseFloat(asset.dividends);
+            if (isNaN(divs) || divs < 0) {
+              throw new Error(`Dados de dividendos inválidos para ${ticker} na carteira EUA.`);
+            }
+          }
         }
 
         // Validate tickers, quantities, and average prices in ledgerBr
@@ -632,11 +1163,40 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
           if (isNaN(qty) || qty <= 0 || isNaN(avgPrice) || avgPrice <= 0) {
             throw new Error(`Dados de quantidade ou preço médio inválidos para ${ticker} na carteira Brasil.`);
           }
+          if (asset.dividends !== undefined) {
+            const divs = parseFloat(asset.dividends);
+            if (isNaN(divs) || divs < 0) {
+              throw new Error(`Dados de dividendos inválidos para ${ticker} na carteira Brasil.`);
+            }
+          }
+        }
+
+        // Sanitize to standard upgraded schema
+        const sanitizedUs = {};
+        for (const ticker of Object.keys(parsed.ledgerUs)) {
+          const asset = parsed.ledgerUs[ticker];
+          sanitizedUs[ticker] = {
+            ticker: asset.ticker,
+            qty: parseFloat(asset.qty),
+            avgPrice: parseFloat(asset.avgPrice),
+            dividends: asset.dividends !== undefined ? parseFloat(asset.dividends) : 0
+          };
+        }
+
+        const sanitizedBr = {};
+        for (const ticker of Object.keys(parsed.ledgerBr)) {
+          const asset = parsed.ledgerBr[ticker];
+          sanitizedBr[ticker] = {
+            ticker: asset.ticker,
+            qty: parseFloat(asset.qty),
+            avgPrice: parseFloat(asset.avgPrice),
+            dividends: asset.dividends !== undefined ? parseFloat(asset.dividends) : 0
+          };
         }
 
         // Apply state changes if everything is valid
-        setLedgerUs(parsed.ledgerUs);
-        setLedgerBr(parsed.ledgerBr);
+        setLedgerUs(sanitizedUs);
+        setLedgerBr(sanitizedBr);
 
         if (parsed.exchangeRate) {
           const rate = parseFloat(parsed.exchangeRate);
@@ -647,8 +1207,8 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
         }
 
         // Explicitly write to localStorage to prevent race conditions during updates
-        localStorage.setItem('fsi_user_portfolio_ledger_us', JSON.stringify(parsed.ledgerUs));
-        localStorage.setItem('fsi_user_portfolio_ledger_br', JSON.stringify(parsed.ledgerBr));
+        localStorage.setItem('fsi_user_portfolio_ledger_us', JSON.stringify(sanitizedUs));
+        localStorage.setItem('fsi_user_portfolio_ledger_br', JSON.stringify(sanitizedBr));
 
         setSuccessMessage("Backup importado com sucesso! Suas carteiras foram restauradas.");
         
@@ -680,22 +1240,23 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     const symbol = tickerInput.trim().toUpperCase();
     const qty = parseFloat(qtyInput);
     const avg = parseFloat(avgPriceInput);
+    const divs = parseFloat(dividendsInput) || 0;
 
-    if (!symbol || isNaN(qty) || qty <= 0 || isNaN(avg) || avg <= 0) {
-      alert("Por favor, preencha todos os campos com valores válidos maiores que zero.");
+    if (!symbol || isNaN(qty) || qty <= 0 || isNaN(avg) || avg <= 0 || isNaN(divs) || divs < 0) {
+      alert("Por favor, preencha todos os campos com valores válidos maiores ou iguais a zero.");
       return;
     }
 
     if (activePortfolio === 'US') {
       const updated = {
         ...ledgerUs,
-        [symbol]: { ticker: symbol, qty, avgPrice: avg }
+        [symbol]: { ticker: symbol, qty, avgPrice: avg, dividends: divs }
       };
       setLedgerUs(updated);
     } else if (activePortfolio === 'BR') {
       const updated = {
         ...ledgerBr,
-        [symbol]: { ticker: symbol, qty, avgPrice: avg }
+        [symbol]: { ticker: symbol, qty, avgPrice: avg, dividends: divs }
       };
       setLedgerBr(updated);
     }
@@ -703,6 +1264,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     setTickerInput('');
     setQtyInput('');
     setAvgPriceInput('');
+    setDividendsInput('');
   };
 
   // Remover ativo
@@ -724,29 +1286,33 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
   const startEditing = (symbol, item) => {
     setEditingKey(symbol);
     setEditQty(item.qty.toString());
-    setEditAvgPrice(item.avgPrice.toString());
+    const nativePrice = item.avgPriceNative !== undefined ? item.avgPriceNative : item.avgPrice;
+    setEditAvgPrice(nativePrice.toString());
+    const divsVal = item.dividendsNative !== undefined ? item.dividendsNative : (item.dividends || 0);
+    setEditDividends(divsVal.toString());
   };
 
   // Salvar edição
   const saveEditing = (symbol) => {
     const qty = parseFloat(editQty);
     const avg = parseFloat(editAvgPrice);
+    const divs = parseFloat(editDividends) || 0;
 
-    if (isNaN(qty) || qty <= 0 || isNaN(avg) || avg <= 0) {
-      alert("Por favor, digite valores válidos.");
+    if (isNaN(qty) || qty <= 0 || isNaN(avg) || avg <= 0 || isNaN(divs) || divs < 0) {
+      alert("Por favor, digite valores válidos maiores ou iguais a zero.");
       return;
     }
 
     if (activePortfolio === 'US') {
       const updated = {
         ...ledgerUs,
-        [symbol]: { ticker: symbol, qty, avgPrice: avg }
+        [symbol]: { ticker: symbol, qty, avgPrice: avg, dividends: divs }
       };
       setLedgerUs(updated);
     } else {
       const updated = {
         ...ledgerBr,
-        [symbol]: { ticker: symbol, qty, avgPrice: avg }
+        [symbol]: { ticker: symbol, qty, avgPrice: avg, dividends: divs }
       };
       setLedgerBr(updated);
     }
@@ -770,7 +1336,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
 
   // Formatter dinâmico
   const formatVal = (val, currencyCode) => {
-    const code = currencyCode || (activePortfolio === 'US' ? 'USD' : activePortfolio === 'BR' ? 'BRL' : globalCurrency);
+    const code = currencyCode || globalCurrency;
     if (hideValues) {
       return code === 'BRL' ? 'R$ ••••' : '$ ••••';
     }
@@ -780,10 +1346,17 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  // Cálculos consolidados da carteira EUA (USD)
-  const holdingsUs = Object.values(ledgerUs).map(item => {
+  // Cálculos consolidados da carteira EUA (USD) - NATIVO
+  const holdingsUsNative = Object.values(ledgerUs).map(item => {
     const comp = fetchCompanyData(item.ticker);
-    const invested = item.qty * item.avgPrice;
+    const divs = parseFloat(item.dividends) || 0;
+    const rawAvgPrice = item.avgPrice;
+    
+    // Calcula o preço médio ajustado (abate de dividendos)
+    const adjustedAvgPrice = item.qty > 0 ? Math.max(0, rawAvgPrice - divs / item.qty) : rawAvgPrice;
+    const activeAvgPrice = adjustWithDividends ? adjustedAvgPrice : rawAvgPrice;
+    
+    const invested = item.qty * activeAvgPrice;
     const currentVal = item.qty * comp.price;
     const profitLoss = currentVal - invested;
     const profitLossPct = invested > 0 ? (profitLoss / invested) * 100 : 0;
@@ -794,6 +1367,10 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
 
     return {
       ...item,
+      dividends: divs,
+      rawAvgPrice: rawAvgPrice,
+      adjustedAvgPrice: adjustedAvgPrice,
+      avgPrice: activeAvgPrice,
       name: comp.name,
       sector: comp.sector || 'Outros',
       currentPrice: comp.price,
@@ -810,16 +1387,49 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     };
   });
 
+  const totalInvestedUsNative = holdingsUsNative.reduce((acc, h) => acc + h.investedCost, 0);
+  const totalValuationUsNative = holdingsUsNative.reduce((acc, h) => acc + h.currentValuation, 0);
+  const totalProfitLossUsNative = totalValuationUsNative - totalInvestedUsNative;
+  const totalProfitLossPctUsNative = totalInvestedUsNative > 0 ? (totalProfitLossUsNative / totalInvestedUsNative) * 100 : 0;
+  const totalDailyChangeValUsNative = holdingsUsNative.reduce((acc, h) => acc + h.dailyChangeVal, 0);
+
+  // holdingsUs convertido para visualização
+  const holdingsUs = holdingsUsNative.map(h => {
+    const multiplier = globalCurrency === 'BRL' ? USD_TO_BRL : 1;
+    return {
+      ...h,
+      avgPriceNative: h.rawAvgPrice,
+      dividendsNative: h.dividends,
+      avgPrice: h.avgPrice * multiplier,
+      rawAvgPrice: h.rawAvgPrice * multiplier,
+      adjustedAvgPrice: h.adjustedAvgPrice * multiplier,
+      dividends: h.dividends * multiplier,
+      investedCost: h.investedCost * multiplier,
+      currentPrice: h.currentPrice * multiplier,
+      currentValuation: h.currentValuation * multiplier,
+      profitLoss: h.profitLoss * multiplier,
+      dailyChangeVal: h.dailyChangeVal * multiplier,
+      currency: globalCurrency
+    };
+  });
+
   const totalInvestedUs = holdingsUs.reduce((acc, h) => acc + h.investedCost, 0);
   const totalValuationUs = holdingsUs.reduce((acc, h) => acc + h.currentValuation, 0);
   const totalProfitLossUs = totalValuationUs - totalInvestedUs;
   const totalProfitLossPctUs = totalInvestedUs > 0 ? (totalProfitLossUs / totalInvestedUs) * 100 : 0;
   const totalDailyChangeValUs = holdingsUs.reduce((acc, h) => acc + h.dailyChangeVal, 0);
 
-  // Cálculos consolidados da carteira Brasil (BRL)
-  const holdingsBr = Object.values(ledgerBr).map(item => {
+  // Cálculos consolidados da carteira Brasil (BRL) - NATIVO
+  const holdingsBrNative = Object.values(ledgerBr).map(item => {
     const comp = fetchCompanyData(item.ticker);
-    const invested = item.qty * item.avgPrice;
+    const divs = parseFloat(item.dividends) || 0;
+    const rawAvgPrice = item.avgPrice;
+    
+    // Calcula o preço médio ajustado (abate de dividendos)
+    const adjustedAvgPrice = item.qty > 0 ? Math.max(0, rawAvgPrice - divs / item.qty) : rawAvgPrice;
+    const activeAvgPrice = adjustWithDividends ? adjustedAvgPrice : rawAvgPrice;
+    
+    const invested = item.qty * activeAvgPrice;
     const currentVal = item.qty * comp.price;
     const profitLoss = currentVal - invested;
     const profitLossPct = invested > 0 ? (profitLoss / invested) * 100 : 0;
@@ -830,6 +1440,10 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
 
     return {
       ...item,
+      dividends: divs,
+      rawAvgPrice: rawAvgPrice,
+      adjustedAvgPrice: adjustedAvgPrice,
+      avgPrice: activeAvgPrice,
       name: comp.name,
       sector: comp.sector || 'Outros',
       currentPrice: comp.price,
@@ -846,6 +1460,32 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     };
   });
 
+  const totalInvestedBrNative = holdingsBrNative.reduce((acc, h) => acc + h.investedCost, 0);
+  const totalValuationBrNative = holdingsBrNative.reduce((acc, h) => acc + h.currentValuation, 0);
+  const totalProfitLossBrNative = totalValuationBrNative - totalInvestedBrNative;
+  const totalProfitLossPctBrNative = totalInvestedBrNative > 0 ? (totalProfitLossBrNative / totalInvestedBrNative) * 100 : 0;
+  const totalDailyChangeValBrNative = holdingsBrNative.reduce((acc, h) => acc + h.dailyChangeVal, 0);
+
+  // holdingsBr convertido para visualização
+  const holdingsBr = holdingsBrNative.map(h => {
+    const multiplier = globalCurrency === 'USD' ? (1 / USD_TO_BRL) : 1;
+    return {
+      ...h,
+      avgPriceNative: h.rawAvgPrice,
+      dividendsNative: h.dividends,
+      avgPrice: h.avgPrice * multiplier,
+      rawAvgPrice: h.rawAvgPrice * multiplier,
+      adjustedAvgPrice: h.adjustedAvgPrice * multiplier,
+      dividends: h.dividends * multiplier,
+      investedCost: h.investedCost * multiplier,
+      currentPrice: h.currentPrice * multiplier,
+      currentValuation: h.currentValuation * multiplier,
+      profitLoss: h.profitLoss * multiplier,
+      dailyChangeVal: h.dailyChangeVal * multiplier,
+      currency: globalCurrency
+    };
+  });
+
   const totalInvestedBr = holdingsBr.reduce((acc, h) => acc + h.investedCost, 0);
   const totalValuationBr = holdingsBr.reduce((acc, h) => acc + h.currentValuation, 0);
   const totalProfitLossBr = totalValuationBr - totalInvestedBr;
@@ -855,23 +1495,21 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
   // Unifica dados de carteira global
   const holdingsGlobal = [
     ...holdingsUs.map(h => {
-      const multiplier = globalCurrency === 'BRL' ? USD_TO_BRL : 1;
       return {
         ...h,
-        investedCostGlobal: h.investedCost * multiplier,
-        currentValuationGlobal: h.currentValuation * multiplier,
-        profitLossGlobal: h.profitLoss * multiplier,
-        dailyChangeValGlobal: h.dailyChangeVal * multiplier
+        investedCostGlobal: h.investedCost,
+        currentValuationGlobal: h.currentValuation,
+        profitLossGlobal: h.profitLoss,
+        dailyChangeValGlobal: h.dailyChangeVal
       };
     }),
     ...holdingsBr.map(h => {
-      const multiplier = globalCurrency === 'USD' ? (1 / USD_TO_BRL) : 1;
       return {
         ...h,
-        investedCostGlobal: h.investedCost * multiplier,
-        currentValuationGlobal: h.currentValuation * multiplier,
-        profitLossGlobal: h.profitLoss * multiplier,
-        dailyChangeValGlobal: h.dailyChangeVal * multiplier
+        investedCostGlobal: h.investedCost,
+        currentValuationGlobal: h.currentValuation,
+        profitLossGlobal: h.profitLoss,
+        dailyChangeValGlobal: h.dailyChangeVal
       };
     })
   ];
@@ -909,6 +1547,9 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
       } else if (sortField === 'avgPrice') {
         aVal = a.avgPrice;
         bVal = b.avgPrice;
+      } else if (sortField === 'dividends') {
+        aVal = a.dividends || 0;
+        bVal = b.dividends || 0;
       } else if (sortField === 'investedCost') {
         aVal = activePortfolio === 'GLOBAL' ? a.investedCostGlobal : a.investedCost;
         bVal = activePortfolio === 'GLOBAL' ? b.investedCostGlobal : b.investedCost;
@@ -999,10 +1640,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
   const showTechAlert = techSector && techSector.pct > 40;
 
   // Filtragem de notícias direcionada correlacionada com a carteira real do usuário
-  const ALL_NEWS = [
-    ...SAMPLE_NEWS.map(n => ({ ...n, country: 'US' })),
-    ...BR_NEWS.map(n => ({ ...n, country: 'BR' }))
-  ];
+  const ALL_NEWS = newsFeed;
 
   const activeTickers = activePortfolio === 'US'
     ? Object.keys(ledgerUs)
@@ -1198,7 +1836,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
             <circle cx="50" cy="50" r="28" fill="#0c0e17" />
             <text x="50" y="47" textAnchor="middle" fill="#94a3b8" fontSize="6" fontWeight="bold">TOTAL</text>
             <text x="50" y="58" textAnchor="middle" fill="#ffffff" fontSize="8" fontWeight="bold">
-              {hideValues ? '••••' : `${activePortfolio === 'US' ? '$' : activePortfolio === 'BR' ? 'R$' : globalCurrency === 'USD' ? '$' : 'R$'}${(totalValuation / 1000).toFixed(1)}K`}
+              {hideValues ? '••••' : `${globalCurrency === 'USD' ? '$' : 'R$'}${(totalValuation / 1000).toFixed(1)}K`}
             </text>
           </svg>
         </div>
@@ -1254,6 +1892,9 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     return mostRecent ? mostRecent.toISOString() : null;
   }, [activeHoldings]);
 
+  const activeMode = apiMode || localStorage.getItem('fsi_api_mode') || 'simulated';
+  const activeKey = apiKey || localStorage.getItem('fsi_api_key') || localStorage.getItem('fsi_gemini_api_key') || geminiApiKey;
+
   return (
     <div style={styles.container} className="animate-fade">
       
@@ -1295,25 +1936,47 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
             </div>
           </div>
 
-          {activePortfolio === 'GLOBAL' && (
-            <div style={styles.currencyToggleContainer}>
-              <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>CONVERSÃO CAMBIAL:</span>
-              <div style={styles.toggleGroup}>
-                <button 
-                  onClick={() => setGlobalCurrency('USD')} 
-                  style={{ ...styles.toggleBtn, ...(globalCurrency === 'USD' ? styles.toggleBtnActive : {}) }}
-                >
-                  🇺🇸 USD ($)
-                </button>
-                <button 
-                  onClick={() => setGlobalCurrency('BRL')} 
-                  style={{ ...styles.toggleBtn, ...(globalCurrency === 'BRL' ? styles.toggleBtnActive : {}) }}
-                >
-                  🇧🇷 BRL (R$)
-                </button>
-              </div>
+          <div style={styles.currencyToggleContainer}>
+            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>MOEDA EXIBIÇÃO:</span>
+            <div style={styles.toggleGroup}>
+              <button 
+                onClick={() => setGlobalCurrency('USD')} 
+                style={{ ...styles.toggleBtn, ...(globalCurrency === 'USD' ? styles.toggleBtnActive : {}) }}
+              >
+                🇺🇸 USD ($)
+              </button>
+              <button 
+                onClick={() => setGlobalCurrency('BRL')} 
+                style={{ ...styles.toggleBtn, ...(globalCurrency === 'BRL' ? styles.toggleBtnActive : {}) }}
+              >
+                🇧🇷 BRL (R$)
+              </button>
             </div>
-          )}
+          </div>
+
+          <div style={styles.currencyToggleContainer}>
+            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold' }}>ABATER DIVIDENDOS:</span>
+            <div style={styles.toggleGroup}>
+              <button 
+                onClick={() => setAdjustWithDividends(false)} 
+                style={{ 
+                  ...styles.toggleBtn, 
+                  ...(!adjustWithDividends ? { ...styles.toggleBtnActive, background: 'rgba(148, 163, 184, 0.2)', color: '#cbd5e1' } : {}) 
+                }}
+              >
+                Sem
+              </button>
+              <button 
+                onClick={() => setAdjustWithDividends(true)} 
+                style={{ 
+                  ...styles.toggleBtn, 
+                  ...(adjustWithDividends ? { ...styles.toggleBtnActive, background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.4)' } : {}) 
+                }}
+              >
+                Com
+              </button>
+            </div>
+          </div>
 
           <input 
             type="file" 
@@ -1457,16 +2120,16 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
             </div>
             <div style={styles.custodyRow}>
               <span style={styles.custodyLabel}>Patrimônio:</span>
-              <strong style={styles.custodyValueUsd}>{formatVal(totalValuationUs, 'USD')}</strong>
+              <strong style={styles.custodyValueUsd}>{formatVal(totalValuationUsNative, 'USD')}</strong>
             </div>
             <div style={styles.custodyRow}>
               <span style={styles.custodyLabel}>Custo Médio:</span>
-              <span style={styles.custodyText}>{formatVal(totalInvestedUs, 'USD')}</span>
+              <span style={styles.custodyText}>{formatVal(totalInvestedUsNative, 'USD')}</span>
             </div>
             <div style={styles.custodyRow}>
               <span style={styles.custodyLabel}>Retorno Histórico:</span>
-              <span style={{ color: totalProfitLossUs >= 0 ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
-                {totalProfitLossUs >= 0 ? '+' : ''}{formatVal(totalProfitLossUs, 'USD')} ({totalProfitLossPctUs.toFixed(2)}%)
+              <span style={{ color: totalProfitLossUsNative >= 0 ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
+                {totalProfitLossUsNative >= 0 ? '+' : ''}{formatVal(totalProfitLossUsNative, 'USD')} ({totalProfitLossPctUsNative.toFixed(2)}%)
               </span>
             </div>
           </div>
@@ -1480,16 +2143,16 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
             </div>
             <div style={styles.custodyRow}>
               <span style={styles.custodyLabel}>Patrimônio:</span>
-              <strong style={styles.custodyValueBrl}>{formatVal(totalValuationBr, 'BRL')}</strong>
+              <strong style={styles.custodyValueBrl}>{formatVal(totalValuationBrNative, 'BRL')}</strong>
             </div>
             <div style={styles.custodyRow}>
               <span style={styles.custodyLabel}>Custo Médio:</span>
-              <span style={styles.custodyText}>{formatVal(totalInvestedBr, 'BRL')}</span>
+              <span style={styles.custodyText}>{formatVal(totalInvestedBrNative, 'BRL')}</span>
             </div>
             <div style={styles.custodyRow}>
               <span style={styles.custodyLabel}>Retorno Histórico:</span>
-              <span style={{ color: totalProfitLossBr >= 0 ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
-                {totalProfitLossBr >= 0 ? '+' : ''}{formatVal(totalProfitLossBr, 'BRL')} ({totalProfitLossPctBr.toFixed(2)}%)
+              <span style={{ color: totalProfitLossBrNative >= 0 ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
+                {totalProfitLossBrNative >= 0 ? '+' : ''}{formatVal(totalProfitLossBrNative, 'BRL')} ({totalProfitLossPctBrNative.toFixed(2)}%)
               </span>
             </div>
           </div>
@@ -1632,14 +2295,21 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
                     style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
                     onClick={() => handleSort('avgPrice')}
                   >
-                    Custo Médio{renderSortIndicator('avgPrice')}
+                    {adjustWithDividends ? 'Custo Médio (Líq.)' : 'Custo Médio'}{renderSortIndicator('avgPrice')}
+                  </th>
+                  <th 
+                    className="spreadsheet-th" 
+                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                    onClick={() => handleSort('dividends')}
+                  >
+                    Div. Recebidos{renderSortIndicator('dividends')}
                   </th>
                   <th 
                     className="spreadsheet-th" 
                     style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
                     onClick={() => handleSort('investedCost')}
                   >
-                    Custo Total{renderSortIndicator('investedCost')}
+                    {adjustWithDividends ? 'Custo Total (Líq.)' : 'Custo Total'}{renderSortIndicator('investedCost')}
                   </th>
                   <th 
                     className="spreadsheet-th" 
@@ -1676,7 +2346,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
               <tbody>
                 {sortedHoldings.length === 0 ? (
                   <tr>
-                    <td colSpan={11} style={{ textAlign: 'center', padding: '30px', color: '#64748b', fontSize: '13px' }}>
+                    <td colSpan={12} style={{ textAlign: 'center', padding: '30px', color: '#64748b', fontSize: '13px' }}>
                       Nenhum ativo cadastrado. Utilize as abas de portfólio para adicionar ações!
                     </td>
                   </tr>
@@ -1790,6 +2460,29 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
                           )}
                         </td>
 
+                        {/* Dividends Cell */}
+                        <td 
+                          className="spreadsheet-td" 
+                          style={{ 
+                            textAlign: 'right', 
+                            cursor: activePortfolio === 'GLOBAL' ? 'default' : 'pointer', 
+                            color: '#10b981', 
+                            backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.1)' : 'transparent' 
+                          }}
+                          onDoubleClick={() => activePortfolio !== 'GLOBAL' && startEditing(h.ticker, h)}
+                        >
+                          {isEditing ? (
+                            <input 
+                              type="number"
+                              value={editDividends}
+                              onChange={(e) => setEditDividends(e.target.value)}
+                              style={styles.inlineInput}
+                            />
+                          ) : (
+                            formatVal(h.dividends || 0, h.currency)
+                          )}
+                        </td>
+
                         {/* Custo Total */}
                         <td className="spreadsheet-td" style={{ textAlign: 'right' }}>
                           {activePortfolio === 'GLOBAL' 
@@ -1868,7 +2561,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
           {/* Add Asset Form */}
           {activePortfolio !== 'GLOBAL' ? (
             <form onSubmit={handleAddHolding} style={styles.addForm}>
-              <h4 style={{ fontSize: '12px', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', gridColumn: 'span 4' }}>
+              <h4 style={{ fontSize: '12px', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', gridColumn: 'span 5' }}>
                 ➕ Adicionar Novo Ativo à Carteira {activePortfolio === 'US' ? 'EUA (USD)' : 'Brasil (BRL)'}
               </h4>
               <div style={styles.formGroup}>
@@ -1901,6 +2594,19 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
                   placeholder={activePortfolio === 'US' ? "Ex: 175.50" : "Ex: 34.00"}
                   value={avgPriceInput}
                   onChange={(e) => setAvgPriceInput(e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>
+                  Div. Recebidos ({activePortfolio === 'US' ? 'USD' : 'BRL'})
+                </label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  placeholder="Ex: 150.00"
+                  value={dividendsInput}
+                  onChange={(e) => setDividendsInput(e.target.value)}
                   style={styles.input}
                 />
               </div>
@@ -2113,31 +2819,100 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
               </h3>
               <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: 2, margin: 0 }}>
                 Comunicados e relatórios macroeconômicos cruzados com sensibilidade aos ativos e setores da sua carteira.
+                {newsLastUpdated && (
+                  <span style={{ color: '#64748b', marginLeft: 8, fontStyle: 'italic' }}>
+                    (Última atualização: {newsLastUpdated})
+                  </span>
+                )}
               </p>
             </div>
             
-            <button 
-              onClick={() => setShowKeyConfig(!showKeyConfig)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '6px 12px',
-                borderRadius: '6px',
-                background: geminiApiKey ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid',
-                borderColor: geminiApiKey ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.1)',
-                color: geminiApiKey ? '#10b981' : '#94a3b8',
-                fontSize: '11px',
-                cursor: 'pointer',
-                fontWeight: '600',
-                transition: 'all 0.2s',
-                outline: 'none',
-              }}
-            >
-              <Cpu size={14} color={geminiApiKey ? '#10b981' : '#94a3b8'} />
-              {geminiApiKey ? 'Gemini AI Ativo' : 'Configurar Gemini'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Dynamic News Feed Refresh Button */}
+              <button 
+                onClick={handleRefreshNews}
+                disabled={isRefreshingNews}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  background: isRefreshingNews 
+                    ? 'rgba(56, 189, 248, 0.1)' 
+                    : 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid',
+                  borderColor: isRefreshingNews 
+                    ? '#38bdf8' 
+                    : 'rgba(255, 255, 255, 0.1)',
+                  color: isRefreshingNews ? '#38bdf8' : '#e2e8f0',
+                  fontSize: '11px',
+                  cursor: isRefreshingNews ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                }}
+              >
+                <RefreshCw 
+                  size={13} 
+                  style={{ 
+                    animation: isRefreshingNews ? 'spin 1s linear infinite' : 'none',
+                    marginRight: 2
+                  }}
+                />
+                {isRefreshingNews ? 'Atualizando...' : 'Atualizar Feed'}
+              </button>
+
+              <button 
+                onClick={() => setShowKeyConfig(!showKeyConfig)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  background: (activeMode === 'simulated')
+                    ? 'rgba(251, 191, 36, 0.1)'
+                    : activeKey
+                      ? 'rgba(16, 185, 129, 0.1)' 
+                      : 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid',
+                  borderColor: (activeMode === 'simulated')
+                    ? 'rgba(251, 191, 36, 0.25)'
+                    : activeKey 
+                      ? 'rgba(16, 185, 129, 0.25)' 
+                      : 'rgba(255, 255, 255, 0.1)',
+                  color: (activeMode === 'simulated')
+                    ? '#fbbf24'
+                    : activeKey 
+                      ? '#10b981' 
+                      : '#94a3b8',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                }}
+              >
+                <Cpu 
+                  size={14} 
+                  color={
+                    (activeMode === 'simulated')
+                      ? '#fbbf24'
+                      : activeKey 
+                        ? '#10b981' 
+                        : '#94a3b8'
+                  } 
+                />
+                {
+                  (activeMode === 'simulated')
+                    ? 'Simulação Offline'
+                    : activeKey 
+                      ? 'Gemini AI Ativo' 
+                      : 'Configurar Gemini'
+                }
+              </button>
+            </div>
           </div>
 
           {/* Filtering row */}
@@ -2175,59 +2950,124 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
         {showKeyConfig && (
           <div style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '12px 16px',
+            flexDirection: 'column',
+            gap: 12,
+            padding: '16px',
             borderRadius: '8px',
-            background: 'rgba(255, 255, 255, 0.01)',
+            background: 'rgba(255, 255, 255, 0.02)',
             border: '1px solid rgba(255, 255, 255, 0.05)',
             marginBottom: 20,
           }}>
-            <span style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-              <Key size={12} /> Gemini API Key:
-            </span>
-            <input 
-              type="password"
-              value={geminiApiKey}
-              onChange={(e) => {
-                setGeminiApiKey(e.target.value);
-                localStorage.setItem('fsi_gemini_api_key', e.target.value);
-              }}
-              placeholder="Insira sua chave AI do Gemini..."
-              style={{
-                flex: 1,
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '4px',
-                padding: '6px 10px',
-                color: '#ffffff',
-                fontSize: '11px',
-                outline: 'none',
-              }}
-            />
-            <button 
-              onClick={() => {
-                setGeminiApiKey('');
-                localStorage.removeItem('fsi_gemini_api_key');
-                setAiReport(null);
-              }}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '4px',
-                background: 'rgba(244, 63, 94, 0.1)',
-                border: '1px solid rgba(244, 63, 94, 0.2)',
-                color: '#f43f5e',
-                fontSize: '11px',
-                cursor: 'pointer',
-              }}
-            >
-              Limpar
-            </button>
+            {/* API Key Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
+              <span style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                <Key size={12} /> Gemini API Key:
+              </span>
+              <input 
+                type="password"
+                value={geminiApiKey}
+                onChange={(e) => {
+                  setGeminiApiKey(e.target.value);
+                  localStorage.setItem('fsi_api_key', e.target.value);
+                  localStorage.setItem('fsi_gemini_api_key', e.target.value);
+                  if (setApiKey) setApiKey(e.target.value);
+                }}
+                placeholder="Insira sua chave AI do Gemini..."
+                style={{
+                  flex: 1,
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '4px',
+                  padding: '6px 10px',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  outline: 'none',
+                }}
+              />
+              <button 
+                onClick={() => {
+                  setGeminiApiKey('');
+                  localStorage.removeItem('fsi_api_key');
+                  localStorage.removeItem('fsi_gemini_api_key');
+                  if (setApiKey) setApiKey('');
+                  setAiReport(null);
+                }}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  background: 'rgba(244, 63, 94, 0.1)',
+                  border: '1px solid rgba(244, 63, 94, 0.2)',
+                  color: '#f43f5e',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                }}
+              >
+                Limpar
+              </button>
+            </div>
+
+            {/* Mode Selection Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 15, width: '100%', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: 10 }}>
+              <span style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Cpu size={12} /> Modo de Execução:
+              </span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('fsi_api_mode', 'simulated');
+                    if (setApiMode) setApiMode('simulated');
+                    // Force state update to re-render
+                    setPriceUpdateTrigger(p => p + 1);
+                  }}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '4px',
+                    background: (activeMode === 'simulated') ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
+                    border: '1px solid',
+                    borderColor: (activeMode === 'simulated') ? '#fbbf24' : 'rgba(255, 255, 255, 0.1)',
+                    color: (activeMode === 'simulated') ? '#fbbf24' : '#94a3b8',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Offline (Simulação)
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('fsi_api_mode', 'gemini');
+                    if (setApiMode) setApiMode('gemini');
+                    // Force state update to re-render
+                    setPriceUpdateTrigger(p => p + 1);
+                  }}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '4px',
+                    background: (activeMode === 'gemini') ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
+                    border: '1px solid',
+                    borderColor: (activeMode === 'gemini') ? '#06b6d4' : 'rgba(255, 255, 255, 0.1)',
+                    color: (activeMode === 'gemini') ? '#06b6d4' : '#94a3b8',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Gemini AI Ativo
+                </button>
+              </div>
+              <span style={{ fontSize: '10px', color: '#64748b' }}>
+                {activeMode === 'simulated' 
+                  ? 'Usa o motor inteligente local offline.' 
+                  : 'Chama a API do Google Gemini com a chave fornecida.'}
+              </span>
+            </div>
           </div>
         )}
 
         {/* Geopolitical Stress Simulator Panel */}
-        {geminiApiKey && (
+        {true && (
           <div style={{
             background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.04) 0%, rgba(251, 191, 36, 0) 100%)',
             border: '1px solid rgba(251, 191, 36, 0.1)',
@@ -2289,6 +3129,51 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
                   <span style={{ fontSize: '11px', color: '#f43f5e', display: 'flex', alignItems: 'center', gap: 4 }}>
                     ⚠️ {newsSimError}
                   </span>
+                )}
+                {showOfflineFallback && (
+                  <div style={{
+                    marginTop: 4,
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(251, 191, 36, 0.08)',
+                    border: '1px solid rgba(251, 191, 36, 0.2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                  }}>
+                    <p style={{ fontSize: '11px', color: '#fbbf24', margin: 0, lineHeight: '1.4' }}>
+                      <strong>Recuperação Aura FSI:</strong> Identificamos que sua chave Gemini padrão foi bloqueada/vazada. Você pode alternar instantaneamente para a <strong>Simulação Offline Premium de Alta Fidelidade</strong> local (zero latência, 100% funcional e totalmente gratuita).
+                    </p>
+                    <button
+                      onClick={async () => {
+                        setShowOfflineFallback(false);
+                        setNewsSimError('');
+                        setIsSimulatingNews(true);
+                        // Delay estético premium
+                        await new Promise(r => setTimeout(r, 800));
+                        const report = generateMockCognitiveReport(customScenario, activeHoldings);
+                        setAiReport(report);
+                        localStorage.setItem('fsi_api_mode', 'simulated');
+                        if (setApiMode) setApiMode('simulated');
+                        setSuccessMessage('Alternado para Simulação Offline com sucesso!');
+                        setTimeout(() => setSuccessMessage(''), 4000);
+                        setIsSimulatingNews(false);
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '4px',
+                        background: '#fbbf24',
+                        border: 'none',
+                        color: '#000000',
+                        fontWeight: 'bold',
+                        fontSize: '10px',
+                        cursor: 'pointer',
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      Ativar Simulação Offline & Executar
+                    </button>
+                  </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <button 
@@ -2460,6 +3345,27 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
                   <h4 style={styles.newsCardTitle}>{news.title}</h4>
                   <p style={styles.newsCardText}>{news.summary}</p>
                   
+                  {/* Link to read full article */}
+                  <div style={{ marginTop: '8px', marginBottom: '12px' }}>
+                    <span 
+                      onClick={() => setActiveNewsArticle(news)}
+                      style={{
+                        color: '#38bdf8',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        textDecoration: 'underline',
+                        transition: 'all 0.2s',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Leia a matéria completa →
+                    </span>
+                  </div>
+                  
                   {/* Visual Impact mapping for holdings */}
                   <div style={styles.newsImpactArea}>
                     <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Ativos Relacionados:</span>
@@ -2508,6 +3414,233 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
         </div>
 
       </div>
+
+      {/* Modal de Leitura Completa de Notícias */}
+      {activeNewsArticle && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(9, 11, 17, 0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+          padding: '20px',
+        }}>
+          <div className="glass-panel animate-fade" style={{
+            width: '100%',
+            maxWidth: '650px',
+            maxHeight: '90vh',
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(56, 189, 248, 0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '20px 24px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'linear-gradient(90deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0) 100%)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Newspaper color="#fbbf24" size={18} />
+                <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  Aura Cognitive Wire • {activeNewsArticle.source}
+                </span>
+              </div>
+              <button 
+                onClick={() => setActiveNewsArticle(null)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  color: '#94a3b8',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                  e.currentTarget.style.color = '#ef4444';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.color = '#94a3b8';
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{
+              padding: '24px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            }}>
+              {/* Meta info */}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '12px', color: '#64748b' }}>
+                <span>{activeNewsArticle.time || 'Agora mesmo'}</span>
+                <span>•</span>
+                <span style={{ 
+                  color: activeNewsArticle.country === 'US' ? '#a5b4fc' : '#6ee7b7',
+                  fontWeight: 'bold'
+                }}>
+                  {activeNewsArticle.country === 'US' ? 'ESTADOS UNIDOS' : 'BRASIL B3'}
+                </span>
+              </div>
+
+              {/* Title */}
+              <h2 style={{ fontSize: '20px', color: '#ffffff', lineHeight: '1.4', margin: 0, fontWeight: '700' }}>
+                {activeNewsArticle.title}
+              </h2>
+
+              {/* Reporter */}
+              <div style={{ fontSize: '11px', color: '#94a3b8', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '10px' }}>
+                Por <strong style={{ color: '#e2e8f0' }}>Aura FSI Intelligence Team</strong> | Publicado em tempo de execução
+              </div>
+
+              {/* Content Paragraphs */}
+              <div style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.7', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <p>
+                  <strong>{activeNewsArticle.source}</strong> — {activeNewsArticle.summary}
+                </p>
+                <p>
+                  De acordo com análises compiladas pelo nosso motor cognitivo, a matéria reflete desdobramentos críticos para a alocação de carteira atual. Investidores institucionais estão monitorando de perto o impacto deste cenário macroeconômico nos fluxos de caixa descontados (DCF) e nos custos de captação (WACC), com reflexos imediatos na volatilidade intra-diária.
+                </p>
+                <p>
+                  A recomendação do comitê de Wealth Management da Aura Cognitive é manter a disciplina de alocação de ativos e utilizar a ferramenta de Rebalanceamento Dinâmico para calibrar a exposição aos tickers impactados de forma cirúrgica.
+                </p>
+              </div>
+
+              {/* Asset Sensitivity & Recommendations */}
+              <div style={{
+                marginTop: '10px',
+                padding: '16px',
+                background: 'rgba(0, 0, 0, 0.2)',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+              }}>
+                <h4 style={{ fontSize: '12px', color: '#fbbf24', margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Sensibilidade de Ativos na Carteira Real
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {activeNewsArticle.tags.map(ticker => {
+                    const impact = activeNewsArticle.impacts?.[ticker] || 'neutral';
+                    let color = '#94a3b8';
+                    let label = 'Neutro / Sem impacto imediato';
+                    let detail = 'O ativo possui baixa sensibilidade às variáveis deste cenário específico, atuando de forma estável.';
+                    let bgColor = 'rgba(255, 255, 255, 0.03)';
+                    
+                    if (impact === 'critical') {
+                      color = '#f43f5e';
+                      label = 'Risco Crítico';
+                      detail = 'Exposição direta a fluxos negativos ou gargalos de custos. Sugere-se hedge ou proteção de lucros.';
+                      bgColor = 'rgba(244, 63, 94, 0.05)';
+                    } else if (impact === 'high-risk') {
+                      color = '#fbbf24';
+                      label = 'Aviso de Risco';
+                      detail = 'Risco de volatilidade elevada. Recomenda-se monitorar de perto as margens e níveis de suporte.';
+                      bgColor = 'rgba(251, 191, 36, 0.05)';
+                    } else if (impact === 'positive') {
+                      color = '#10b981';
+                      label = 'Ganho Estimado (Oportunidade)';
+                      detail = 'Geração de valor positiva imediata devido à melhora nos ventos favoráveis operacionais do setor.';
+                      bgColor = 'rgba(16, 185, 129, 0.05)';
+                    } else if (impact === 'hedge') {
+                      color = '#6366f1';
+                      label = 'Porto Seguro (Hedge)';
+                      detail = 'Ativo defensivo resiliente neste cenário, atuando como amortecedor natural da volatilidade.';
+                      bgColor = 'rgba(99, 102, 241, 0.05)';
+                    }
+
+                    return (
+                      <div key={ticker} style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 12,
+                        padding: '10px',
+                        borderRadius: '6px',
+                        backgroundColor: bgColor,
+                        borderLeft: `3px solid ${color}`,
+                      }}>
+                        <div style={{
+                          fontWeight: 'bold',
+                          color: '#ffffff',
+                          fontSize: '12px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                        }}>{ticker}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <span style={{ color: color, fontSize: '11px', fontWeight: 'bold' }}>{label}</span>
+                          <span style={{ color: '#94a3b8', fontSize: '11px', lineHeight: '1.4' }}>{detail}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: '16px 24px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'rgba(15, 23, 42, 0.5)',
+            }}>
+              {/* Search Google link */}
+              <a 
+                href={`https://www.google.com/search?q=${encodeURIComponent(activeNewsArticle.title)}`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: '12px',
+                  color: '#38bdf8',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: '500',
+                }}
+              >
+                🔍 Pesquisar no Google Notícias
+              </a>
+
+              <button 
+                onClick={() => setActiveNewsArticle(null)}
+                className="btn btn-secondary"
+                style={{ padding: '6px 16px', fontSize: '12px', borderRadius: '6px' }}
+              >
+                Fechar Leitura
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
@@ -2773,7 +3906,7 @@ const styles = {
   },
   addForm: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr 120px',
+    gridTemplateColumns: '1fr 1fr 1fr 1fr 120px',
     gap: 12,
     marginTop: 20,
     background: 'rgba(0,0,0,0.15)',
