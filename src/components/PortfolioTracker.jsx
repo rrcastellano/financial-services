@@ -340,20 +340,43 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
 }`;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: promptText }]
-          }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
-        })
-      });
+      const baseUrl = typeof window !== 'undefined' ? '/api-proxy/gm' : 'https://generativelanguage.googleapis.com';
+      const url = `${baseUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+      
+      let response;
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: promptText }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          })
+        });
+      } catch (err) {
+        console.warn('[Proxy Fallback] Local proxy failed for Gemini. Falling back to direct URL.', err);
+        const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        response = await fetch(directUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: promptText }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          })
+        });
+      }
       
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
@@ -404,7 +427,6 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     window.dispatchEvent(new CustomEvent('portfolio_updated'));
   }, [ledgerBr]);
 
-  // Atualiza cotações em tempo real para ambas as carteiras (EUA e Brasil)
   const handleRefreshPrices = async () => {
     // Agrega sempre todos os tickers de ambas as carteiras para atualizar tudo simultaneamente
     const tickers = [...Object.keys(ledgerUs), ...Object.keys(ledgerBr)];
@@ -412,16 +434,13 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     setLoadingPrices(true);
     setErrorMessage('');
     setSuccessMessage('');
+    setTickerStatus({}); // Reseta o status de todos os tickers para cinza (aguardando atualização)
     
     const provider = localStorage.getItem('fsi_finance_api_provider') || 'simulated';
     const apiKey = localStorage.getItem('fsi_finance_api_key') || '';
     
-    // Limpa o cache de preços e o marcador de provedor para forçar uma consulta fresca à API
-    // Isso garante que cada clique em "Atualizar" sempre busca os preços mais recentes
-    if (provider !== 'simulated') {
-      localStorage.removeItem('fsi_prices_cache');
-      localStorage.removeItem('fsi_last_used_provider');
-    }
+    // O cache fsi_prices_cache não deve ser limpo aqui para atuar como uma base local persistente.
+    // O auto-healing de troca de provedor já é tratado diretamente pelo motor de cotações em financeApi.js.
     
     let exchangeUpdated = false;
     let exchangeRateStr = '';

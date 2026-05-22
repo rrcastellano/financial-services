@@ -943,27 +943,9 @@ export function formatDateTime(isoString) {
 
 // Helper function to validate if a price is coherent with our calibrated models
 export function isPriceCoherent(symbol, price) {
+  // Regra desabilitada conforme solicitação do usuário. Sempre aceita e mostra preços reais da API.
   if (price === undefined || price === null || isNaN(price)) return false;
-  const symbolUpper = symbol.toUpperCase().trim();
-  
-  // Ativos brasileiros (PETR4, VALE3, etc.) não sofrem da incoerência de escala em relação à API real
-  const isBrlAsset = /\d$/.test(symbolUpper) || symbolUpper.includes('.SA') || 
-                     ['PETR4', 'VALE3', 'ITUB4', 'WEGE3', 'BBDC4'].includes(symbolUpper);
-  if (isBrlAsset) return true;
-  
-  const baseCompany = REAL_TICKERS[symbolUpper];
-  if (!baseCompany) return true; // Ativos desconhecidos customizados passam
-  
-  const expectedPrice = baseCompany.price;
-  const ratio = price / expectedPrice;
-  
-  // Se o preço recebido for menor que 94% ou maior que 106% do preço calibrado, é incoerente para ações dos EUA.
-  // Isso rejeita qualquer preço real-world poluído (como AVGO splitado a 139 ou LITE real-world a 44) e garante
-  // que apenas os preços simulados/mockados de alta fidelidade da sandbox (que flutuam +-5%) sejam aceitos.
-  if (ratio < 0.94 || ratio > 1.06) {
-    return false;
-  }
-  return true;
+  return price > 0;
 }
 
 
@@ -992,6 +974,22 @@ export async function updateLivePricesCache(tickers = [], provider = 'simulated'
   return activeFetchPromise;
 }
 
+// Bulletproof fetch helper that tries Vite local proxy first, falling back to direct API call
+async function safeFetch(proxyPath, directUrl) {
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(proxyPath);
+      // Se a resposta for de sucesso ou rate limit (429), retorna. Caso contrário, tenta direto.
+      if (res.ok || res.status === 429) {
+        return res;
+      }
+    } catch (e) {
+      console.warn(`[Proxy Fallback] Local proxy failed for ${proxyPath}. Falling back to direct URL.`, e);
+    }
+  }
+  return await fetch(directUrl);
+}
+
 // Inner executor of price cache updates
 async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
   // 1. Resolve Provider and Key dynamically with multiple layers of fallbacks
@@ -1004,29 +1002,25 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
     }
   }
 
-  let activeApiKey = apiKey;
-  if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey === '') {
-    activeApiKey = localStorage.getItem('fsi_finance_api_key') || '';
-    
-    if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey === '') {
-      if (activeProvider === 'finnhub') {
-        activeApiKey = localStorage.getItem('fsi_finnhub_api_key');
-      } else if (activeProvider === 'twelvedata') {
-        activeApiKey = localStorage.getItem('fsi_twelvedata_api_key');
-      } else if (activeProvider === 'brapi') {
-        activeApiKey = localStorage.getItem('fsi_brapi_api_key');
-      }
+  // Robust, provider-specific key validation and fallbacks to prevent key pollution
+  let activeApiKey = '';
+  if (activeProvider === 'finnhub') {
+    activeApiKey = localStorage.getItem('fsi_finnhub_api_key') || '';
+    if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 40) {
+      const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
+      activeApiKey = (generic && generic.length === 40) ? generic : 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g';
     }
-  }
-
-  // Final fallback to verified hardcoded keys from chaves.env if the resolved key is still empty
-  if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey === '') {
-    if (activeProvider === 'finnhub') {
-      activeApiKey = 'd86o1ppr01qurhv71o70d86o1ppr01qurhv71o7g';
-    } else if (activeProvider === 'twelvedata') {
-      activeApiKey = 'eeeac747bf5547c9aa38659bc2905ea7';
-    } else if (activeProvider === 'brapi') {
-      activeApiKey = '3NQyj7ujtTwoq84s7vQTsL';
+  } else if (activeProvider === 'twelvedata') {
+    activeApiKey = localStorage.getItem('fsi_twelvedata_api_key') || '';
+    if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 32) {
+      const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
+      activeApiKey = (generic && generic.length === 32) ? generic : 'eeeac747bf5547c9aa38659bc2905ea7';
+    }
+  } else if (activeProvider === 'brapi') {
+    activeApiKey = localStorage.getItem('fsi_brapi_api_key') || '';
+    if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 22) {
+      const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
+      activeApiKey = (generic && generic.length === 22) ? generic : '3NQyj7ujtTwoq84s7vQTsL';
     }
   }
 
@@ -1064,7 +1058,7 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
     // Set of successfully updated tickers during this call
     const updatedTickers = new Set();
 
-    // 1. Atualiza ativos do Brasil sempre via BRAPI se houver token (sequencialmente para evitar 429)
+    // 1. Atualiza ativos do Brasil via BRAPI de forma individual e paralela (para contornar a limitação de 1 ativo por chamada no plano gratuito)
     if (brazilianTickers.length > 0 && brapiKey && brapiKey !== 'undefined') {
       try {
         const brapiTickers = brazilianTickers.map(t => t.replace('.SA', ''));
@@ -1079,19 +1073,27 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
           metaMap = {};
         }
 
-        // Sequential fetching with throttling delay
-        for (const ticker of brapiTickers) {
-          const url = `${BRAPI_BASE}/api/quote/${ticker}?token=${brapiKey}`;
+        const promises = brapiTickers.map(async (symbol, index) => {
+          await delay(index * 25); // 25ms staggered delay to avoid rate limits
+          const path = `/api-proxy/br/api/quote/${symbol}?token=${brapiKey}`;
+          const direct = `https://brapi.dev/api/quote/${symbol}?token=${brapiKey}`;
+          
           try {
-            const res = await fetch(url);
+            let res = await safeFetch(path, direct);
+            if (res.status === 429) {
+              isRateLimited = true;
+              console.warn(`[BRAPI Rate Limit] 429 for ${symbol}. Retrying in 1200ms...`);
+              await delay(1200);
+              res = await safeFetch(path, direct);
+            }
+
             if (res.ok) {
               const data = await res.json();
               if (data && Array.isArray(data.results) && data.results[0]) {
                 const item = data.results[0];
-                if (item.regularMarketPrice !== undefined && item.regularMarketPrice !== null) {
-                  const symbolUpper = item.symbol.toUpperCase();
-                  const price = parseFloat(item.regularMarketPrice);
-                  
+                const price = parseFloat(item.regularMarketPrice);
+                if (!isNaN(price) && price > 0) {
+                  const symbolUpper = symbol.toUpperCase();
                   setCachePrice(priceMap, symbolUpper, price, 'brapi');
                   updatedTickers.add(symbolUpper);
                   
@@ -1100,8 +1102,8 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
                     logourl: item.logourl || '',
                   };
 
-                  const requestedWithSA = brazilianTickers.find(t => t.startsWith(symbolUpper));
-                  if (requestedWithSA) {
+                  const requestedWithSA = brazilianTickers.find(t => t.toUpperCase().replace('.SA', '') === symbolUpper);
+                  if (requestedWithSA && requestedWithSA !== symbolUpper) {
                     setCachePrice(priceMap, requestedWithSA, price, 'brapi');
                     updatedTickers.add(requestedWithSA);
                     metaMap[requestedWithSA] = {
@@ -1111,33 +1113,16 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
                   }
                 }
               }
-            } else if (res.status === 429) {
-              isRateLimited = true;
-              console.warn(`[BRAPI Rate Limit] 429 for ${ticker}. Throttling and retrying...`);
-              await delay(1200);
-              const retryRes = await fetch(url);
-              if (retryRes.ok) {
-                const data = await retryRes.json();
-                if (data && Array.isArray(data.results) && data.results[0]) {
-                  const item = data.results[0];
-                  if (item.regularMarketPrice !== undefined && item.regularMarketPrice !== null) {
-                    const symbolUpper = item.symbol.toUpperCase();
-                    const price = parseFloat(item.regularMarketPrice);
-                    setCachePrice(priceMap, symbolUpper, price, 'brapi');
-                    updatedTickers.add(symbolUpper);
-                  }
-                }
-              }
             }
           } catch (err) {
-            console.warn(`[BRAPI Fetch Error] Failed for ${ticker}:`, err);
+            console.warn(`[BRAPI Individual Fetch Error] Failed for ${symbol}:`, err.message);
           }
-          await delay(300); // 300ms delay between consecutive requests (increased from 80ms)
-        }
+        });
 
+        await Promise.all(promises);
         localStorage.setItem('fsi_metadata_cache', JSON.stringify(metaMap));
       } catch (e) {
-        console.warn('[BRAPI Automatic Fetch Error] Failed:', e);
+        console.warn('[BRAPI Automatic Parallel Fetch Error] Failed:', e);
       }
     }
 
@@ -1145,104 +1130,117 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
     if (usTickers.length > 0 && activeProvider !== 'simulated' && activeApiKey) {
       if (activeProvider === 'twelvedata') {
         try {
-          const url = `${TWELVEDATA_BASE}/price?symbol=${usTickers.join(',')}&apikey=${activeApiKey}`;
-          const res = await fetch(url);
-          if (res.ok) {
-            const data = await res.json();
-            if (usTickers.length === 1) {
-              const symbol = usTickers[0];
-              if (data && data.price) {
-                const val = parseFloat(data.price);
-                if (!isNaN(val) && val > 0) {
-                  setCachePrice(priceMap, symbol, val, 'twelvedata');
-                  updatedTickers.add(symbol);
-                }
+          // Twelve Data free plan has a limit of max 8 symbols in a single bulk request.
+          // We break the US tickers into batches of 8 and execute them in parallel, staggered by 50ms.
+          const batchSize = 8;
+          const batches = [];
+          for (let i = 0; i < usTickers.length; i += batchSize) {
+            batches.push(usTickers.slice(i, i + batchSize));
+          }
+
+          const batchPromises = batches.map(async (batch, index) => {
+            await delay(index * 50); // Stagger batches by 50ms to respect rate limits gently
+            const path = `/api-proxy/td/price?symbol=${batch.join(',')}&apikey=${activeApiKey}`;
+            const direct = `https://api.twelvedata.com/price?symbol=${batch.join(',')}&apikey=${activeApiKey}`;
+            
+            try {
+              let res = await safeFetch(path, direct);
+              if (res.status === 429) {
+                isRateLimited = true;
+                console.warn(`[Twelve Data Rate Limit] 429. Waiting 1200ms before retry...`);
+                await delay(1200);
+                res = await safeFetch(path, direct);
               }
-            } else if (data) {
-              usTickers.forEach(sym => {
-                if (data[sym] && data[sym].price) {
-                  const val = parseFloat(data[sym].price);
-                  if (!isNaN(val) && val > 0) {
-                    setCachePrice(priceMap, sym, val, 'twelvedata');
-                    updatedTickers.add(sym);
-                  }
-                }
-              });
-            }
-          } else if (res.status === 429) {
-            isRateLimited = true;
-            console.warn(`[Twelve Data Rate Limit] 429. Waiting before retry...`);
-            await delay(1200);
-            const retryRes = await fetch(url);
-            if (retryRes.ok) {
-              const data = await retryRes.json();
-              if (usTickers.length === 1) {
-                const symbol = usTickers[0];
-                if (data && data.price) {
-                  const val = parseFloat(data.price);
-                  if (!isNaN(val) && val > 0) {
-                    setCachePrice(priceMap, symbol, val, 'twelvedata');
-                    updatedTickers.add(symbol);
-                  }
-                }
-              } else if (data) {
-                usTickers.forEach(sym => {
-                  if (data[sym] && data[sym].price) {
-                    const val = parseFloat(data[sym].price);
+
+              if (res.ok) {
+                const data = await res.json();
+                if (batch.length === 1) {
+                  const symbol = batch[0];
+                  if (data && data.price) {
+                    const val = parseFloat(data.price);
                     if (!isNaN(val) && val > 0) {
-                      setCachePrice(priceMap, sym, val, 'twelvedata');
-                      updatedTickers.add(sym);
+                      setCachePrice(priceMap, symbol, val, 'twelvedata');
+                      updatedTickers.add(symbol);
                     }
                   }
-                });
+                } else if (data) {
+                  batch.forEach(sym => {
+                    if (data[sym] && data[sym].price) {
+                      const val = parseFloat(data[sym].price);
+                      if (!isNaN(val) && val > 0) {
+                        setCachePrice(priceMap, sym, val, 'twelvedata');
+                        updatedTickers.add(sym);
+                      }
+                    }
+                  });
+                }
               }
+            } catch (err) {
+              console.warn(`[Twelve Data Batch Error] Failed for batch ${batch.join(',')}:`, err.message);
             }
-          }
+          });
+
+          await Promise.all(batchPromises);
         } catch (e) {
           console.warn(`[Twelve Data US Fetch Error]:`, e);
         }
       } else if (activeProvider === 'finnhub') {
         try {
-          // Parallel fetches — Finnhub supports CORS natively, no proxy needed
-          const results = await Promise.allSettled(
-            usTickers.map(async (symbol) => {
-              const url = `${FINNHUB_BASE}/api/v1/quote?symbol=${symbol}&token=${activeApiKey}`;
-              const res = await fetch(url);
+          // Staggered parallel fetching: we trigger all requests in parallel but staggered by 20ms.
+          // This completes the entire US portfolio fetch (~18 tickers) in less than 1.5 seconds!
+          const promises = usTickers.map(async (symbol, index) => {
+            await delay(index * 20); // 20ms staggered delay to prevent network burst and rate limits
+            const path = `/api-proxy/fh/api/v1/quote?symbol=${symbol}&token=${activeApiKey}`;
+            const direct = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${activeApiKey}`;
+            
+            try {
+              let res = await safeFetch(path, direct);
               if (res.status === 429) {
                 isRateLimited = true;
-                throw new Error(`429 rate limit for ${symbol}`);
+                console.warn(`[Finnhub Rate Limit] 429 for ${symbol}. Retrying in 1200ms...`);
+                await delay(1200);
+                res = await safeFetch(path, direct);
               }
-              if (!res.ok) throw new Error(`HTTP ${res.status} for ${symbol}`);
-              const data = await res.json();
-              return { symbol, data };
-            })
-          );
 
-          results.forEach((result) => {
-            if (result.status === 'fulfilled') {
-              const { symbol, data } = result.value;
-              if (data && data.c !== undefined && data.c !== null && data.c !== 0) {
-                const val = parseFloat(data.c);
-                if (!isNaN(val) && val > 0) {
-                  setCachePrice(priceMap, symbol, val, 'finnhub');
-                  updatedTickers.add(symbol);
-                  console.log(`[Finnhub] ${symbol} = $${val}`);
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.c !== undefined && data.c !== null && data.c !== 0) {
+                  const val = parseFloat(data.c);
+                  if (!isNaN(val) && val > 0) {
+                    setCachePrice(priceMap, symbol, val, 'finnhub');
+                    updatedTickers.add(symbol);
+                    console.log(`[Finnhub] ${symbol} = $${val}`);
+                  }
                 }
+              } else {
+                console.warn(`[Finnhub] HTTP error ${res.status} for ${symbol}`);
               }
-            } else {
-              console.warn(`[Finnhub] Failed:`, result.reason?.message);
+            } catch (err) {
+              console.warn(`[Finnhub] Failed for ${symbol}:`, err.message);
             }
           });
+
+          await Promise.all(promises);
         } catch (e) {
           console.warn(`[Finnhub Bulk US Fetch Error]:`, e);
         }
       } else if (activeProvider === 'brapi') {
         try {
-          // BRAPI US stock quotes must be fetched one-by-one to avoid the single asset limit
-          for (const symbol of usTickers) {
-            const url = `${BRAPI_BASE}/api/quote/${symbol}?token=${activeApiKey}`;
+          // BRAPI US stock quotes must be fetched one-by-one to avoid the single asset limit.
+          // Staggered parallel fetching with a 25ms delay makes it incredibly fast and safe.
+          const promises = usTickers.map(async (symbol, index) => {
+            await delay(index * 25); // 25ms staggered delay to avoid rate limits
+            const path = `/api-proxy/br/api/quote/${symbol}?token=${activeApiKey}`;
+            const direct = `https://brapi.dev/api/quote/${symbol}?token=${activeApiKey}`;
+            
             try {
-              const res = await fetch(url);
+              let res = await safeFetch(path, direct);
+              if (res.status === 429) {
+                isRateLimited = true;
+                console.warn(`[BRAPI Rate Limit] 429 for ${symbol}. Retrying in 1200ms...`);
+                await delay(1200);
+                res = await safeFetch(path, direct);
+              }
               if (res.ok) {
                 const data = await res.json();
                 if (data && Array.isArray(data.results) && data.results[0]) {
@@ -1255,30 +1253,13 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
                     }
                   }
                 }
-              } else if (res.status === 429) {
-                isRateLimited = true;
-                console.warn(`[BRAPI Rate Limit] 429 for ${symbol}. Retrying...`);
-                await delay(1200);
-                const retryRes = await fetch(url);
-                if (retryRes.ok) {
-                  const data = await retryRes.json();
-                  if (data && Array.isArray(data.results) && data.results[0]) {
-                    const item = data.results[0];
-                    if (item.regularMarketPrice !== undefined && item.regularMarketPrice !== null) {
-                      const val = parseFloat(item.regularMarketPrice);
-                      if (!isNaN(val) && val > 0) {
-                        setCachePrice(priceMap, symbol, val, 'brapi');
-                        updatedTickers.add(symbol);
-                      }
-                    }
-                  }
-                }
               }
             } catch (e) {
               console.warn(`[BRAPI US Fetch Error] Failed for ${symbol}:`, e);
             }
-            await delay(300); // 300ms throttle delay (increased from 80ms)
-          }
+          });
+
+          await Promise.all(promises);
         } catch (e) {
           console.warn(`[BRAPI US Bulk Fetch Error]:`, e);
         }

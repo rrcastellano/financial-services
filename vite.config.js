@@ -6,20 +6,25 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api-proxy/twelvedata': {
+      '/api-proxy/td': {
         target: 'https://api.twelvedata.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api-proxy\/twelvedata/, '')
+        rewrite: (path) => path.replace(/^\/api-proxy\/td/, '')
       },
-      '/api-proxy/finnhub': {
+      '/api-proxy/fh': {
         target: 'https://finnhub.io',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api-proxy\/finnhub/, '')
+        rewrite: (path) => path.replace(/^\/api-proxy\/fh/, '')
       },
-      '/api-proxy/brapi': {
+      '/api-proxy/br': {
         target: 'https://brapi.dev',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api-proxy\/brapi/, '')
+        rewrite: (path) => path.replace(/^\/api-proxy\/br/, '')
+      },
+      '/api-proxy/gm': {
+        target: 'https://generativelanguage.googleapis.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-proxy\/gm/, '')
       }
     }
   }
