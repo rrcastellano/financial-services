@@ -440,7 +440,7 @@ export const REAL_TICKERS = {
     sector: "Technology",
     industry: "Computer Hardware",
     ticker: "SNDK",
-    price: 1502.88,
+    price: 2335.00,
     shares: 326,
     revenueLTM: 13100,
     revenueGrowth: -0.050,
@@ -632,7 +632,23 @@ export function fetchCompanyData(tickerSymbol) {
   const symbol = tickerSymbol.toUpperCase().trim();
   let company;
   
-  if (REAL_TICKERS[symbol]) {
+  // 1. Tenta carregar do cache de companhias carregadas via Gemini (dados reais)
+  let cachedCompany = null;
+  try {
+    const companiesCacheStr = localStorage.getItem('fsi_companies_cache');
+    if (companiesCacheStr) {
+      const companiesCache = JSON.parse(companiesCacheStr);
+      if (companiesCache && companiesCache[symbol]) {
+        cachedCompany = { ...companiesCache[symbol] };
+      }
+    }
+  } catch (e) {
+    // Ignored
+  }
+
+  if (cachedCompany) {
+    company = cachedCompany;
+  } else if (REAL_TICKERS[symbol]) {
     company = { ...REAL_TICKERS[symbol] };
   } else {
     // Realistic mock generator for search fallbacks
@@ -707,15 +723,39 @@ export function fetchCompanyData(tickerSymbol) {
       const cache = JSON.parse(cacheStr);
       if (cache && cache[symbol] !== undefined) {
         const entry = cache[symbol];
+        let priceVal;
+        let providerVal = null;
+        let updatedAtVal = null;
         if (entry && typeof entry === 'object' && entry.price !== undefined) {
-          company.price = parseFloat(entry.price);
-          company.updatedAt = entry.updatedAt || null;
-          company.provider = entry.provider || null;
+          priceVal = parseFloat(entry.price);
+          providerVal = entry.provider || null;
+          updatedAtVal = entry.updatedAt || null;
         } else {
-          company.price = parseFloat(entry);
-          company.updatedAt = null;
-          company.provider = null;
+          priceVal = parseFloat(entry);
         }
+
+        // Cache self-healing: if the price is simulated and deviates by >10% from the hardcoded base price,
+        // force-heal it to the new registry price.
+        if (REAL_TICKERS[symbol] && (providerVal === 'simulated' || !providerVal)) {
+          const defaultPrice = REAL_TICKERS[symbol].price;
+          const deviation = Math.abs(priceVal - defaultPrice) / defaultPrice;
+          if (deviation > 0.10) {
+            console.log(`[Finance API Cache Healing] Ticker ${symbol} cached simulated price (${priceVal}) deviated >10% from registry price (${defaultPrice}). Overwriting cache.`);
+            priceVal = defaultPrice;
+            updatedAtVal = new Date().toISOString();
+            providerVal = 'simulated';
+            cache[symbol] = {
+              price: defaultPrice,
+              updatedAt: updatedAtVal,
+              provider: 'simulated'
+            };
+            localStorage.setItem('fsi_prices_cache', JSON.stringify(cache));
+          }
+        }
+
+        company.price = priceVal;
+        company.updatedAt = updatedAtVal;
+        company.provider = providerVal;
       }
     }
   } catch (e) {
@@ -1277,7 +1317,14 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
 
         if (activeProvider === 'simulated') {
           // Na simulação, aplica uma flutuação controlada de +- 1% para dar vida ao painel
-          const currentPrice = getCachePrice(priceMap, symbol) || defaultPrice;
+          let currentPrice = getCachePrice(priceMap, symbol) || defaultPrice;
+          if (baseCompany) {
+            const deviation = Math.abs(currentPrice - defaultPrice) / defaultPrice;
+            if (deviation > 0.10) {
+              console.log(`[Finance API Cache Update Healing] Ticker ${symbol} simulated price (${currentPrice}) deviated >10% from registry (${defaultPrice}). Resetting.`);
+              currentPrice = defaultPrice;
+            }
+          }
           const fluctuation = 1 + (Math.random() * 0.02 - 0.01);
           const newPrice = parseFloat((currentPrice * fluctuation).toFixed(2));
           setCachePrice(priceMap, symbol, newPrice, 'simulated');
@@ -1288,8 +1335,16 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
           if (currentCached === undefined || currentCached === null) {
             // Sem cache algum: inicializa com preço base da base de dados local
             setCachePrice(priceMap, symbol, defaultPrice, fallbackProvider);
+          } else {
+            const entry = getCacheEntry(priceMap, symbol);
+            if (entry && (entry.provider === 'simulated' || !entry.provider) && baseCompany) {
+              const deviation = Math.abs(entry.price - defaultPrice) / defaultPrice;
+              if (deviation > 0.10) {
+                console.log(`[Finance API Cache Update Healing Real API Fallback] Ticker ${symbol} simulated price (${entry.price}) deviated >10% from registry (${defaultPrice}). Healing.`);
+                setCachePrice(priceMap, symbol, defaultPrice, 'simulated');
+              }
+            }
           }
-          // Se já existe cache, não toca — o valor existente é o último confirmado pela API
         }
       }
     });
@@ -1316,7 +1371,13 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
         const fallbackProvider = isBrl ? 'brapi' : (activeProvider === 'simulated' ? 'simulated' : activeProvider);
 
         if (activeProvider === 'simulated') {
-          const currentPrice = getCachePrice(priceMap, symbol) || defaultPrice;
+          let currentPrice = getCachePrice(priceMap, symbol) || defaultPrice;
+          if (baseCompany) {
+            const deviation = Math.abs(currentPrice - defaultPrice) / defaultPrice;
+            if (deviation > 0.10) {
+              currentPrice = defaultPrice;
+            }
+          }
           const fluctuation = 1 + (Math.random() * 0.02 - 0.01);
           const newPrice = parseFloat((currentPrice * fluctuation).toFixed(2));
           setCachePrice(priceMap, symbol, newPrice, 'simulated');
@@ -1325,8 +1386,15 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
           const currentCached = getCachePrice(priceMap, symbol);
           if (currentCached === undefined || currentCached === null) {
             setCachePrice(priceMap, symbol, defaultPrice, fallbackProvider);
+          } else {
+            const entry = getCacheEntry(priceMap, symbol);
+            if (entry && (entry.provider === 'simulated' || !entry.provider) && baseCompany) {
+              const deviation = Math.abs(entry.price - defaultPrice) / defaultPrice;
+              if (deviation > 0.10) {
+                setCachePrice(priceMap, symbol, defaultPrice, 'simulated');
+              }
+            }
           }
-          // Se já existe cache, mantém — o valor é o último confirmado pela API real
         }
       });
       localStorage.setItem('fsi_prices_cache', JSON.stringify(priceMap));
@@ -1340,6 +1408,331 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
       rateLimited: isRateLimited, 
       updatedCount: 0 
     };
+  }
+}
+
+// Fetch actual historical candles for a ticker (daily interval, up to 15 days of data)
+export async function fetchHistoricalCandles(tickerSymbol, provider = 'simulated', apiKey = '') {
+  const symbol = tickerSymbol.toUpperCase().trim();
+  if (!symbol) return null;
+
+  const isBrl = /\d$/.test(symbol) || symbol.includes('.SA');
+  
+  // Resolve Provider and Key dynamically
+  let activeProvider = provider || localStorage.getItem('fsi_finance_api_provider') || 'simulated';
+  let activeApiKey = '';
+  
+  if (activeProvider === 'simulated') {
+    const savedProvider = localStorage.getItem('fsi_finance_api_provider');
+    if (savedProvider && savedProvider !== 'simulated') {
+      activeProvider = savedProvider;
+    }
+  }
+
+  // Key loading fallbacks
+  if (isBrl) {
+    activeApiKey = localStorage.getItem('fsi_brapi_api_key') || 
+                   (activeProvider === 'brapi' ? apiKey : null) || 
+                   (import.meta.env.VITE_BRAPI || '');
+  } else {
+    if (activeProvider === 'finnhub') {
+      activeApiKey = localStorage.getItem('fsi_finnhub_api_key') || '';
+      if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 40) {
+        const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
+        activeApiKey = (generic && generic.length === 40) ? generic : (import.meta.env.VITE_FINHUB || '');
+      }
+    } else if (activeProvider === 'twelvedata') {
+      activeApiKey = localStorage.getItem('fsi_twelvedata_api_key') || '';
+      if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 32) {
+        const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
+        activeApiKey = (generic && generic.length === 32) ? generic : (import.meta.env.VITE_TWELVEDATA || '');
+      }
+    } else if (activeProvider === 'brapi') {
+      activeApiKey = localStorage.getItem('fsi_brapi_api_key') || '';
+      if (!activeApiKey || activeApiKey === 'undefined' || activeApiKey.length !== 22) {
+        const generic = apiKey || localStorage.getItem('fsi_finance_api_key') || '';
+        activeApiKey = (generic && generic.length === 22) ? generic : (import.meta.env.VITE_BRAPI || '');
+      }
+    }
+  }
+
+  const brapiKey = localStorage.getItem('fsi_brapi_api_key') || 
+                   (activeProvider === 'brapi' ? activeApiKey : null) || 
+                   (import.meta.env.VITE_BRAPI || '');
+
+  // Fallback to simulated if no API keys are configured and it's not simulated provider
+  if (activeProvider !== 'simulated' && !activeApiKey) {
+    console.warn(`[Historical Candles] No API key found for provider "${activeProvider}". Falling back to simulated candles.`);
+    activeProvider = 'simulated';
+  }
+
+  // Check if we have cached historical candles
+  let candleCache = {};
+  try {
+    const cached = localStorage.getItem('fsi_historical_candles_cache');
+    if (cached) candleCache = JSON.parse(cached) || {};
+  } catch (e) {
+    candleCache = {};
+  }
+
+  // If we already have real cached candles for this ticker and they contain at least 10 items, return them!
+  if (candleCache[symbol] && candleCache[symbol].length >= 10 && candleCache[symbol][0].isReal) {
+    console.log(`[Historical Candles] Returning cached real candles for ${symbol}`);
+    return candleCache[symbol];
+  }
+
+  if (activeProvider === 'simulated') {
+    return null; // Return null so the UI can construct simulated candles
+  }
+
+  try {
+    let candles = [];
+    
+    if (isBrl) {
+      // BRAPI Historical quote
+      const cleanBrSymbol = symbol.replace('.SA', '');
+      const path = `/api-proxy/br/api/quote/${cleanBrSymbol}?range=1mo&interval=1d&token=${brapiKey}`;
+      const direct = `https://brapi.dev/api/quote/${cleanBrSymbol}?range=1mo&interval=1d&token=${brapiKey}`;
+      
+      const res = await safeFetch(path, direct);
+      if (!res.ok) throw new Error(`BRAPI returned HTTP ${res.status}`);
+      
+      const data = await res.json();
+      if (data && data.results && data.results[0] && Array.isArray(data.results[0].historicalDataPrice)) {
+        candles = data.results[0].historicalDataPrice
+          .filter(d => d.open && d.high && d.low && d.close)
+          .map(d => {
+            const dateObj = new Date(d.date * 1000);
+            const dateStr = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+            return {
+              date: dateStr,
+              open: parseFloat(d.open),
+              high: parseFloat(d.high),
+              low: parseFloat(d.low),
+              close: parseFloat(d.close),
+              isReal: true
+            };
+          });
+      }
+    } else {
+      // US Tickers - Prefer Twelve Data since it's the only free key supporting historical daily candles
+      const tdKey = localStorage.getItem('fsi_twelvedata_api_key') || 
+                    (activeProvider === 'twelvedata' ? activeApiKey : null) || 
+                    (import.meta.env.VITE_TWELVEDATA || '');
+
+      if (tdKey && tdKey !== 'undefined') {
+        const path = `/api-proxy/td/time_series?symbol=${symbol}&interval=1day&outputsize=25&apikey=${tdKey}`;
+        const direct = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=25&apikey=${tdKey}`;
+        
+        try {
+          const res = await safeFetch(path, direct);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data.values)) {
+              candles = data.values.map(v => {
+                const parts = v.datetime.split('-');
+                const dateStr = `${parts[2]}/${parts[1]}`;
+                return {
+                  date: dateStr,
+                  open: parseFloat(v.open),
+                  high: parseFloat(v.high),
+                  low: parseFloat(v.low),
+                  close: parseFloat(v.close),
+                  isReal: true
+                };
+              }).reverse(); // older first
+            }
+          }
+        } catch (e) {
+          console.warn(`[Twelve Data US Fetch Error]:`, e.message);
+        }
+      }
+
+      // If Twelve Data wasn't successful or configured, fallback to Finnhub as second choice
+      if (candles.length === 0 && activeApiKey) {
+        const to = Math.floor(Date.now() / 1000);
+        const from = to - 30 * 24 * 60 * 60; // 30 days ago to get at least 15 trading sessions
+        const path = `/api-proxy/fh/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${activeApiKey}`;
+        const direct = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${activeApiKey}`;
+        
+        try {
+          const res = await safeFetch(path, direct);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.s === 'ok' && Array.isArray(data.t)) {
+              candles = data.t.map((t, idx) => {
+                const dateObj = new Date(t * 1000);
+                const dateStr = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+                return {
+                  date: dateStr,
+                  open: parseFloat(data.o[idx]),
+                  high: parseFloat(data.h[idx]),
+                  low: parseFloat(data.l[idx]),
+                  close: parseFloat(data.c[idx]),
+                  isReal: true
+                };
+              });
+            }
+          }
+        } catch (e) {
+          console.warn(`[Finnhub US Fallback Fetch Error]:`, e.message);
+        }
+      }
+    }
+
+    if (candles && candles.length > 0) {
+      // Limit to last 15 days to keep perfect graph layout
+      const slicedCandles = candles.slice(-15);
+      
+      // Update cache
+      candleCache[symbol] = slicedCandles;
+      localStorage.setItem('fsi_historical_candles_cache', JSON.stringify(candleCache));
+      console.log(`[Historical Candles] Successfully fetched and cached real candles for ${symbol}`);
+      return slicedCandles;
+    }
+  } catch (e) {
+    console.error(`[Historical Candles Fetch Error] Failed for ${symbol}:`, e.message);
+  }
+
+  return null;
+}
+
+// Fetch real-world company profile and peer group fundamentals using Gemini AI
+export async function fetchCompanyFundamentalsViaGemini(ticker, apiKey) {
+  const symbol = ticker.toUpperCase().trim();
+  if (!symbol || !apiKey) return { success: false, reason: 'Invalid params' };
+
+  const promptText = `
+    Você é um analista de investimentos de elite. Extraia os dados financeiros fundamentais mais recentes de 2025/2026 (LTM/último ano fiscal disponível) para o ticker "${symbol}" e de 4 a 5 concorrentes listados na bolsa (Comparable Companies).
+    Realize pesquisas internas e utilize sua base de dados atualizada para extrair valores reais, realistas e consolidados para as empresas.
+    
+    A resposta deve ser rigorosamente um JSON válido no formato abaixo. Não inclua nenhuma formatação de markdown como \`\`\`json ou explicações textuais fora do JSON. Apenas retorne o JSON cru.
+
+    Estrutura JSON esperada:
+    {
+      "target": {
+        "ticker": "${symbol}",
+        "name": "Nome Completo Real da Empresa",
+        "sector": "Setor Comercial Real",
+        "industry": "Indústria Real",
+        "price": 123.45, // Cotação de mercado atual aproximada (float)
+        "shares": 456.78, // Quantidade de ações em circulação em milhões (ex: 326 para 326.000.000 de ações)
+        "revenueLTM": 13100, // Receita total acumulada dos últimos 12 meses (LTM) em milhões (USD ou BRL)
+        "revenueGrowth": -0.05, // Crescimento YoY da Receita (LTM) em formato decimal (ex: -0.05 para -5%)
+        "grossProfit": 2620, // Lucro Bruto acumulado LTM em milhões
+        "grossMargin": 0.20, // Margem bruta em formato decimal
+        "ebitda": 1220, // EBITDA acumulado LTM em milhões
+        "ebitdaMargin": 0.093, // Margem EBITDA em formato decimal
+        "netDebt": 5900, // Dívida Líquida em milhões (Total Debt - Cash. Use valor negativo se possuir Caixa Líquido)
+        "netIncome": -250, // Lucro Líquido acumulado LTM em milhões
+        "description": "Breve descrição institucional real do ativo...",
+        "comps": ["PEER1", "PEER2", "PEER3", "PEER4"], // Lista de tickers de 4 ou 5 concorrentes diretos (preferencialmente listados na mesma moeda/mercado)
+        "growthRateYear1": 0.06, // Projeção realista do crescimento do EBITDA para o Ano 1 (decimal)
+        "growthRateYear2": 0.10,
+        "growthRateYear3": 0.11,
+        "growthRateYear4": 0.09,
+        "growthRateYear5": 0.07,
+        "ebitdaMarginProj": 0.14, // Margem EBITDA projetada de longo prazo
+        "wacc": 0.09, // Custo médio ponderado de capital (WACC) estimado (ex: 0.09 para 9%)
+        "terminalMultiple": 11.5, // Múltiplo EBITDA terminal de saída sugerido para o DCF (float)
+        "freeCashFlowLTM": 810 // Fluxo de Caixa Livre LTM aproximado em milhões (FCP LTM)
+      },
+      "peers": [
+        // A mesma estrutura exata com as informações reais/estimadas para cada concorrente citado em "comps" (ex: PEER1, PEER2, PEER3, etc.)
+      ]
+    }
+  `;
+
+  try {
+    const res = await fetch(`/api-proxy/gm/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: { responseMimeType: "application/json" }
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error(`Gemini HTTP Error ${res.status}`);
+    }
+
+    const rawData = await res.json();
+    const text = rawData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    // Clean and parse
+    let cleaned = text.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.substring(7);
+    }
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.substring(0, cleaned.length - 3);
+    }
+    cleaned = cleaned.trim();
+    
+    const data = JSON.parse(cleaned);
+    
+    if (data && data.target && Array.isArray(data.peers)) {
+      // Grava no localStorage fsi_companies_cache
+      let cache = {};
+      try {
+        const cached = localStorage.getItem('fsi_companies_cache');
+        if (cached) {
+          cache = JSON.parse(cached) || {};
+        }
+      } catch (e) {
+        cache = {};
+      }
+
+      // Adiciona o target
+      cache[data.target.ticker.toUpperCase()] = data.target;
+
+      // Adiciona todos os peers
+      data.peers.forEach(peer => {
+        if (peer && peer.ticker) {
+          cache[peer.ticker.toUpperCase()] = peer;
+        }
+      });
+
+      localStorage.setItem('fsi_companies_cache', JSON.stringify(cache));
+      console.log(`[Finance API Gemini] Successfully loaded and cached company profiles for ${symbol} and peers:`, data.target.comps);
+      
+      // Também atualiza o fsi_prices_cache para garantir que a cotação ao vivo não fique estática no valor retornado pelo Gemini
+      let pricesCache = {};
+      try {
+        const pcached = localStorage.getItem('fsi_prices_cache');
+        if (pcached) {
+          pricesCache = JSON.parse(pcached) || {};
+        }
+      } catch (e) {
+        pricesCache = {};
+      }
+      
+      pricesCache[data.target.ticker.toUpperCase()] = {
+        price: data.target.price,
+        updatedAt: new Date().toISOString(),
+        provider: 'gemini'
+      };
+      
+      data.peers.forEach(peer => {
+        if (peer && peer.ticker) {
+          pricesCache[peer.ticker.toUpperCase()] = {
+            price: peer.price,
+            updatedAt: new Date().toISOString(),
+            provider: 'gemini'
+          };
+        }
+      });
+      
+      localStorage.setItem('fsi_prices_cache', JSON.stringify(pricesCache));
+
+      return { success: true, target: data.target };
+    }
+
+    return { success: false, reason: 'Invalid JSON structure' };
+  } catch (err) {
+    console.error('Error fetching fundamentals via Gemini:', err);
+    return { success: false, reason: err.message };
   }
 }
 

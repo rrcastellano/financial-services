@@ -9,21 +9,25 @@ export default defineConfig({
       '/api-proxy/td': {
         target: 'https://api.twelvedata.com',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api-proxy\/td/, '')
       },
       '/api-proxy/fh': {
         target: 'https://finnhub.io',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api-proxy\/fh/, '')
       },
       '/api-proxy/br': {
         target: 'https://brapi.dev',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api-proxy\/br/, '')
       },
       '/api-proxy/gm': {
         target: 'https://generativelanguage.googleapis.com',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api-proxy\/gm/, '')
       }
     }

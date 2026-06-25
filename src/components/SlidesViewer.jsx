@@ -1,14 +1,47 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Presentation, Download, MonitorPlay } from 'lucide-react';
-import { calculateDCF } from '../utils/financeApi';
+import { calculateDCF, fetchCompsAnalysis } from '../utils/financeApi';
 
 export default function SlidesViewer({ company }) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   if (!company) return null;
 
+  const isBrl = /\d$/.test(company.ticker) || company.ticker.includes('.SA');
+  const currencySymbol = isBrl ? 'R$' : '$';
+
   // Recalculate DCF implied price for dynamic slide values
   const dcfVal = calculateDCF(company);
+
+  // Recalculate recommendation and consensus target price
+  const compsAnalysis = fetchCompsAnalysis(company);
+  const peers = compsAnalysis.filter(c => !c.isTarget);
+  
+  let compsTargetPrice = company.price;
+  if (peers.length > 0) {
+    const sumEvEbitda = peers.reduce((acc, p) => acc + p.evEbitda, 0);
+    const medianEvEbitda = sumEvEbitda / peers.length;
+    const impliedEv = company.ebitda * medianEvEbitda;
+    const impliedEquityValue = impliedEv - company.netDebt;
+    const targetCompsPrice = impliedEquityValue / company.shares;
+    if (!isNaN(targetCompsPrice) && targetCompsPrice > 0) {
+      compsTargetPrice = parseFloat(targetCompsPrice.toFixed(2));
+    }
+  }
+
+  const blendedTarget = parseFloat(((dcfVal.impliedPerShare * 0.6) + (compsTargetPrice * 0.4)).toFixed(2));
+  const currentPrice = company.price;
+  const totalUpside = ((blendedTarget - currentPrice) / currentPrice) * 100;
+
+  let recommendation = 'NEUTRO';
+  let recColor = '#fbbf24'; // amber
+  if (totalUpside >= 15) {
+    recommendation = 'COMPRA';
+    recColor = '#10b981'; // emerald
+  } else if (totalUpside <= -10) {
+    recommendation = 'VENDA';
+    recColor = '#ef4444'; // red
+  }
 
   // Dynamic football field scale calculations
   const ffRange52wk = [company.price * 0.7, company.price * 1.15];
@@ -52,7 +85,7 @@ export default function SlidesViewer({ company }) {
   const slides = [
     // Slide 1: Title
     {
-      title: `${company.name} (NYSE: ${company.ticker})`,
+      title: `${company.name} (${isBrl ? 'B3' : 'NYSE'}: ${company.ticker})`,
       subtitle: "Strategic Alternatives Evaluation & Valuation Overview",
       content: (
         <div style={styles.titleSlideContent}>
@@ -62,7 +95,7 @@ export default function SlidesViewer({ company }) {
           <div style={styles.presentationDetails}>
             <p>Prepared for: Board of Directors</p>
             <p>Strictly Private & Confidential</p>
-            <p>May 2026</p>
+            <p>June 2026</p>
           </div>
         </div>
       ),
@@ -83,7 +116,7 @@ export default function SlidesViewer({ company }) {
             <div style={styles.statsRow}>
               <div style={styles.statBox}>
                 <span style={styles.statLabel}>Revenue (LTM)</span>
-                <span style={styles.statVal}>${(company.revenueLTM / 1000).toFixed(1)}B</span>
+                <span style={styles.statVal}>{currencySymbol}{(company.revenueLTM / 1000).toFixed(1)}B</span>
               </div>
               <div style={styles.statBox}>
                 <span style={styles.statLabel}>EBITDA Margin</span>
@@ -99,7 +132,7 @@ export default function SlidesViewer({ company }) {
             <h4 style={styles.cardHeader}>Strategic Thesis & Key Valuation Drivers</h4>
             <ul style={styles.slideList}>
               <li><strong>Market Leadership:</strong> Robust competitive advantages driving superior gross margins of {(company.grossMargin * 100).toFixed(1)}%.</li>
-              <li><strong>Capital Efficiency:</strong> Exceptionally strong cash flow profile with LTM Free Cash Flow of ${(company.freeCashFlowLTM / 1000).toFixed(1)}B.</li>
+              <li><strong>Capital Efficiency:</strong> Exceptionally strong cash flow profile with LTM Free Cash Flow of {currencySymbol}{(company.freeCashFlowLTM / 1000).toFixed(1)}B.</li>
               <li><strong>Value Unlock Opportunity:</strong> Implied valuation models suggest significant disconnects between current equity price and intrinsic business value.</li>
             </ul>
           </div>
@@ -147,7 +180,7 @@ export default function SlidesViewer({ company }) {
                 The target's current trading valuation represents an attractive entry point relative to peer leaders, supported by premium margins.
               </p>
               <div style={{...styles.badgeContainer, marginTop: 12}}>
-                <span className="tag tag-success">Target EV: ${(company.price * company.shares / 1000 + company.netDebt / 1000).toFixed(1)}B</span>
+                <span className="tag tag-success">Target EV: {currencySymbol}{(company.price * company.shares / 1000 + company.netDebt / 1000).toFixed(1)}B</span>
                 <span className="tag tag-info">Peers: {company.comps.join(', ')}</span>
               </div>
             </div>
@@ -162,7 +195,8 @@ export default function SlidesViewer({ company }) {
       content: (
         <div style={styles.footballFieldContainer}>
           <div style={styles.leadParagraph}>
-            Valuation ranges support an implied intrinsic value per share of **${dcfVal.impliedPerShare}** based on DCF models.
+            Valuation ranges support an implied intrinsic value per share of **{currencySymbol}{dcfVal.impliedPerShare}** based on DCF models.
+            Recomendação de Consenso: <strong style={{ color: recColor }}>{recommendation}</strong> (Preço-Alvo: {currencySymbol}{blendedTarget}, Upside: {totalUpside.toFixed(1)}%).
           </div>
           
           <div style={styles.footballFieldChart}>
@@ -171,7 +205,7 @@ export default function SlidesViewer({ company }) {
               <div style={styles.rowLabel}>52-Week Range</div>
               <div style={styles.rowBarArea}>
                 <div style={getFFBarStyles(ffRange52wk[0], ffRange52wk[1], 'rgba(255,255,255,0.15)')}>
-                  <span style={styles.barRangeLabel}>${ffRange52wk[0].toFixed(0)} - ${ffRange52wk[1].toFixed(0)}</span>
+                  <span style={styles.barRangeLabel}>{currencySymbol}{ffRange52wk[0].toFixed(0)} - {currencySymbol}{ffRange52wk[1].toFixed(0)}</span>
                 </div>
               </div>
             </div>
@@ -181,7 +215,7 @@ export default function SlidesViewer({ company }) {
               <div style={styles.rowLabel}>Trading Comps</div>
               <div style={styles.rowBarArea}>
                 <div style={getFFBarStyles(ffTradingComps[0], ffTradingComps[1], '#0891b2')}>
-                  <span style={styles.barRangeLabel}>${ffTradingComps[0].toFixed(0)} - ${ffTradingComps[1].toFixed(0)}</span>
+                  <span style={styles.barRangeLabel}>{currencySymbol}{ffTradingComps[0].toFixed(0)} - {currencySymbol}{ffTradingComps[1].toFixed(0)}</span>
                 </div>
               </div>
             </div>
@@ -191,7 +225,7 @@ export default function SlidesViewer({ company }) {
               <div style={styles.rowLabel}>DCF Valuation</div>
               <div style={styles.rowBarArea}>
                 <div style={getFFBarStyles(ffDcf[0], ffDcf[1], '#6366f1')}>
-                  <span style={styles.barRangeLabel}>${ffDcf[0].toFixed(0)} - ${ffDcf[1].toFixed(0)}</span>
+                  <span style={styles.barRangeLabel}>{currencySymbol}{ffDcf[0].toFixed(0)} - {currencySymbol}{ffDcf[1].toFixed(0)}</span>
                 </div>
               </div>
             </div>
@@ -201,14 +235,14 @@ export default function SlidesViewer({ company }) {
               <div style={styles.rowLabel}>Illustrative LBO</div>
               <div style={styles.rowBarArea}>
                 <div style={getFFBarStyles(ffLbo[0], ffLbo[1], '#10b981')}>
-                  <span style={styles.barRangeLabel}>${ffLbo[0].toFixed(0)} - ${ffLbo[1].toFixed(0)}</span>
+                  <span style={styles.barRangeLabel}>{currencySymbol}{ffLbo[0].toFixed(0)} - {currencySymbol}{ffLbo[1].toFixed(0)}</span>
                 </div>
               </div>
             </div>
 
             {/* Current Price Reference Line */}
             <div style={{...styles.refLine, left: refLineLeft}}>
-              <div style={styles.refLineText}>Current Price: ${ffCurrent.toFixed(2)}</div>
+              <div style={styles.refLineText}>Current Price: {currencySymbol}{ffCurrent.toFixed(2)}</div>
             </div>
 
             {/* Grid Scale Markers */}
@@ -221,11 +255,11 @@ export default function SlidesViewer({ company }) {
               color: '#64748b',
               fontSize: '9px'
             }}>
-              <span>${ffMin.toFixed(0)}</span>
-              <span>${(ffMin + ffDiff * 0.25).toFixed(0)}</span>
-              <span>${(ffMin + ffDiff * 0.5).toFixed(0)}</span>
-              <span>${(ffMin + ffDiff * 0.75).toFixed(0)}</span>
-              <span>${ffMax.toFixed(0)}</span>
+              <span>{currencySymbol}{ffMin.toFixed(0)}</span>
+              <span>{currencySymbol}{(ffMin + ffDiff * 0.25).toFixed(0)}</span>
+              <span>{currencySymbol}{(ffMin + ffDiff * 0.5).toFixed(0)}</span>
+              <span>{currencySymbol}{(ffMin + ffDiff * 0.75).toFixed(0)}</span>
+              <span>{currencySymbol}{ffMax.toFixed(0)}</span>
             </div>
           </div>
 

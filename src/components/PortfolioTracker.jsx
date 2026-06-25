@@ -26,9 +26,49 @@ import {
   EyeOff,
   Cpu,
   Key,
-  Sparkles
+  Sparkles,
+  Layers
 } from 'lucide-react';
 import { fetchCompanyData, updateLivePricesCache, formatDateTime } from '../utils/financeApi';
+
+// Helper to robustly parse JSON from Gemini AI, removing code blocks and trailing explanations or non-whitespace garbage
+function cleanAndParseJSON(text) {
+  if (!text) throw new Error('Dados vazios recebidos para análise JSON.');
+  
+  let cleaned = text.trim();
+  
+  // Remove block code formatting if present
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  }
+  
+  cleaned = cleaned.trim();
+  
+  // Find first '{' or '[' and last '}' or ']'
+  const firstBrace = cleaned.indexOf('{');
+  const firstBracket = cleaned.indexOf('[');
+  let startIdx = -1;
+  let endIdx = -1;
+  
+  if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+    startIdx = firstBrace;
+    endIdx = cleaned.lastIndexOf('}');
+  } else if (firstBracket !== -1) {
+    startIdx = firstBracket;
+    endIdx = cleaned.lastIndexOf(']');
+  }
+  
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    const jsonCandidate = cleaned.substring(startIdx, endIdx + 1);
+    try {
+      return JSON.parse(jsonCandidate);
+    } catch (e) {
+      console.warn('[cleanAndParseJSON] Substring parsing failed. Trying standard parse.', e);
+    }
+  }
+  
+  return JSON.parse(cleaned);
+}
 
 const DEFAULT_PORTFOLIO_LEDGER = {
   NVDA: { ticker: 'NVDA', qty: 15, avgPrice: 820.00, dividends: 150.00 },
@@ -548,6 +588,84 @@ export default function PortfolioTracker({
     localStorage.setItem('fsi_adjust_with_dividends', adjustWithDividends ? 'true' : 'false');
   }, [adjustWithDividends]);
 
+  const [cashTastyTrade, setCashTastyTrade] = useState(() => {
+    try {
+      const saved = localStorage.getItem('fsi_cash_tastytrade');
+      return saved ? parseFloat(saved) : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  const [cashAvenue, setCashAvenue] = useState(() => {
+    try {
+      const saved = localStorage.getItem('fsi_cash_avenue');
+      return saved ? parseFloat(saved) : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  const [isEditingCash, setIsEditingCash] = useState(false);
+  const [tempTastyTrade, setTempTastyTrade] = useState('');
+  const [tempAvenue, setTempAvenue] = useState('');
+
+  const handleStartEditingCash = () => {
+    setTempTastyTrade(String(cashTastyTrade || ''));
+    setTempAvenue(String(cashAvenue || ''));
+    setIsEditingCash(true);
+  };
+
+  const handleSaveCash = () => {
+    const valTasty = parseFloat(tempTastyTrade);
+    const parsedTasty = isNaN(valTasty) ? 0 : Math.max(0, valTasty);
+
+    const valAvenue = parseFloat(tempAvenue);
+    const parsedAvenue = isNaN(valAvenue) ? 0 : Math.max(0, valAvenue);
+
+    setCashTastyTrade(parsedTasty);
+    localStorage.setItem('fsi_cash_tastytrade', String(parsedTasty));
+
+    setCashAvenue(parsedAvenue);
+    localStorage.setItem('fsi_cash_avenue', String(parsedAvenue));
+
+    setIsEditingCash(false);
+
+    // Dispatch sync event
+    window.dispatchEvent(new CustomEvent('portfolio_updated'));
+  };
+
+  const handleCancelEditingCash = () => {
+    setIsEditingCash(false);
+  };
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const savedTasty = localStorage.getItem('fsi_cash_tastytrade');
+        const parsedTasty = savedTasty ? parseFloat(savedTasty) : 0;
+        const savedAvenue = localStorage.getItem('fsi_cash_avenue');
+        const parsedAvenue = savedAvenue ? parseFloat(savedAvenue) : 0;
+
+        setCashTastyTrade(parsedTasty);
+        setCashAvenue(parsedAvenue);
+
+        if (!isEditingCash) {
+          setTempTastyTrade(String(parsedTasty || ''));
+          setTempAvenue(String(parsedAvenue || ''));
+        }
+      } catch (e) {
+        console.error('Failed to sync cash', e);
+      }
+    };
+    window.addEventListener('portfolio_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('portfolio_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [isEditingCash]);
+
   const [sortField, setSortField] = useState(null); // 'ticker', 'name', 'qty', 'avgPrice', 'investedCost', 'currentPrice', 'currentValuation', 'profitLossPct', 'country'
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
 
@@ -634,7 +752,7 @@ export default function PortfolioTracker({
 
     // Se estiver em modo gemini, a chave de API deve ser válida e presente. Caso contrário, gera erro explícito.
     if (activeMode === 'gemini') {
-      if (!activeKey || activeKey === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8') {
+      if (!activeKey || activeKey === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' || activeKey === 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw') {
         setNewsSimError('Erro: Chave API do Gemini ausente ou inválida. Por favor, configure uma chave Gemini ativa no menu de Configurações no canto superior direito para poder utilizar o modo Gemini AI Ativo.');
         setIsSimulatingNews(false);
         return;
@@ -745,7 +863,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
         throw new Error('Formato de resposta inválido recebido da API Gemini.');
       }
       
-      const parsedData = JSON.parse(resText.trim());
+      const parsedData = cleanAndParseJSON(resText);
       setAiReport(parsedData);
       setSuccessMessage('Simulação concluída com sucesso (Processada via Gemini AI Ativa)!');
       setTimeout(() => setSuccessMessage(''), 4000);
@@ -795,7 +913,7 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
     }).join(', ');
 
     if (activeMode === 'gemini') {
-      if (!activeKey || activeKey === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8') {
+      if (!activeKey || activeKey === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' || activeKey === 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw') {
         setErrorMessage('Erro: Chave API do Gemini ausente ou inválida. Por favor, configure uma chave Gemini ativa no menu de Configurações para poder atualizar via Gemini.');
         setIsRefreshingNews(false);
         return;
@@ -876,7 +994,7 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
           throw new Error('Formato de resposta inválido recebido da API Gemini.');
         }
 
-        const parsedData = JSON.parse(resText.trim());
+        const parsedData = cleanAndParseJSON(resText);
         if (Array.isArray(parsedData) && parsedData.length > 0) {
           setNewsFeed(parsedData);
           setNewsLastUpdated(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
@@ -1079,12 +1197,26 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
   // Exportar carteiras (EUA e Brasil)
   const handleExportPortfolios = () => {
     try {
+      // Obter parâmetros de risco (stop loss) do localStorage
+      let riskParams = {};
+      try {
+        const savedParams = localStorage.getItem('fsi_portfolio_risk_parameters');
+        if (savedParams) {
+          riskParams = JSON.parse(savedParams);
+        }
+      } catch (e) {
+        console.error("Erro ao ler fsi_portfolio_risk_parameters do localStorage", e);
+      }
+
       const backupData = {
         version: "1.0",
         timestamp: new Date().toISOString(),
         exchangeRate: usdToBrlInput,
         ledgerUs,
-        ledgerBr
+        ledgerBr,
+        cashTastyTrade,
+        cashAvenue,
+        riskParams
       };
 
       const dataStr = JSON.stringify(backupData, null, 2);
@@ -1204,6 +1336,42 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
             setUsdToBrlInput(parsed.exchangeRate);
             localStorage.setItem('fsi_usd_to_brl', parsed.exchangeRate);
           }
+        }
+
+        // Import cash values if present in the backup
+        if (parsed.cashTastyTrade !== undefined) {
+          const tastyVal = parseFloat(parsed.cashTastyTrade);
+          if (!isNaN(tastyVal)) {
+            const val = Math.max(0, tastyVal);
+            setCashTastyTrade(val);
+            localStorage.setItem('fsi_cash_tastytrade', String(val));
+          }
+        }
+        if (parsed.cashAvenue !== undefined) {
+          const avenueVal = parseFloat(parsed.cashAvenue);
+          if (!isNaN(avenueVal)) {
+            const val = Math.max(0, avenueVal);
+            setCashAvenue(val);
+            localStorage.setItem('fsi_cash_avenue', String(val));
+          }
+        }
+
+        // Import risk parameters if present in the backup
+        if (parsed.riskParams && typeof parsed.riskParams === 'object') {
+          const importedRiskParams = {};
+          for (const ticker of Object.keys(parsed.riskParams)) {
+            const param = parsed.riskParams[ticker];
+            if (param && typeof param === 'object') {
+              importedRiskParams[ticker] = {};
+              if (param.stopPrice !== undefined && param.stopPrice !== null) {
+                const sp = parseFloat(param.stopPrice);
+                if (!isNaN(sp)) {
+                  importedRiskParams[ticker].stopPrice = Math.max(0, sp);
+                }
+              }
+            }
+          }
+          localStorage.setItem('fsi_portfolio_risk_parameters', JSON.stringify(importedRiskParams));
         }
 
         // Explicitly write to localStorage to prevent race conditions during updates
@@ -1619,6 +1787,25 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     : activePortfolio === 'BR' 
       ? (totalValuationBr > 0 ? (totalDailyChangeValBr / totalValuationBr) * 100 : 0)
       : totalDailyChangePctGlobal;
+
+  // Dynamic Cash & Liquidity calculations in display currency
+  const cashDetails = React.useMemo(() => {
+    const multiplier = globalCurrency === 'BRL' ? usdToBrl : 1;
+    const displayTasty = cashTastyTrade * multiplier;
+    const displayAvenue = cashAvenue * multiplier;
+    const totalCash = displayTasty + displayAvenue;
+    const activeCash = activePortfolio === 'BR' ? 0 : totalCash;
+    const consolidatedWealth = activeCash + totalValuation;
+
+    return {
+      displayTasty,
+      displayAvenue,
+      totalCash,
+      activeCash,
+      totalInvestments: totalValuation,
+      consolidatedWealth
+    };
+  }, [cashTastyTrade, cashAvenue, totalValuation, activePortfolio, globalCurrency, usdToBrl]);
 
   // Concentração setorial
   const sectorCounts = {};
@@ -2164,13 +2351,32 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #6366f1' }} className="glass-panel">
           <div style={styles.kpiMeta}>
             <span style={styles.kpiTitle}>
-              {activePortfolio === 'GLOBAL' ? 'Patrimônio Consolidado' : 'Patrimônio da Carteira'}
+              {activePortfolio === 'BR' ? 'Patrimônio da Carteira' : 'Patrimônio Consolidado'}
             </span>
             <span style={{ color: '#6366f1', background: 'rgba(99, 102, 241, 0.12)', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>Valuation</span>
           </div>
-          <span style={styles.kpiValue}>{formatVal(totalValuation)}</span>
-          <span style={styles.kpiDesc}>Patrimônio totalizado com base nas cotações de mercado</span>
+          <span style={styles.kpiValue}>
+            {formatVal(activePortfolio === 'BR' ? totalValuation : cashDetails.consolidatedWealth)}
+          </span>
+          <span style={styles.kpiDesc}>
+            {activePortfolio === 'BR' 
+              ? 'Patrimônio totalizado com base nas cotações de mercado' 
+              : 'Soma de investimentos + caixa total disponível'}
+          </span>
         </div>
+
+        {activePortfolio !== 'BR' && (
+          <div style={{ ...styles.kpiCard, borderLeft: '4px solid #38bdf8' }} className="glass-panel">
+            <div style={styles.kpiMeta}>
+              <span style={styles.kpiTitle}>Caixa Total Disponível</span>
+              <span style={{ color: '#38bdf8', background: 'rgba(56, 189, 248, 0.12)', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>Caixa</span>
+            </div>
+            <span style={styles.kpiValue}>{formatVal(cashDetails.totalCash)}</span>
+            <span style={styles.kpiDesc}>
+              TastyTrade: {formatVal(cashDetails.displayTasty)} | Avenue: {formatVal(cashDetails.displayAvenue)}
+            </span>
+          </div>
+        )}
 
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #94a3b8' }} className="glass-panel">
           <div style={styles.kpiMeta}>
@@ -2228,6 +2434,188 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
           <span style={styles.kpiDesc}>Ganho ou perda estimado na sessão de hoje</span>
         </div>
       </div>
+
+      {/* Cash Management Panel */}
+      {activePortfolio !== 'BR' && (
+        <div style={styles.cashPanel} className="glass-panel">
+          <div style={styles.cashHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Layers size={16} color="#38bdf8" />
+              <div>
+                <h3 style={styles.cashTitle}>Caixa e Liquidez Disponível</h3>
+                <p style={{ fontSize: '11px', color: '#64748b', margin: 0, marginTop: 2 }}>Informe seus saldos em caixa para ter a visão consolidada do portfólio</p>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', alignItems: 'center' }}>
+              {!isEditingCash ? (
+                <button 
+                  onClick={handleStartEditingCash}
+                  className="btn"
+                  style={{ 
+                    height: '26px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 6, 
+                    fontSize: '11px', 
+                    padding: '0 12px', 
+                    cursor: 'pointer',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '6px',
+                    color: '#ffffff',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Edit3 size={12} color="#38bdf8" /> Habilitar Alterações
+                </button>
+              ) : (
+                <>
+                  <button 
+                    onClick={handleSaveCash}
+                    className="btn btn-primary"
+                    style={{ height: '26px', display: 'flex', alignItems: 'center', gap: 6, fontSize: '11px', padding: '0 12px', cursor: 'pointer' }}
+                  >
+                    <Save size={12} /> Salvar
+                  </button>
+                  <button 
+                    onClick={handleCancelEditingCash}
+                    className="btn"
+                    style={{ 
+                      height: '26px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 6, 
+                      fontSize: '11px', 
+                      padding: '0 12px', 
+                      cursor: 'pointer',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                      borderRadius: '6px',
+                      color: '#fda4af',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <X size={12} /> Cancelar
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div style={styles.cashBody}>
+            {/* Inputs Section */}
+            <div style={styles.cashInputsRow}>
+              <div style={styles.cashInputGroup}>
+                <span style={styles.cashInputLabel}>TastyTrade (USD)</span>
+                {isEditingCash ? (
+                  <div style={{
+                    ...styles.cashInputWrapper,
+                    border: '1px solid rgba(56, 189, 248, 0.3)',
+                    background: 'rgba(0, 0, 0, 0.4)',
+                  }}>
+                    <span style={styles.cashCurrencySymbol}>$</span>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={tempTastyTrade}
+                      onChange={(e) => setTempTastyTrade(e.target.value)}
+                      style={styles.cashInput}
+                    />
+                  </div>
+                ) : (
+                  <div style={styles.cashDisplayVal}>
+                    <span>{formatVal(cashDetails.displayTasty)}</span>
+                    {globalCurrency === 'BRL' && (
+                      <span style={styles.cashNativeBadge}>
+                        $ {cashTastyTrade.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <div style={styles.cashInputGroup}>
+                <span style={styles.cashInputLabel}>Avenue (USD)</span>
+                {isEditingCash ? (
+                  <div style={{
+                    ...styles.cashInputWrapper,
+                    border: '1px solid rgba(56, 189, 248, 0.3)',
+                    background: 'rgba(0, 0, 0, 0.4)',
+                  }}>
+                    <span style={styles.cashCurrencySymbol}>$</span>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={tempAvenue}
+                      onChange={(e) => setTempAvenue(e.target.value)}
+                      style={styles.cashInput}
+                    />
+                  </div>
+                ) : (
+                  <div style={styles.cashDisplayVal}>
+                    <span>{formatVal(cashDetails.displayAvenue)}</span>
+                    {globalCurrency === 'BRL' && (
+                      <span style={styles.cashNativeBadge}>
+                        $ {cashAvenue.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Allocations Summary & Progress Bar */}
+            <div style={styles.cashSummaryCol}>
+              <div style={styles.cashStatsRow}>
+                <div style={styles.cashStat}>
+                  <span style={styles.cashStatLabel}>Caixa Total:</span>
+                  <strong style={{ ...styles.cashStatValue, color: '#38bdf8' }}>
+                    {formatVal(cashDetails.totalCash)}
+                  </strong>
+                </div>
+                <div style={styles.cashStat}>
+                  <span style={styles.cashStatLabel}>Ações Custodiadas:</span>
+                  <strong style={{ ...styles.cashStatValue, color: '#10b981' }}>
+                    {formatVal(cashDetails.totalInvestments)}
+                  </strong>
+                </div>
+                <div style={styles.cashStat}>
+                  <span style={styles.cashStatLabel}>Patrimônio Total:</span>
+                  <strong style={{ ...styles.cashStatValue, color: '#ffffff' }}>
+                    {formatVal(cashDetails.consolidatedWealth)}
+                  </strong>
+                </div>
+              </div>
+              
+              {/* Visual allocation progress bar */}
+              {cashDetails.consolidatedWealth > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
+                  <div style={styles.progressBarBg}>
+                    <div 
+                      style={{ 
+                        ...styles.progressBarFill, 
+                        width: `${(cashDetails.totalCash / cashDetails.consolidatedWealth) * 100}%`,
+                        background: 'linear-gradient(90deg, #38bdf8, #a855f7)',
+                      }} 
+                    />
+                  </div>
+                  <div style={styles.progressLabels}>
+                    <span style={{ color: '#38bdf8' }}>
+                      Caixa: {((cashDetails.totalCash / cashDetails.consolidatedWealth) * 100).toFixed(1)}%
+                    </span>
+                    <span style={{ color: '#10b981' }}>
+                      Investimentos: {((cashDetails.totalInvestments / cashDetails.consolidatedWealth) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Workspace Layout Split */}
       <div style={styles.layoutSplit}>
@@ -4246,5 +4634,152 @@ const styles = {
     padding: '2px 8px',
     borderRadius: '12px',
     border: '1px solid',
+  },
+  cashPanel: {
+    padding: 20,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+    textAlign: 'left',
+    marginTop: 16,
+  },
+  cashHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    paddingBottom: 12,
+    marginBottom: 4,
+  },
+  cashTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#ffffff',
+    margin: 0,
+  },
+  cashSubtitle: {
+    fontSize: '11px',
+    color: '#64748b',
+    marginLeft: 'auto',
+  },
+  cashBody: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: 24,
+    alignItems: 'center',
+  },
+  cashInputsRow: {
+    display: 'flex',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  cashInputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+    flex: 1,
+    minWidth: '130px',
+  },
+  cashInputLabel: {
+    fontSize: '11px',
+    color: '#94a3b8',
+    fontWeight: '500',
+    textAlign: 'left',
+  },
+  cashInputWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    background: 'rgba(0, 0, 0, 0.25)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '6px',
+    padding: '6px 10px',
+  },
+  cashCurrencySymbol: {
+    color: '#64748b',
+    fontSize: '12px',
+    marginRight: 6,
+    userSelect: 'none',
+  },
+  cashInput: {
+    background: 'none',
+    border: 'none',
+    color: '#ffffff',
+    fontSize: '12px',
+    outline: 'none',
+    width: '100%',
+    fontFamily: 'var(--font-mono)',
+  },
+  cashDisplayVal: {
+    background: 'rgba(0, 0, 0, 0.2)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '6px',
+    padding: '8px 12px',
+    color: '#ffffff',
+    fontSize: '13px',
+    fontWeight: '700',
+    fontFamily: 'var(--font-mono)',
+    minHeight: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    textAlign: 'left',
+  },
+  cashNativeBadge: {
+    fontSize: '9px',
+    color: '#64748b',
+    background: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '4px',
+    padding: '1px 5px',
+    marginLeft: 'auto',
+    fontWeight: 'normal',
+    fontFamily: 'var(--font-mono)',
+  },
+  cashSummaryCol: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+  },
+  cashStatsRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  cashStat: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 4,
+    flex: 1,
+  },
+  cashStatLabel: {
+    fontSize: '10px',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  cashStatValue: {
+    fontSize: '13px',
+    fontWeight: '600',
+  },
+  progressBarBg: {
+    width: '100%',
+    height: '6px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '3px',
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: '3px',
+    transition: 'width 0.4s ease-out',
+  },
+  progressLabels: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '10px',
+    fontWeight: '600',
   }
 };

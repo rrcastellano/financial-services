@@ -1,0 +1,551 @@
+Data transação,Data liquidação,Descrição,Valor,Saldo
+2023-11-27,2023-11-29,Cobrança de taxa de corretagem de OMF,-7.5,12.8
+2023-11-27,2023-11-29,Compra de 76 OMF a $ 3946 cada,-2998.95,20.3
+2023-11-27,2023-11-29,Compra de 18 ARCH a $ 16550 cada,-2979,3019.25
+2023-11-27,2023-11-29,Cobrança de taxa de corretagem de ARCH,-7.5,5998.25
+2023-11-27,2023-11-27,Câmbio de real para dólar,6005.75,6005.75
+2023-12-05,2023-12-06,Câmbio de real para dólar,9844.6,9857.4
+2023-12-07,2023-12-11,Cobrança de taxa de corretagem de TTWO,-5,144.44
+2023-12-07,2023-12-11,Compra de 12 TTWO a $ 15367 cada,-1844.04,149.44
+2023-12-07,2023-12-11,Cobrança de taxa de corretagem de LLY,-7.5,1993.48
+2023-12-07,2023-12-11,Compra de 4 LLY a $ 58554 cada,-2342.15,2000.98
+2023-12-07,2023-12-11,Cobrança de taxa de corretagem de AVGO,-7.5,4343.13
+2023-12-07,2023-12-11,Compra de 3 AVGO a $ 91763 cada,-2752.9,4350.63
+2023-12-07,2023-12-11,Compra de 20 GOOGL a $ 13732 cada,-2746.37,7103.53
+2023-12-07,2023-12-11,Cobrança de taxa de corretagem de GOOGL,-7.5,9849.9
+2023-12-13,2023-12-15,Cobrança de taxa de corretagem de GOOGL,-2.5,10
+2023-12-13,2023-12-15,Compra de 1 GOOGL a $ 13194 cada,-131.94,12.5
+2023-12-16,2023-12-18,Imposto sobre dividendo de ARCH,-6.1,24.24
+2023-12-16,2023-12-18,Dividendos de ARCH,20.34,30.34
+2023-12-19,2023-12-20,Câmbio de real para dólar,4015.37,4039.61
+2023-12-20,2023-12-22,Cobrança de taxa de corretagem de UNH,-5,62.78
+2023-12-20,2023-12-22,Compra de 33 UNH a $ 52261 cada,-1724.6,67.78
+2023-12-20,2023-12-22,Cobrança de taxa de corretagem de BABA,-7.5,1792.38
+2023-12-20,2023-12-22,Compra de 30 BABA a $ 7466 cada,-2239.73,1799.88
+2023-12-30,2024-01-02,Dividendos de AVGO,15.75,73.8
+2023-12-30,2024-01-02,Imposto sobre dividendo de AVGO,-4.73,58.05
+2024-01-19,2024-01-22,Câmbio de real para dólar,9957.17,10030.97
+2024-01-22,2024-01-24,Cobrança de taxa de corretagem de MELI,-7.5,10.62
+2024-01-22,2024-01-24,Compra de 128 MELI a $ 1.74872 cada,-2238.36,18.12
+2024-01-22,2024-01-24,Compra de 5 META a $ 38169 cada,-1908.44,2256.48
+2024-01-22,2024-01-24,Cobrança de taxa de corretagem de META,-5,4164.92
+2024-01-22,2024-01-24,Compra de 32 NVDA a $ 59925 cada,-1917.6,4169.92
+2024-01-22,2024-01-24,Cobrança de taxa de corretagem de NVDA,-5,6087.52
+2024-01-22,2024-01-24,Cobrança de taxa de corretagem de MSFT,-5,6092.52
+2024-01-22,2024-01-24,Compra de 5 MSFT a $ 39711 cada,-1985.56,6097.52
+2024-01-22,2024-01-24,Cobrança de taxa de corretagem de AAPL,-5,8083.08
+2024-01-22,2024-01-24,Compra de 10 AAPL a $ 19429 cada,-1942.89,8088.08
+2024-02-16,2024-02-16,Transferência para Conta corrente,-10,2.3
+2024-02-16,2024-02-16,Imposto sobre dividendo de AAPL,-0.72,12.3
+2024-02-16,2024-02-16,Dividendos de AAPL,2.4,13.02
+2024-02-24,2024-02-26,Imposto sobre dividendo de OMF,-22.8,55.5
+2024-02-24,2024-02-26,Dividendos de OMF,76,78.3
+2024-03-01,2024-03-01,Transferência da Conta corrente para Conta investimento,2.56,58.06
+2024-03-02,2024-03-04,Transferência da Conta corrente para Conta investimento,22282.72,22340.78
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de BABA,-2.5,1.56
+2024-03-04,2024-03-06,Compra de 109 BABA a $ 7238 cada,-788.9,4.06
+2024-03-04,2024-03-06,Compra de 2 UNH a $ 48507 cada,-970.15,792.96
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de UNH,-2.5,1763.11
+2024-03-04,2024-03-06,Compra de 6 TTWO a $ 14890 cada,-893.4,1765.61
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de TTWO,-2.5,2659.01
+2024-03-04,2024-03-06,Compra de 15 OMF a $ 4877 cada,-731.55,2661.51
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de OMF,-2.5,3393.06
+2024-03-04,2024-03-06,Compra de 1 NVDA a $ 84648 cada,-846.48,3395.56
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de NVDA,-2.5,4242.04
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de MSFT,-2.5,4244.54
+2024-03-04,2024-03-06,Compra de 2 MSFT a $ 41382 cada,-827.65,4247.04
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de META,-2.5,5074.69
+2024-03-04,2024-03-06,Compra de 15 META a $ 50062 cada,-750.92,5077.19
+2024-03-04,2024-03-06,Compra de 05 MELI a $ 1.60143 cada,-800.72,5828.11
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de MELI,-2.5,6628.83
+2024-03-04,2024-03-06,Compra de 1 LLY a $ 78864 cada,-788.64,6631.33
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de LLY,-2.5,7419.97
+2024-03-04,2024-03-06,Compra de 6 GOOGL a $ 13353 cada,-801.18,7422.47
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de GOOGL,-2.5,8223.65
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de AVGO,-2.5,8226.15
+2024-03-04,2024-03-06,Compra de 06 AVGO a $ 1.39867 cada,-839.2,8228.65
+2024-03-04,2024-03-06,Compra de 5 ARCH a $ 17813 cada,-890.65,9067.85
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de ARCH,-2.5,9958.5
+2024-03-04,2024-03-06,Compra de 5 AAPL a $ 17636 cada,-881.78,9961
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de AAPL,-2.5,10842.78
+2024-03-04,2024-03-06,Compra de 200 FBTC a $ 5744 cada,-11488,10845.28
+2024-03-04,2024-03-06,Cobrança de taxa de corretagem de FBTC,-7.5,22333.28
+2024-03-08,2024-03-11,Câmbio de real para dólar,8644.62,8646.18
+2024-03-09,2024-03-11,Dividendos de LLY,5.2,8649.82
+2024-03-09,2024-03-11,Imposto sobre dividendo de LLY,-1.56,8644.62
+2024-03-11,2024-03-13,Compra de 098 QCOM a $ 16975 cada,-166.36,1.28
+2024-03-11,2024-03-13,Cobrança de taxa de corretagem de QCOM,-2.5,167.64
+2024-03-11,2024-03-13,Compra de 10 AAPL a $ 17313 cada,-1731.28,170.14
+2024-03-11,2024-03-13,Cobrança de taxa de corretagem de AAPL,-5,1901.42
+2024-03-11,2024-03-13,Cobrança de taxa de corretagem de MELI,-2.5,1906.42
+2024-03-11,2024-03-13,Compra de 06 MELI a $ 1.54344 cada,-926.06,1908.92
+2024-03-11,2024-03-13,Compra de 32 UNH a $ 47928 cada,-1533.7,2834.98
+2024-03-11,2024-03-13,Cobrança de taxa de corretagem de UNH,-5,4368.68
+2024-03-11,2024-03-13,Compra de 95 TTWO a $ 14469 cada,-1374.52,4373.68
+2024-03-11,2024-03-13,Cobrança de taxa de corretagem de TTWO,-5,5748.2
+2024-03-11,2024-03-13,Compra de 17 QCOM a $ 16995 cada,-2889.12,5753.2
+2024-03-11,2024-03-13,Cobrança de taxa de corretagem de QCOM,-7.5,8642.32
+2024-03-15,2024-03-15,Dividendos de MSFT,3.75,3.9
+2024-03-15,2024-03-15,Imposto sobre dividendo de MSFT,-1.13,0.15
+2024-03-16,2024-03-18,Dividendos de ARCH,29.7,24.69
+2024-03-16,2024-03-18,Imposto sobre dividendo de ARCH,-8.91,-5.01
+2024-03-20,2024-03-20,Dividendos de UNH,9.96,31.66
+2024-03-20,2024-03-20,Imposto sobre dividendo de UNH,-2.99,21.7
+2024-03-27,2024-03-27,Dividendos de META,2.5,33.41
+2024-03-27,2024-03-27,Imposto sobre dividendo de META,-0.75,30.91
+2024-03-28,2024-04-02,Compra de 194 NVDY a $ 2942 cada,-5707.44,25.05
+2024-03-28,2024-04-02,Cobrança de taxa de corretagem de NVDY,-7.5,5732.49
+2024-03-28,2024-03-28,Imposto sobre dividendo de NVDA,-0.05,5739.99
+2024-03-28,2024-03-28,Dividendos de NVDA,0.17,5740.04
+2024-03-28,2024-03-28,Câmbio de real para dólar,5706.46,5739.87
+2024-04-02,2024-04-02,Dividendos de AVGO,18.9,38.28
+2024-04-02,2024-04-02,Imposto sobre dividendo de AVGO,-5.67,19.38
+2024-04-09,2024-04-09,Dividendos de NVDY,506.01,392.49
+2024-04-09,2024-04-09,Imposto sobre dividendo de NVDY,-151.8,-113.52
+2024-04-10,2024-04-10,Imposto de aluguel de ativo,-0.03,392.56
+2024-04-10,2024-04-10,Rentabilidade de aluguel de ativo,0.1,392.59
+2024-04-15,2024-04-15,Ajuste March Campaign,54.53,447.09
+2024-04-19,2024-04-23,Compra de 276 QCOM a $ 16108 cada,-444.59,0
+2024-04-19,2024-04-23,Cobrança de taxa de corretagem de QCOM,-2.5,444.59
+2024-05-09,2024-05-09,Imposto sobre dividendo de NVDY,-69.77,162.8
+2024-05-09,2024-05-09,Dividendos de NVDY,232.57,232.57
+2024-05-14,2024-05-16,Compra de 306 NVDY a $ 2619 cada,-8014.11,1149.53
+2024-05-14,2024-05-16,Cobrança de taxa de corretagem de NVDY,-7.5,9163.64
+2024-05-14,2024-05-16,Cobrança de taxa de corretagem de UNH,-7.5,9171.14
+2024-05-14,2024-05-16,Venda de 85 UNH a $ 51242 cada,4355.53,9178.64
+2024-05-14,2024-05-16,Venda de 25 AAPL a $ 18671 cada,4667.81,4823.11
+2024-05-14,2024-05-16,Cobrança de taxa de corretagem de AAPL,-7.5,155.3
+2024-05-15,2024-05-17,Compra de 5217 CONY a $ 2194 cada,-1144.53,0
+2024-05-15,2024-05-17,Cobrança de taxa de corretagem de CONY,-5,1144.53
+2024-05-17,2024-05-17,Imposto sobre dividendo de AAPL,-1.88,4.37
+2024-05-17,2024-05-17,Dividendos de AAPL,6.25,6.25
+2024-05-18,2024-05-20,Imposto sobre dividendo de OMF,-28.39,70.62
+2024-05-18,2024-05-20,Dividendos de OMF,94.64,99.01
+2024-05-21,2024-05-21,Imposto sobre ADR de BABA,-0.82,69.8
+2024-06-08,2024-06-10,Dividendos de CONY,88.59,1028.86
+2024-06-08,2024-06-10,Dividendos de NVDY,1281.5,940.27
+2024-06-08,2024-06-10,Imposto sobre dividendo de NVDY,-384.45,-341.23
+2024-06-08,2024-06-10,Imposto sobre dividendo de CONY,-26.58,43.22
+2024-06-10,2024-06-11,Cobrança de taxa de corretagem de CONY,-5,1.86
+2024-06-10,2024-06-11,Compra de 4773 CONY a $ 2141 cada,-1022,6.86
+2024-06-11,2024-06-11,Imposto sobre dividendo de LLY,-1.95,6.41
+2024-06-11,2024-06-11,Dividendos de LLY,6.5,8.36
+2024-06-14,2024-06-14,Dividendos de MSFT,5.25,10.08
+2024-06-14,2024-06-14,Imposto sobre dividendo de MSFT,-1.58,4.83
+2024-06-15,2024-06-17,Imposto sobre dividendo de ARCH,-7.66,27.98
+2024-06-15,2024-06-17,Imposto de aluguel de ativo,-0.01,35.64
+2024-06-15,2024-06-17,Rentabilidade de aluguel de ativo,0.04,35.65
+2024-06-15,2024-06-17,Dividendos de ARCH,25.53,35.61
+2024-06-18,2024-06-20,Cobrança de taxa de corretagem de MELI,-7.5,7345.54
+2024-06-18,2024-06-20,Venda de 238 MELI a $ 1.57045 cada,3737.67,7353.04
+2024-06-18,2024-06-20,Venda de 23 ARCH a $ 15614 cada,3591.11,3615.37
+2024-06-18,2024-06-20,Cobrança de taxa de corretagem de ARCH,-7.5,24.26
+2024-06-18,2024-06-18,Dividendos de GOOGL,5.4,31.76
+2024-06-18,2024-06-18,Imposto sobre dividendo de GOOGL,-1.62,26.36
+2024-06-20,2024-06-21,Compra de 57552 CONY a $ 2166 cada,-12465.76,2.5
+2024-06-20,2024-06-21,Cobrança de taxa de corretagem de CONY,-7.5,12468.26
+2024-06-20,2024-06-21,Cobrança de taxa de corretagem de MSFT,-7.5,12475.76
+2024-06-20,2024-06-21,Venda de 7 MSFT a $ 44131 cada,3089.17,12483.26
+2024-06-20,2024-06-21,Cobrança de taxa de corretagem de BABA,-7.5,9394.09
+2024-06-20,2024-06-21,Venda de 409 BABA a $ 7472 cada,3056.05,9401.59
+2024-06-20,2024-06-20,Transferência para Conta corrente,-1000,6345.54
+2024-06-21,2024-06-21,Imposto sobre dividendo de QCOM,-5.29,14.84
+2024-06-21,2024-06-21,Dividendos de QCOM,17.63,20.13
+2024-06-27,2024-06-27,Imposto sobre dividendo de META,-0.98,17.11
+2024-06-27,2024-06-27,Dividendos de META,3.25,18.09
+2024-06-29,2024-07-01,Dividendos de NVDA,0.42,30.63
+2024-06-29,2024-07-01,Imposto sobre dividendo de NVDA,-0.13,30.21
+2024-06-29,2024-07-01,Dividendos de AVGO,18.9,30.34
+2024-06-29,2024-07-01,Imposto sobre dividendo de AVGO,-5.67,11.44
+2024-07-01,2024-07-02,Câmbio de real para dólar,8713.8,8744.43
+2024-07-02,2024-07-03,Compra de 300 MSTY a $ 2860 cada,-8579.49,157.44
+2024-07-02,2024-07-03,Cobrança de taxa de corretagem de MSTY,-7.5,8736.93
+2024-07-05,2024-07-08,Venda de 275 TTWO a $ 15215 cada,4184.13,4334.07
+2024-07-05,2024-07-08,Cobrança de taxa de corretagem de TTWO,-7.5,149.94
+2024-07-08,2024-07-08,Transferência para Conta corrente,-1500,2084.07
+2024-07-08,2024-07-08,Transferência para Conta corrente,-750,3584.07
+2024-07-09,2024-07-09,Dividendos de CONY,1062.58,4182.34
+2024-07-09,2024-07-09,Imposto sobre dividendo de CONY,-318.77,3119.76
+2024-07-09,2024-07-10,Imposto sobre dividendo de NVDY,-370.61,3438.53
+2024-07-09,2024-07-10,Dividendos de NVDY,1235.35,3809.14
+2024-07-09,2024-07-09,Dividendos de MSTY,699.6,2573.79
+2024-07-09,2024-07-09,Imposto sobre dividendo de MSTY,-209.88,1874.19
+2024-07-10,2024-07-10,Transferência para Conta corrente,-1000,3182.34
+2024-07-12,2024-07-12,Rentabilidade de aluguel de ativo,0.04,3182.37
+2024-07-12,2024-07-12,Imposto de aluguel de ativo,-0.01,3182.33
+2024-07-13,2024-07-15,Imposto sobre ADR de BABA,-0.81,3249.45
+2024-07-13,2024-07-15,Dividendos de BABA,67.89,3250.26
+2024-07-16,2024-07-16,Transferência para Conta corrente,-2000,1249.45
+2024-07-17,2024-07-17,Transferência para Conta corrente,-1100,149.45
+2024-08-08,2024-08-08,Transferência da Conta corrente para Conta investimento,375.81,525.26
+2024-08-09,2024-08-09,Dividendos de MSTY,582.15,1846.36
+2024-08-09,2024-08-09,Dividendos de NVDY,625.6,1264.21
+2024-08-09,2024-08-09,Imposto sobre dividendo de NVDY,-187.68,638.61
+2024-08-09,2024-08-09,Imposto sobre dividendo de MSTY,-174.65,826.29
+2024-08-09,2024-08-09,Dividendos de CONY,679.54,1000.94
+2024-08-09,2024-08-09,Imposto sobre dividendo de CONY,-203.86,321.4
+2024-08-14,2024-08-14,Imposto de aluguel de ativo,-0.05,1846.48
+2024-08-14,2024-08-14,Rentabilidade de aluguel de ativo,0.17,1846.53
+2024-08-16,2024-08-19,Compra de 11505 CONY a $ 1598 cada,-1838.48,3
+2024-08-16,2024-08-19,Cobrança de taxa de corretagem de CONY,-5,1841.48
+2024-08-17,2024-08-19,Imposto sobre dividendo de OMF,-28.39,69.25
+2024-08-17,2024-08-19,Dividendos de OMF,94.64,97.64
+2024-09-05,2024-09-06,Compra de 73661 CONY a $ 1350 cada,-9942.19,0.5
+2024-09-05,2024-09-06,Cobrança de taxa de corretagem de CONY,-7.5,9942.69
+2024-09-05,2024-09-06,Cobrança de taxa de corretagem de FBTC,-7.5,9950.19
+2024-09-05,2024-09-06,Venda de 200 FBTC a $ 4944 cada,9888.44,9957.69
+2024-09-10,2024-09-10,Transferência para Conta corrente,-50,1929.17
+2024-09-10,2024-09-10,Imposto sobre dividendo de CONY,-230.68,1979.17
+2024-09-10,2024-09-10,Dividendos de CONY,768.92,2209.85
+2024-09-10,2024-09-10,Imposto sobre dividendo de MSTY,-166.87,1440.93
+2024-09-10,2024-09-11,Imposto sobre dividendo de CONY,-247.24,1607.8
+2024-09-10,2024-09-10,Dividendos de MSTY,556.23,1855.04
+2024-09-10,2024-09-11,Dividendos de CONY,824.13,1298.81
+2024-09-10,2024-09-10,Dividendos de NVDY,677.4,474.68
+2024-09-10,2024-09-10,Imposto sobre dividendo de NVDY,-203.22,-202.72
+2024-09-11,2024-09-11,Dividendos de LLY,6.5,1933.72
+2024-09-11,2024-09-11,Imposto sobre dividendo de LLY,-1.95,1927.22
+2024-09-13,2024-09-13,Imposto de aluguel de ativo,-0.04,1933.8
+2024-09-13,2024-09-13,Rentabilidade de aluguel de ativo,0.12,1933.84
+2024-09-17,2024-09-17,Dividendos de GOOGL,5.4,1937.58
+2024-09-17,2024-09-17,Imposto sobre dividendo de GOOGL,-1.62,1932.18
+2024-09-24,2024-09-25,Taxa de corretagem de Opções,-10,447.58
+2024-09-24,2024-09-25,Compra de 5 contratos de PUT de BABA a $ 148 cada,-740,457.58
+2024-09-24,2024-09-25,Compra de 5 contratos de PUT de BABA a $ 148 cada,-740,1197.58
+2024-09-25,2024-09-25,Transferência da Conta corrente para Conta investimento,50,2487.58
+2024-09-25,2024-09-26,Venda de 8 contratos de PUT de BABA a $ 200 cada,1600,2437.58
+2024-09-25,2024-09-26,Taxa de corretagem de Opções,-10,837.58
+2024-09-25,2024-09-26,Venda de 2 contratos de PUT de BABA a $ 200 cada,400,847.58
+2024-09-26,2024-09-27,Taxa de corretagem de Opções,-5,32.58
+2024-09-26,2024-09-27,Compra de 5 contratos de PUT de BABA a $ 490 cada,-2450,37.58
+2024-09-27,2024-09-27,Dividendos de META,3.25,47.19
+2024-09-27,2024-09-27,Imposto sobre dividendo de QCOM,-5.29,43.94
+2024-09-27,2024-09-27,Imposto sobre dividendo de META,-0.98,49.23
+2024-09-27,2024-09-27,Dividendos de QCOM,17.63,50.21
+2024-10-01,2024-10-01,Dividendos de AVGO,19.08,60.55
+2024-10-01,2024-10-01,Imposto sobre dividendo de AVGO,-5.72,41.47
+2024-10-04,2024-10-04,Imposto sobre dividendo de NVDA,-0.13,60.84
+2024-10-04,2024-10-04,Dividendos de NVDA,0.42,60.97
+2024-10-12,2024-10-15,Dividendos de NVDY,549.95,445.8
+2024-10-12,2024-10-15,Imposto sobre dividendo de NVDY,-164.99,-104.15
+2024-10-16,2024-10-16,Imposto de aluguel de ativo,-0.36,446.63
+2024-10-16,2024-10-16,Rentabilidade de aluguel de ativo,1.19,446.99
+2024-10-19,2024-10-21,Dividendos de CONY,1694.75,1632.95
+2024-10-19,2024-10-21,Imposto sobre dividendo de CONY,-508.43,-61.8
+2024-10-21,2024-10-22,Taxa de corretagem de Opções,-3,4147.95
+2024-10-21,2024-10-22,Venda de 2 contratos de PUT de BABA a $ 504 cada,1008,4150.95
+2024-10-21,2024-10-22,Venda de 3 contratos de PUT de BABA a $ 504 cada,1512,3142.95
+2024-10-21,2024-10-22,Taxa de corretagem de Opções,-2,1630.95
+2024-10-26,2024-10-28,Dividendos de MSTY,1259.43,5029.55
+2024-10-26,2024-10-28,Imposto sobre dividendo de MSTY,-377.83,3770.12
+2024-10-31,2024-11-01,Compra de 1682 IBM a $ 20812 cada,-3500,1522.05
+2024-10-31,2024-11-01,Cobrança de taxa de corretagem de IBM,-7.5,5022.05
+2024-11-09,2024-11-12,Imposto sobre dividendo de NVDY,-153.42,1880.03
+2024-11-09,2024-11-12,Dividendos de NVDY,511.4,2033.45
+2024-11-11,2024-11-12,Transferência para Conta corrente,-1368.63,511.4
+2024-11-16,2024-11-18,Dividendos de CONY,3089.44,2674.01
+2024-11-16,2024-11-18,Imposto sobre dividendo de CONY,-926.83,-415.43
+2024-11-18,2024-11-19,Taxa de corretagem de Opções,-1,563.01
+2024-11-18,2024-11-19,Compra de 1 contrato de PUT de TSLA a $ 2110 cada,-2110,564.01
+2024-11-19,2024-11-19,Dividendos de OMF,94.64,629.26
+2024-11-19,2024-11-19,Imposto sobre dividendo de OMF,-28.39,534.62
+2024-11-23,2024-11-25,Dividendos de MSTY,1326.39,1557.73
+2024-11-23,2024-11-25,Imposto sobre dividendo de MSTY,-397.92,231.34
+2024-12-03,2024-12-04,Compra de 784 RCL a $ 24512 cada,-1921.02,0.01
+2024-12-03,2024-12-04,Cobrança de taxa de corretagem de RCL,-5,1921.03
+2024-12-03,2024-12-04,Cobrança de taxa de corretagem de MSTY,-7.5,1926.03
+2024-12-03,2024-12-04,Compra de 210 MSTY a $ 3397 cada,-7134.71,1933.53
+2024-12-03,2024-12-04,Compra de 150 NVDY a $ 2539 cada,-3808.5,9068.24
+2024-12-03,2024-12-04,Cobrança de taxa de corretagem de NVDY,-7.5,12876.74
+2024-12-03,2024-12-03,Transferência da Conta corrente para Conta investimento,2.51,12884.24
+2024-12-03,2024-12-04,Venda de 655 CONY a $ 1730 cada,11331.5,12881.73
+2024-12-03,2024-12-04,Cobrança de taxa de corretagem de CONY,-7.5,1550.23
+2024-12-07,2024-12-09,Dividendos de NVDY,770.32,539.23
+2024-12-07,2024-12-09,Imposto sobre dividendo de NVDY,-231.1,-231.09
+2024-12-10,2024-12-11,Compra de 227 RCL a $ 24474 cada,-556.72,0.01
+2024-12-10,2024-12-11,Cobrança de taxa de corretagem de RCL,-2.5,556.73
+2024-12-10,2024-12-11,Taxa de corretagem de Opções,-1,559.23
+2024-12-10,2024-12-11,Venda de 1 contrato de PUT de TSLA a $ 021 cada,21,560.23
+2024-12-11,2024-12-11,Imposto sobre dividendo de IBM,-8.42,24.22
+2024-12-11,2024-12-11,Imposto sobre dividendo de LLY,-1.95,32.64
+2024-12-11,2024-12-11,Dividendos de IBM,28.08,34.59
+2024-12-11,2024-12-11,Dividendos de LLY,6.5,6.51
+2024-12-12,2024-12-12,Rentabilidade de aluguel de ativo,0.9,24.85
+2024-12-12,2024-12-12,Imposto de aluguel de ativo,-0.27,23.95
+2024-12-14,2024-12-16,Dividendos de CONY,1167.8,842.31
+2024-12-14,2024-12-16,Imposto sobre dividendo de CONY,-350.34,-325.49
+2024-12-16,2024-12-17,Compra de 927 PYPL a $ 9059 cada,-839.81,-0
+2024-12-16,2024-12-17,Cobrança de taxa de corretagem de PYPL,-2.5,839.81
+2024-12-17,2024-12-17,Dividendos de GOOGL,5.4,3.78
+2024-12-17,2024-12-17,Imposto sobre dividendo de GOOGL,-1.62,-1.62
+2024-12-20,2024-12-20,Imposto sobre dividendo de QCOM,-5.29,16.12
+2024-12-20,2024-12-20,Dividendos de QCOM,17.63,21.41
+2024-12-21,2024-12-23,Dividendos de MSTY,1571.87,1116.43
+2024-12-21,2024-12-23,Imposto sobre dividendo de MSTY,-471.56,-455.44
+2024-12-23,2024-12-24,Compra de 1281 PYPL a $ 8674 cada,-1111.43,-0
+2024-12-23,2024-12-24,Cobrança de taxa de corretagem de PYPL,-5,1111.43
+2024-12-28,2024-12-30,Dividendos de NVDA,0.42,2.56
+2024-12-28,2024-12-30,Imposto sobre dividendo de META,-0.98,2.14
+2024-12-28,2024-12-30,Imposto sobre dividendo de NVDA,-0.13,3.12
+2024-12-28,2024-12-30,Dividendos de META,3.25,3.25
+2025-01-01,2025-01-02,Dividendos de AVGO,21.24,17.43
+2025-01-01,2025-01-02,Imposto sobre dividendo de AVGO,-6.37,-3.81
+2025-01-07,2025-01-07,Dividendos de NVDY,583.9,426.16
+2025-01-07,2025-01-07,Imposto sobre dividendo de NVDY,-175.17,-157.74
+2025-01-11,2025-01-13,Imposto sobre dividendo de CONY,-218.15,935.22
+2025-01-11,2025-01-13,Dividendos de CONY,727.16,1153.37
+2025-01-11,2025-01-13,Imposto sobre dividendo de CONY,-0.02,426.21
+2025-01-11,2025-01-13,Dividendos de CONY,0.07,426.23
+2025-01-14,2025-01-14,Imposto de aluguel de ativo,-0.26,941.4
+2025-01-14,2025-01-14,Rentabilidade de aluguel de ativo,0.88,941.66
+2025-01-14,2025-01-14,Dividendos de RCL,5.56,940.78
+2025-01-18,2025-01-21,Dividendos de MSTY,1162.39,1755.07
+2025-01-18,2025-01-21,Imposto sobre dividendo de MSTY,-348.72,592.68
+2025-01-21,2025-01-22,Cobrança de taxa de corretagem de TSLY,-5,9.14
+2025-01-21,2025-01-22,Compra de 122 TSLY a $ 1427 cada,-1740.93,14.14
+2025-01-25,2025-01-27,Imposto sobre dividendo de TSLY,-26.24,70.37
+2025-01-25,2025-01-27,Dividendos de TSLY,87.47,96.61
+2025-01-29,2025-01-29,Transferência da Conta corrente para Conta investimento,10.4,60.77
+2025-01-29,2025-01-29,Transferência para Conta corrente,-20,50.37
+2025-02-01,2025-02-03,Dividendos de NVDY,539.11,438.15
+2025-02-01,2025-02-03,Imposto sobre dividendo de NVDY,-161.73,-100.96
+2025-02-03,2025-02-04,Compra de 34 TSLY a $ 1263 cada,-429.25,6.4
+2025-02-03,2025-02-04,Cobrança de taxa de corretagem de TSLY,-2.5,435.65
+2025-02-06,2025-02-06,Transferência para Conta corrente,-0.03,6.37
+2025-02-08,2025-02-10,Dividendos de CONY,912.81,645.4
+2025-02-08,2025-02-10,Imposto sobre dividendo de CONY,-273.84,-267.41
+2025-02-08,2025-02-10,Imposto sobre dividendo de CONY,-0.02,6.43
+2025-02-08,2025-02-10,Dividendos de CONY,0.08,6.45
+2025-02-10,2025-02-11,Cobrança de taxa de corretagem de TSLY,-2.5,3.19
+2025-02-10,2025-02-11,Compra de 53 TSLY a $ 1207 cada,-639.71,5.69
+2025-02-12,2025-02-12,Rentabilidade de aluguel de ativo,2.61,5.02
+2025-02-12,2025-02-12,Imposto de aluguel de ativo,-0.78,2.41
+2025-02-15,2025-02-18,Dividendos de MSTY,1031.02,726.73
+2025-02-15,2025-02-18,Imposto sobre dividendo de MSTY,-309.31,-304.29
+2025-02-18,2025-02-19,Compra de 60 TSLY a $ 1208 cada,-724.8,-0.57
+2025-02-18,2025-02-19,Cobrança de taxa de corretagem de TSLY,-2.5,724.23
+2025-02-21,2025-02-21,Dividendos de OMF,94.64,65.68
+2025-02-21,2025-02-21,Imposto sobre dividendo de OMF,-28.39,-28.96
+2025-02-22,2025-02-24,Dividendos de TSLY,155.83,174.76
+2025-02-22,2025-02-24,Imposto sobre dividendo de TSLY,-46.75,18.93
+2025-03-01,2025-03-03,Imposto sobre dividendo de NVDY,-314.3,908.13
+2025-03-01,2025-03-03,Dividendos de NVDY,1047.67,1222.43
+2025-03-04,2025-03-05,Compra de 45 FI a $ 22558 cada,-10150.88,29976.85
+2025-03-04,2025-03-04,Transferência da Conta corrente para Conta investimento,39219.6,40127.73
+2025-03-05,2025-03-06,Compra de 229 MSTY a $ 2131 cada,-4880.79,27.87
+2025-03-05,2025-03-06,Cobrança de taxa de corretagem de MSTY,-10,4908.66
+2025-03-05,2025-03-06,Cobrança de taxa de corretagem de NVDY,-10,4918.66
+2025-03-05,2025-03-06,Compra de 272 NVDY a $ 1702 cada,-4629.66,4928.66
+2025-03-05,2025-03-06,Cobrança de taxa de corretagem de CONY,-10,9558.32
+2025-03-05,2025-03-06,Compra de 710 CONY a $ 985 cada,-6993.43,9568.32
+2025-03-05,2025-03-06,Compra de 1.455 TSLY a $ 922 cada,-13415.1,16561.75
+2025-03-08,2025-03-10,Dividendos de CONY,522.24,691.13
+2025-03-08,2025-03-10,Imposto sobre dividendo de CONY,-156.67,168.89
+2025-03-08,2025-03-10,Imposto sobre dividendo de CONY,-127.58,325.56
+2025-03-08,2025-03-10,Dividendos de CONY,425.27,453.14
+2025-03-11,2025-03-11,Imposto sobre dividendo de IBM,-8.42,716.04
+2025-03-11,2025-03-11,Imposto sobre dividendo de LLY,-2.25,724.46
+2025-03-11,2025-03-11,Dividendos de IBM,28.08,726.71
+2025-03-11,2025-03-11,Dividendos de LLY,7.5,698.63
+2025-03-13,2025-03-13,Rentabilidade de aluguel de ativo,2.78,717.99
+2025-03-13,2025-03-13,Imposto de aluguel de ativo,-0.83,715.21
+2025-03-14,2025-03-17,Cobrança de taxa de corretagem de CONY,-2.5,0
+2025-03-14,2025-03-17,Compra de 8824 CONY a $ 818 cada,-721.56,2.5
+2025-03-14,2025-03-14,Transferência da Conta corrente para Conta investimento,6.07,724.06
+2025-03-15,2025-03-17,Imposto sobre dividendo de MSTY,-305.39,712.58
+2025-03-15,2025-03-17,Dividendos de MSTY,1017.97,1017.97
+2025-03-18,2025-03-18,Dividendos de GOOGL,5.4,716.36
+2025-03-18,2025-03-18,Imposto sobre dividendo de GOOGL,-1.62,710.96
+2025-03-20,2025-03-21,Compra de 33 MSTY a $ 2125 cada,-701.25,12.61
+2025-03-20,2025-03-21,Cobrança de taxa de corretagem de MSTY,-2.5,713.86
+2025-03-22,2025-03-24,Imposto sobre dividendo de TSLY,-239.88,572.32
+2025-03-22,2025-03-24,Dividendos de TSLY,799.59,812.2
+2025-03-24,2025-03-25,Cobrança de taxa de corretagem de TSLY,-2.5,1.26
+2025-03-24,2025-03-25,Compra de 69 TSLY a $ 824 cada,-568.56,3.76
+2025-03-27,2025-03-27,Dividendos de META,3.41,3.65
+2025-03-27,2025-03-27,Imposto sobre dividendo de META,-1.02,0.24
+2025-03-28,2025-03-28,Imposto sobre dividendo de QCOM,-5.29,15.99
+2025-03-28,2025-03-28,Dividendos de QCOM,17.63,21.28
+2025-03-29,2025-03-31,Imposto sobre dividendo de NVDY,-217.79,524.18
+2025-03-29,2025-03-31,Dividendos de NVDY,725.98,741.97
+2025-04-01,2025-04-01,Imposto sobre dividendo de AVGO,-6.37,539.05
+2025-04-01,2025-04-01,Dividendos de AVGO,21.24,545.42
+2025-04-03,2025-04-04,Compra de 26 NVDY a $ 1478 cada,-384.28,7.26
+2025-04-03,2025-04-04,Compra de 5 NVDY a $ 1478 cada,-73.9,391.54
+2025-04-03,2025-04-04,Compra de 5 NVDY a $ 1478 cada,-73.9,465.44
+2025-04-03,2025-04-03,Dividendos de NVDA,0.42,539.34
+2025-04-03,2025-04-03,Imposto sobre dividendo de NVDA,-0.13,538.92
+2025-04-05,2025-04-07,Dividendos de CONY,731.63,1571.17
+2025-04-05,2025-04-07,Imposto sobre dividendo de CONY,-219.49,839.54
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,163.04,1059.03
+2025-04-05,2025-04-07,Imposto sobre dividendo de CONY,-0.04,895.99
+2025-04-05,2025-04-07,Dividendos de RCL,7.58,896.03
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,359.34,888.45
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,225.3,529.11
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,144.08,303.81
+2025-04-05,2025-04-07,Dividendos de CONY,0.14,159.73
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,18.79,159.59
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,32.24,140.8
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,34.91,108.56
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,28.34,73.65
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,11.98,45.31
+2025-04-05,2025-04-07,Estorno de imposto sobre dividendo de,26.07,33.33
+2025-04-07,2025-04-08,Compra de 23354 CONY a $ 673 cada,-1571.17,0
+2025-04-12,2025-04-14,Imposto de aluguel de ativo,-1.13,724.4
+2025-04-12,2025-04-14,Imposto sobre dividendo de MSTY,-309.32,725.53
+2025-04-12,2025-04-14,Dividendos de MSTY,1031.08,1034.85
+2025-04-12,2025-04-14,Rentabilidade de aluguel de ativo,3.77,3.77
+2025-04-14,2025-04-15,Cobrança de taxa de corretagem de MSTY,-2.5,5.1
+2025-04-14,2025-04-15,Compra de 35 MSTY a $ 2048 cada,-716.8,7.6
+2025-04-22,2025-04-23,Compra de 113 TSLY a $ 731 cada,-826.02,4.69
+2025-04-22,2025-04-23,Cobrança de taxa de corretagem de TSLY,-2.5,830.71
+2025-04-22,2025-04-22,Dividendos de TSLY,1183.02,833.21
+2025-04-22,2025-04-22,Imposto sobre dividendo de TSLY,-354.91,-349.81
+2025-04-26,2025-04-28,Dividendos de NVDY,645.12,456.27
+2025-04-26,2025-04-28,Imposto sobre dividendo de NVDY,-193.54,-188.85
+2025-04-28,2025-04-29,Cobrança de taxa de corretagem de NVDY,-2.5,3.53
+2025-04-28,2025-04-29,Compra de 32 NVDY a $ 1407 cada,-450.24,6.03
+2025-05-03,2025-05-05,Imposto sobre dividendo de CONY,-371.66,871.11
+2025-05-03,2025-05-05,Dividendos de CONY,1238.85,1242.77
+2025-05-03,2025-05-05,Dividendos de CONY,0.56,3.92
+2025-05-03,2025-05-05,Imposto sobre dividendo de CONY,-0.17,3.36
+2025-05-06,2025-05-07,Compra de 119 CONY a $ 731 cada,-869.89,1.22
+2025-05-10,2025-05-12,Imposto sobre dividendo de MSTY,-574.6,1341.95
+2025-05-10,2025-05-12,Dividendos de MSTY,1915.33,1916.55
+2025-05-12,2025-05-13,Compra de 1 MSTY a $ 2400 cada,-24,22.39
+2025-05-12,2025-05-13,Compra de 44 MSTY a $ 2399 cada,-1055.56,46.39
+2025-05-12,2025-05-13,Compra de 10 MSTY a $ 2400 cada,-240,1101.95
+2025-05-14,2025-05-14,Imposto de aluguel de ativo,-1.19,25.15
+2025-05-14,2025-05-14,Rentabilidade de aluguel de ativo,3.95,26.34
+2025-05-17,2025-05-19,Imposto sobre dividendo de OMF,-28.39,1105.39
+2025-05-17,2025-05-19,Imposto sobre dividendo de TSLY,-434.57,1133.78
+2025-05-17,2025-05-19,Dividendos de OMF,94.64,1568.35
+2025-05-17,2025-05-19,Dividendos de TSLY,1448.56,1473.71
+2025-05-19,2025-05-20,Cobrança de taxa de corretagem de TSLY,-5,6.59
+2025-05-19,2025-05-20,Compra de 121 TSLY a $ 904 cada,-1093.8,11.59
+2025-05-24,2025-05-27,Dividendos de NVDY,1611.32,1134.51
+2025-05-24,2025-05-27,Imposto sobre dividendo de NVDY,-483.4,-476.81
+2025-05-27,2025-05-28,Cobrança de taxa de corretagem de NVDY,-5,12.24
+2025-05-27,2025-05-28,Compra de 73 NVDY a $ 1531 cada,-1117.27,17.24
+2025-05-31,2025-06-02,Imposto sobre dividendo de CONY,-0.19,1053.14
+2025-05-31,2025-06-02,Imposto sobre dividendo de CONY,-445.91,1053.33
+2025-05-31,2025-06-02,Dividendos de CONY,1486.37,1499.24
+2025-05-31,2025-06-02,Dividendos de CONY,0.63,12.87
+2025-06-02,2025-06-03,Compra de 13659 CONY a $ 771 cada,-1052.8,0.34
+2025-06-07,2025-06-09,Imposto sobre dividendo de MSTY,-380.32,887.76
+2025-06-07,2025-06-09,Dividendos de MSTY,1267.74,1268.08
+2025-06-09,2025-06-10,Compra de 42 MSTY a $ 2098 cada,-880.97,6.79
+2025-06-11,2025-06-11,Imposto sobre dividendo de LLY,-2.25,31.81
+2025-06-11,2025-06-11,Dividendos de LLY,7.5,34.06
+2025-06-11,2025-06-11,Dividendos de IBM,28.25,26.56
+2025-06-11,2025-06-11,Imposto sobre dividendo de IBM,-8.48,-1.69
+2025-06-12,2025-06-12,Rentabilidade de aluguel de ativo,4.4,34.89
+2025-06-12,2025-06-12,Imposto de aluguel de ativo,-1.32,30.49
+2025-06-14,2025-06-16,Imposto sobre dividendo de TSLY,-244.94,606.43
+2025-06-14,2025-06-16,Dividendos de TSLY,816.48,851.37
+2025-06-16,2025-06-17,Compra de 72 TSLY a $ 837 cada,-602.28,1.65
+2025-06-16,2025-06-17,Cobrança de taxa de corretagem de TSLY,-2.5,603.93
+2025-06-17,2025-06-17,Imposto sobre dividendo de GOOGL,-1.7,5.62
+2025-06-17,2025-06-17,Dividendos de GOOGL,5.67,7.32
+2025-06-24,2025-06-25,Compra de 31 NVDY a $ 1602 cada,-496.57,6.66
+2025-06-24,2025-06-25,Cobrança de taxa de corretagem de NVDY,-2.5,503.23
+2025-06-24,2025-06-24,Dividendos de NVDY,714.44,505.73
+2025-06-24,2025-06-24,Imposto sobre dividendo de NVDY,-214.33,-208.71
+2025-06-27,2025-06-27,Dividendos de QCOM,18.46,21.97
+2025-06-27,2025-06-27,Imposto sobre dividendo de META,-1.02,3.51
+2025-06-27,2025-06-27,Imposto sobre dividendo de QCOM,-5.54,4.53
+2025-06-27,2025-06-27,Dividendos de META,3.41,10.07
+2025-06-28,2025-06-30,Imposto sobre dividendo de CONY,-346.78,831.29
+2025-06-28,2025-06-30,Dividendos de CONY,1155.93,1178.07
+2025-06-28,2025-06-30,Imposto sobre dividendo de CONY,-0.07,22.14
+2025-06-28,2025-06-30,Dividendos de CONY,0.24,22.21
+2025-06-30,2025-07-01,Compra de 89 CONY a $ 931 cada,-828.25,0.54
+2025-06-30,2025-07-01,Cobrança de taxa de corretagem de CONY,-2.5,828.79
+2025-07-01,2025-07-01,Dividendos de AVGO,21.24,15.41
+2025-07-01,2025-07-01,Imposto sobre dividendo de AVGO,-6.37,-5.83
+2025-07-04,2025-07-07,Dividendos de NVDA,0.42,23.28
+2025-07-04,2025-07-07,Imposto sobre dividendo de NVDA,-0.13,22.86
+2025-07-04,2025-07-07,Dividendos de RCL,7.58,22.99
+2025-07-08,2025-07-09,Imposto sobre dividendo de MSTY,-335.8,806.81
+2025-07-08,2025-07-09,Dividendos de MSTY,1119.33,1142.61
+2025-07-11,2025-07-11,Rentabilidade de aluguel de ativo,6.05,811.04
+2025-07-11,2025-07-11,Imposto de aluguel de ativo,-1.82,804.99
+2025-07-12,2025-07-14,Dividendos de TSLY,812.94,1380.1
+2025-07-12,2025-07-14,Imposto sobre dividendo de TSLY,-243.88,567.16
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de AVGO,-10,4168.11
+2025-07-16,2025-07-17,Compra de 14 AVGO a $ 27872 cada,-3902.08,4178.11
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de RCL,-10,8080.19
+2025-07-16,2025-07-17,Compra de 1988 RCL a $ 34027 cada,-6765.72,8090.19
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de OMF,-10,14855.91
+2025-07-16,2025-07-17,Compra de 79 OMF a $ 5691 cada,-4495.83,14865.91
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de NVDA,-10,19361.74
+2025-07-16,2025-07-17,Compra de 18 NVDA a $ 17091 cada,-3076.29,19371.74
+2025-07-16,2025-07-17,Compra de 75 META a $ 70215 cada,-5266.13,22448.03
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de META,-10,27714.16
+2025-07-16,2025-07-17,Compra de 7 LLY a $ 79199 cada,-5543.93,27724.16
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de LLY,-10,33268.09
+2025-07-16,2025-07-17,Compra de 1818 IBM a $ 28130 cada,-5114.88,33278.09
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de IBM,-10,38392.97
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de GOOGL,-10,38402.97
+2025-07-16,2025-07-17,Compra de 25 GOOGL a $ 18391 cada,-4597.75,38412.97
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de FI,-7.5,43010.72
+2025-07-16,2025-07-17,Compra de 15 FI a $ 16529 cada,-2479.35,43018.22
+2025-07-16,2025-07-17,Compra de 7 NFLX a $ 1.26030 cada,-8822.1,45497.57
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de NFLX,-10,54319.67
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de GEV,-10,54329.67
+2025-07-16,2025-07-17,Compra de 15 GEV a $ 55998 cada,-8399.63,54339.67
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de PLTR,-10,62739.3
+2025-07-16,2025-07-17,Compra de 55 PLTR a $ 14959 cada,-8227.45,62749.3
+2025-07-16,2025-07-17,Compra de 20 CRWD a $ 47063 cada,-9412.6,70976.75
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de CRWD,-10,80389.35
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de CONY,-10,80399.35
+2025-07-16,2025-07-17,Venda de 1.12423 CONY a $ 1006 cada,11304.12,80409.35
+2025-07-16,2025-07-17,Venda de 2.099 TSLY a $ 784 cada,16459.94,69105.23
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de TSLY,-10,52645.29
+2025-07-16,2025-07-17,Venda de 20 NVDY a $ 1775 cada,355,52655.29
+2025-07-16,2025-07-17,Venda de 3 NVDY a $ 1775 cada,53.25,52300.29
+2025-07-16,2025-07-17,Cobrança de taxa de corretagem de NVDY,-10,52247.04
+2025-07-16,2025-07-17,Venda de 5 NVDY a $ 1775 cada,88.75,52257.04
+2025-07-16,2025-07-17,Venda de 1.066 NVDY a $ 1775 cada,18921.61,52168.29
+2025-07-16,2025-07-17,Venda de 904 MSTY a $ 2272 cada,20534.36,33246.68
+2025-07-16,2025-07-17,Venda de 1.12423 CONY a $ 1008 cada,11332.22,12712.32
+2025-08-14,2025-08-15,Compra de 12466 ETHA a $ 3445 cada,-4294.61,-0
+2025-08-14,2025-08-14,Rentabilidade de aluguel de ativo,3.92,4294.61
+2025-08-14,2025-08-14,Imposto de aluguel de ativo,-1.18,4290.69
+2025-08-14,2025-08-14,Dividendos de OMF,176.8,4291.87
+2025-08-14,2025-08-14,Imposto sobre dividendo de OMF,-53.04,4115.07
+2025-08-19,2025-08-19,Dividendos de G035920,3.75,2.62
+2025-08-19,2025-08-19,Imposto sobre dividendo de G035920,-1.13,-1.13
+2025-09-11,2025-09-11,Imposto sobre dividendo de IBM,-17.64,56.38
+2025-09-11,2025-09-11,Dividendos de IBM,58.8,74.02
+2025-09-11,2025-09-11,Imposto sobre dividendo de LLY,-5.4,15.22
+2025-09-11,2025-09-11,Dividendos de LLY,18,20.62
+2025-09-16,2025-09-16,Dividendos de GOOGL,10.92,64.02
+2025-09-16,2025-09-16,Imposto sobre dividendo de GOOGL,-3.28,53.1
+2025-09-26,2025-09-26,Imposto sobre dividendo de QCOM,-5.54,76.94
+2025-09-26,2025-09-26,Dividendos de QCOM,18.46,82.48
+2025-09-30,2025-09-30,Imposto sobre dividendo de META,-2.21,82.08
+2025-09-30,2025-09-30,Dividendos de META,7.35,84.29
+2025-10-01,2025-10-01,Imposto sobre dividendo de AVGO,-8.85,102.73
+2025-10-01,2025-10-01,Dividendos de AVGO,29.5,111.58
+2025-10-03,2025-10-03,Imposto sobre dividendo de NVDA,-0.18,103.15
+2025-10-03,2025-10-03,Dividendos de NVDA,0.6,103.33
+2025-10-15,2025-10-15,Dividendos de RCL,30,133.15
+2025-10-30,2025-10-31,Cobrança de taxa de corretagem de FI,-10,-0
+2025-10-30,2025-10-31,Compra de 7753 FI a $ 6900 cada,-5349.81,10
+2025-10-30,2025-10-31,Venda de 2208 PYPL a $ 6972 cada,1539.71,5359.81
+2025-10-30,2025-10-31,Venda de 2074 QCOM a $ 17777 cada,3686.95,3820.1
+2025-11-15,2025-11-17,Imposto sobre dividendo de OMF,-53.55,124.95
+2025-11-15,2025-11-17,Dividendos de OMF,178.5,178.5
+2025-11-18,2025-11-18,Imposto sobre dividendo de G035920,-1.13,127.57
+2025-11-18,2025-11-18,Dividendos de G035920,3.75,128.7
+2025-12-11,2025-12-11,Imposto sobre dividendo de IBM,-17.64,181.33
+2025-12-11,2025-12-11,Dividendos de IBM,58.8,198.97
+2025-12-11,2025-12-11,Dividendos de LLY,18,140.17
+2025-12-11,2025-12-11,Imposto sobre dividendo de LLY,-5.4,122.17
+2025-12-16,2025-12-16,Imposto sobre dividendo de GOOGL,-3.28,188.97
+2025-12-16,2025-12-16,Dividendos de GOOGL,10.92,192.25
+2025-12-24,2025-12-24,Imposto sobre dividendo de META,-2.21,194.11
+2025-12-24,2025-12-24,Dividendos de META,7.35,196.32
+2025-12-27,2025-12-29,Imposto sobre dividendo de NVDA,-0.18,194.53
+2025-12-27,2025-12-29,Dividendos de NVDA,0.6,194.71

@@ -373,3 +373,35 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
 }
+
+/* Risk Guardian Glows & Animations */
+.pulse-danger-glow {
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+  border-color: rgba(244, 63, 94, 0.6) !important;
+  animation: pulse-danger 2s infinite;
+}
+
+.pulse-success-glow {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  animation: pulse-success 2s infinite;
+}
+
+@keyframes pulse-danger {
+  0%, 100% { box-shadow: 0 0 8px rgba(244, 63, 94, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(244, 63, 94, 0.5); }
+}
+
+@keyframes pulse-success {
+  0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.5); }
+}
+
+/* Candlestick visual adjustments on hover */
+.candle-group {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.candle-group:hover {
+  opacity: 0.8;
+}

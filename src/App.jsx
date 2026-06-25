@@ -11,7 +11,8 @@ import {
   ShieldCheck, 
   TrendingUp,
   Sparkles,
-  Briefcase
+  Briefcase,
+  ShieldAlert
 } from 'lucide-react';
 
 import PitchAgent from './components/PitchAgent';
@@ -22,6 +23,7 @@ import KYCScreener from './components/KYCScreener';
 import SettingsModal from './components/SettingsModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import PortfolioTracker from './components/PortfolioTracker';
+import RiskGuardian from './components/RiskGuardian';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('pitch');
@@ -30,8 +32,8 @@ export default function App() {
   // API Key State (loaded from localStorage by default)
   const [apiKey, setApiKey] = useState(() => {
     const saved = localStorage.getItem('fsi_api_key');
-    // If the saved key is the old leaked one, or empty, automatically upgrade to the new active key
-    if (saved && saved !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && saved !== '') return saved;
+    // If the saved key is the old leaked one, the old expired one, or empty, automatically upgrade to the new active key
+    if (saved && saved !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && saved !== 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw' && saved !== '') return saved;
     const defaultGemini = import.meta.env.VITE_GEMINI || '';
     localStorage.setItem('fsi_api_key', defaultGemini);
     return defaultGemini;
@@ -40,7 +42,7 @@ export default function App() {
     const saved = localStorage.getItem('fsi_api_mode');
     if (saved) return saved;
     const key = localStorage.getItem('fsi_api_key');
-    if (key && key !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && key !== '') {
+    if (key && key !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && key !== 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw' && key !== '') {
       localStorage.setItem('fsi_api_mode', 'gemini');
       return 'gemini';
     }
@@ -78,17 +80,17 @@ export default function App() {
       fsi_brapi_api_key: import.meta.env.VITE_BRAPI || ''
     };
 
-    // Pre-populate keys if empty, unset, or contain the old leaked key
+    // Pre-populate keys if empty, unset, or contain the old leaked/expired keys
     Object.entries(keys).forEach(([key, val]) => {
       const current = localStorage.getItem(key);
-      if (!current || current === 'undefined' || current === '' || current === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8') {
+      if (!current || current === 'undefined' || current === '' || current === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' || current === 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw') {
         localStorage.setItem(key, val);
       }
     });
 
     // Auto-promote to gemini mode if we have a valid key pre-populated or saved
     const activeKey = localStorage.getItem('fsi_api_key');
-    if (activeKey && activeKey !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && activeKey !== '') {
+    if (activeKey && activeKey !== 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' && activeKey !== 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw' && activeKey !== '') {
       const savedMode = localStorage.getItem('fsi_api_mode');
       if (!savedMode || savedMode === 'simulated') {
         localStorage.setItem('fsi_api_mode', 'gemini');
@@ -129,6 +131,14 @@ export default function App() {
       icon: Briefcase,
       component: PortfolioTracker,
       color: '#10b981' // Emerald
+    },
+    {
+      id: 'risk',
+      name: 'Risk & Strategy Guardian',
+      desc: 'Surgical stop-loss planner, candlestick trend predictor & hedging console.',
+      icon: ShieldAlert,
+      component: RiskGuardian,
+      color: '#f43f5e' // Rose/Coral
     },
     {
       id: 'research',

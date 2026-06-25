@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Impostos no Exterior (2023-2026)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .card-highlight {
+            border: 2px solid var(--primary-color);
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        .card-title {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        .card-value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .card-info {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+        .chart-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            color: var(--text-color);
+        }
+        .tab-btn.active {
+            color: var(--primary-color);
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .search-input {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            width: 100%;
+            max-width: 300px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: rgba(255,255,255,0.02);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        td {
+            font-size: 0.9rem;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background-color: rgba(255,255,255,0.01);
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-dt {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+        }
+        .badge-st {
+            background-color: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+        .text-success {
+            color: var(--success-color);
+        }
+        .text-danger {
+            color: var(--danger-color);
+        }
+        .alert {
+            background-color: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        .alert strong {
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Relatório Consolidado de Operações no Exterior</h1>
+            <div class="subtitle">Análise de Imposto de Renda (2023 - 2026) | Avenue & Tastytrade</div>
+        </header>
+
+        <div class="alert">
+            <strong>Regras de Tributação Aplicadas:</strong><br>
+            • <strong>2023:</strong> Isenção mensal para vendas totais de até R$ 35.000,00. Lucros acima do limite tributados a 15% (sem compensação de prejuízos de meses anteriores).<br>
+            • <strong>2024 - 2026 (Lei 14.754/2023):</strong> Alíquota fixa de 15% sobre o lucro líquido anual consolidado. Compensação de perdas acumuladas permitida.
+        </div>
+
+        <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">Consolidado Anual</h2>
+        <div class="dashboard-grid">
+            
+    <div class="card card-highlight">
+        <div class="card-title">Total do Período (2023-2026)</div>
+        <div class="card-value text-danger">$-10,134.67 USD <span style="font-size: 0.95rem; font-weight: 500;">(-3.03%)</span></div>
+        <div class="card-info">
+            Custo Total: $334,511.47 USD<br>
+            Vendas Totais: R$ 1,715,352.74 BRL<br>
+            Resultado BRL: <span class="text-danger" style="font-weight: 600;">R$ -62,045.78</span>
+        </div>
+    </div>
+    
+            <div class="card">
+                <div class="card-title">Consolidado 2023</div>
+                <div class="card-value text-success">+$0.00 USD <span style="font-size: 0.95rem; font-weight: 500;"> (0.00%)</span></div>
+                <div class="card-info">
+                    Tributação Mensal (GCAP)<br>
+                    Vendas Totais: R$ 0.00<br>
+                    Imposto Devido: R$ 0.00
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Consolidado 2024</div>
+                <div class="card-value text-danger">$-1,702.48 USD <span style="font-size: 0.95rem; font-weight: 500;">(-3.43%)</span></div>
+                <div class="card-info">
+                    Imposto Devido: <strong style="color: var(--text-color)">R$ 0.00</strong><br>
+                    Prejuízo Acumulado: $1,702.48 USD<br>
+                    <span style="font-size: 11px; display: block; margin-top: 5px;">Swing: +$521.79 / -$2,224.27</span>
+                    <span style="font-size: 11px; display: block;">Day: +$0.00 / -$0.00</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Consolidado 2025</div>
+                <div class="card-value text-danger">$-17,482.07 USD <span style="font-size: 0.95rem; font-weight: 500;">(-17.18%)</span></div>
+                <div class="card-info">
+                    Imposto Devido: <strong style="color: var(--text-color)">R$ 0.00</strong><br>
+                    Prejuízo Acumulado: $19,184.55 USD<br>
+                    <span style="font-size: 11px; display: block; margin-top: 5px;">Swing: +$174.36 / -$17,656.44</span>
+                    <span style="font-size: 11px; display: block;">Day: +$0.00 / -$0.00</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Consolidado 2026</div>
+                <div class="card-value text-success">+$9,049.88 USD <span style="font-size: 0.95rem; font-weight: 500;">(+4.94%)</span></div>
+                <div class="card-info">
+                    Imposto Devido: <strong style="color: var(--text-color)">R$ 0.00</strong><br>
+                    Prejuízo Acumulado: $10,134.67 USD<br>
+                    <span style="font-size: 11px; display: block; margin-top: 5px;">Swing: +$33,244.25 / -$24,179.53</span>
+                    <span style="font-size: 11px; display: block;">Day: +$13,382.34 / -$13,397.17</span>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="chart-container">
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Volume e Resultado Diário das Operações (USD)</h2>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="operationsChart"></canvas>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 1rem; font-size: 1.5rem; margin-top: 2.5rem;">Resumo Mensal consolidado</h2>
+        <div class="table-container" style="margin-bottom: 2.5rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mês</th>
+                        <th>Custo total de Aquisição (USD)</th>
+                        <th>Resultado Líquido (USD)</th>
+                        <th>Retorno (%)</th>
+                        <th>Resultado Líquido (BRL)</th>
+                        <th>Vendas Totais (BRL)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td><strong>2024-05</strong></td>
+            <td>$8,809.45</td>
+            <td class="text-success">+$198.87</td>
+            <td class="text-success">+2.26%</td>
+            <td class="text-success">+R$ 1,015.92</td>
+            <td>R$ 46,257.72</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2024-06</strong></td>
+            <td>$13,716.72</td>
+            <td class="text-danger">$-272.61</td>
+            <td class="text-danger">-1.99%</td>
+            <td class="text-danger">R$ -1,477.32</td>
+            <td>R$ 72,799.95</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2024-07</strong></td>
+            <td>$4,124.49</td>
+            <td class="text-success">+$52.13</td>
+            <td class="text-success">+1.26%</td>
+            <td class="text-success">+R$ 284.05</td>
+            <td>R$ 22,956.40</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2024-09</strong></td>
+            <td>$11,520.30</td>
+            <td class="text-danger">$-1,629.80</td>
+            <td class="text-danger">-14.15%</td>
+            <td class="text-danger">R$ -9,138.86</td>
+            <td>R$ 55,428.02</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2024-10</strong></td>
+            <td>$29.50</td>
+            <td class="text-danger">$-9.30</td>
+            <td class="text-danger">-31.53%</td>
+            <td class="text-danger">R$ -53.09</td>
+            <td>R$ 115.27</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2024-12</strong></td>
+            <td>$11,364.98</td>
+            <td class="text-danger">$-41.77</td>
+            <td class="text-danger">-0.37%</td>
+            <td class="text-danger">R$ -259.94</td>
+            <td>R$ 68,733.03</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2025-07</strong></td>
+            <td>$96,262.88</td>
+            <td class="text-danger">$-17,237.45</td>
+            <td class="text-danger">-17.91%</td>
+            <td class="text-danger">R$ -96,097.91</td>
+            <td>R$ 440,298.09</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2025-10</strong></td>
+            <td>$5,470.99</td>
+            <td class="text-danger">$-244.63</td>
+            <td class="text-danger">-4.47%</td>
+            <td class="text-danger">R$ -1,320.45</td>
+            <td>R$ 28,140.85</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2026-03</strong></td>
+            <td>$55,105.89</td>
+            <td class="text-danger">$-14,575.85</td>
+            <td class="text-danger">-26.45%</td>
+            <td class="text-danger">R$ -76,456.87</td>
+            <td>R$ 212,456.07</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2026-04</strong></td>
+            <td>$51,741.08</td>
+            <td class="text-success">+$817.93</td>
+            <td class="text-success">+1.58%</td>
+            <td class="text-success">+R$ 4,164.90</td>
+            <td>R$ 262,900.89</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2026-05</strong></td>
+            <td>$7,060.39</td>
+            <td class="text-danger">$-597.78</td>
+            <td class="text-danger">-8.47%</td>
+            <td class="text-danger">R$ -2,939.32</td>
+            <td>R$ 31,893.52</td>
+        </tr>
+        
+        <tr>
+            <td><strong>2026-06</strong></td>
+            <td>$69,304.79</td>
+            <td class="text-success">+$23,405.58</td>
+            <td class="text-success">+33.77%</td>
+            <td class="text-success">+R$ 120,233.10</td>
+            <td>R$ 473,372.92</td>
+        </tr>
+        
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('all')">Todas as Operações</button>
+            <button class="tab-btn" onclick="switchTab('Swing Trade')">Swing Trade</button>
+            <button class="tab-btn" onclick="switchTab('Day Trade')">Day Trade</button>
+        </div>
+
+        <div class="filter-bar">
+            <input type="text" id="searchInput" class="search-input" onkeyup="filterTable()" placeholder="Buscar por ativo (ex: NVDA)...">
+        </div>
+
+        <div class="table-container">
+            <table id="tradesTable">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Ativo</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                        <th>Preço Compra</th>
+                        <th>Preço Venda</th>
+                        <th>Resultado (USD)</th>
+                        <th>Resultado (%)</th>
+                        <th>Retorno 30D</th>
+                        <th>Resultado (BRL)</th>
+                        <th>Dias</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr data-symbol="UNH" data-type="Swing Trade">
+            <td>2024-05-14</td>
+            <td><strong>UNH</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>8.5</td>
+            <td>$498.9352</td>
+            <td>$512.4200</td>
+            <td class="text-success">+$107.12</td>
+            <td class="text-success">+2.53%</td>
+            <td class="text-success">+0.78%</td>
+            <td class="text-success">+R$ 547.52</td>
+            <td>97</td>
+        </tr>
+        
+        <tr data-symbol="AAPL" data-type="Swing Trade">
+            <td>2024-05-14</td>
+            <td><strong>AAPL</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>25</td>
+            <td>$182.7400</td>
+            <td>$186.7100</td>
+            <td class="text-success">+$91.75</td>
+            <td class="text-success">+2.01%</td>
+            <td class="text-success">+0.71%</td>
+            <td class="text-success">+R$ 468.40</td>
+            <td>85</td>
+        </tr>
+        
+        <tr data-symbol="MELI" data-type="Swing Trade">
+            <td>2024-06-18</td>
+            <td><strong>MELI</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>2.38</td>
+            <td>$1,671.2776</td>
+            <td>$1,570.4500</td>
+            <td class="text-danger">$-247.47</td>
+            <td class="text-danger">-6.22%</td>
+            <td class="text-danger">-1.47%</td>
+            <td class="text-danger">R$ -1,340.41</td>
+            <td>127</td>
+        </tr>
+        
+        <tr data-symbol="ARCH" data-type="Swing Trade">
+            <td>2024-06-18</td>
+            <td><strong>ARCH</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>23</td>
+            <td>$168.6804</td>
+            <td>$156.1400</td>
+            <td class="text-danger">$-295.93</td>
+            <td class="text-danger">-7.63%</td>
+            <td class="text-danger">-1.25%</td>
+            <td class="text-danger">R$ -1,602.36</td>
+            <td>183</td>
+        </tr>
+        
+        <tr data-symbol="MSFT" data-type="Swing Trade">
+            <td>2024-06-20</td>
+            <td><strong>MSFT</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>7</td>
+            <td>$402.9557</td>
+            <td>$441.3100</td>
+            <td class="text-success">+$260.98</td>
+            <td class="text-success">+9.25%</td>
+            <td class="text-success">+2.01%</td>
+            <td class="text-success">+R$ 1,414.07</td>
+            <td>138</td>
+        </tr>
+        
+        <tr data-symbol="BABA" data-type="Swing Trade">
+            <td>2024-06-20</td>
+            <td><strong>BABA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>40.9</td>
+            <td>$74.2969</td>
+            <td>$74.7200</td>
+            <td class="text-success">+$9.81</td>
+            <td class="text-success">+0.32%</td>
+            <td class="text-success">+0.06%</td>
+            <td class="text-success">+R$ 51.37</td>
+            <td>163</td>
+        </tr>
+        
+        <tr data-symbol="TTWO" data-type="Swing Trade">
+            <td>2024-07-05</td>
+            <td><strong>TTWO</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>27.5</td>
+            <td>$149.9816</td>
+            <td>$152.1500</td>
+            <td class="text-success">+$52.13</td>
+            <td class="text-success">+1.26%</td>
+            <td class="text-success">+0.24%</td>
+            <td class="text-success">+R$ 284.05</td>
+            <td>159</td>
+        </tr>
+        
+        <tr data-symbol="FBTC" data-type="Swing Trade">
+            <td>2024-09-05</td>
+            <td><strong>FBTC</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>200</td>
+            <td>$57.4775</td>
+            <td>$49.4400</td>
+            <td class="text-danger">$-1,615.00</td>
+            <td class="text-danger">-14.05%</td>
+            <td class="text-danger">-2.28%</td>
+            <td class="text-danger">R$ -9,057.84</td>
+            <td>185</td>
+        </tr>
+        
+        <tr data-symbol="BABA_PUT" data-type="Swing Trade">
+            <td>2024-09-25</td>
+            <td><strong>BABA_PUT</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>8</td>
+            <td>$2.4800</td>
+            <td>$2.0000</td>
+            <td class="text-danger">$-13.84</td>
+            <td class="text-danger">-69.76%</td>
+            <td class="text-danger">-2092.74%</td>
+            <td class="text-danger">R$ -75.76</td>
+            <td>1</td>
+        </tr>
+        
+        <tr data-symbol="BABA_PUT" data-type="Swing Trade">
+            <td>2024-09-25</td>
+            <td><strong>BABA_PUT</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>2</td>
+            <td>$2.4800</td>
+            <td>$2.0000</td>
+            <td class="text-danger">$-0.96</td>
+            <td class="text-danger">-19.35%</td>
+            <td class="text-danger">-580.65%</td>
+            <td class="text-danger">R$ -5.26</td>
+            <td>1</td>
+        </tr>
+        
+        <tr data-symbol="BABA_PUT" data-type="Swing Trade">
+            <td>2024-10-21</td>
+            <td><strong>BABA_PUT</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>2</td>
+            <td>$5.9000</td>
+            <td>$5.0400</td>
+            <td class="text-danger">$-6.72</td>
+            <td class="text-danger">-56.95%</td>
+            <td class="text-danger">-68.34%</td>
+            <td class="text-danger">R$ -38.35</td>
+            <td>25</td>
+        </tr>
+        
+        <tr data-symbol="BABA_PUT" data-type="Swing Trade">
+            <td>2024-10-21</td>
+            <td><strong>BABA_PUT</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>3</td>
+            <td>$5.9000</td>
+            <td>$5.0400</td>
+            <td class="text-danger">$-2.58</td>
+            <td class="text-danger">-14.58%</td>
+            <td class="text-danger">-17.49%</td>
+            <td class="text-danger">R$ -14.73</td>
+            <td>25</td>
+        </tr>
+        
+        <tr data-symbol="CONY" data-type="Swing Trade">
+            <td>2024-12-03</td>
+            <td><strong>CONY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>655</td>
+            <td>$17.3174</td>
+            <td>$17.3000</td>
+            <td class="text-danger">$-18.88</td>
+            <td class="text-danger">-0.17%</td>
+            <td class="text-danger">-0.03%</td>
+            <td class="text-danger">R$ -121.39</td>
+            <td>170</td>
+        </tr>
+        
+        <tr data-symbol="TSLA_PUT" data-type="Swing Trade">
+            <td>2024-12-10</td>
+            <td><strong>TSLA_PUT</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>1</td>
+            <td>$22.1000</td>
+            <td>$0.2100</td>
+            <td class="text-danger">$-22.89</td>
+            <td class="text-danger">-103.57%</td>
+            <td class="text-danger">-141.24%</td>
+            <td class="text-danger">R$ -138.55</td>
+            <td>22</td>
+        </tr>
+        
+        <tr data-symbol="CONY" data-type="Swing Trade">
+            <td>2025-07-16</td>
+            <td><strong>CONY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>1124.23</td>
+            <td>$12.0775</td>
+            <td>$10.0600</td>
+            <td class="text-danger">$-2,278.18</td>
+            <td class="text-danger">-16.78%</td>
+            <td class="text-danger">-1.82%</td>
+            <td class="text-danger">R$ -12,701.25</td>
+            <td>277</td>
+        </tr>
+        
+        <tr data-symbol="CONY" data-type="Swing Trade">
+            <td>2025-07-16</td>
+            <td><strong>CONY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>1124.22</td>
+            <td>$12.0775</td>
+            <td>$10.0800</td>
+            <td class="text-danger">$-2,245.68</td>
+            <td class="text-danger">-16.54%</td>
+            <td class="text-danger">-5.02%</td>
+            <td class="text-danger">R$ -12,520.15</td>
+            <td>99</td>
+        </tr>
+        
+        <tr data-symbol="TSLY" data-type="Swing Trade">
+            <td>2025-07-16</td>
+            <td><strong>TSLY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>2099</td>
+            <td>$9.5598</td>
+            <td>$7.8400</td>
+            <td class="text-danger">$-3,619.88</td>
+            <td class="text-danger">-18.04%</td>
+            <td class="text-danger">-4.30%</td>
+            <td class="text-danger">R$ -20,180.56</td>
+            <td>126</td>
+        </tr>
+        
+        <tr data-symbol="NVDY" data-type="Swing Trade">
+            <td>2025-07-16</td>
+            <td><strong>NVDY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>20</td>
+            <td>$22.6679</td>
+            <td>$17.7500</td>
+            <td class="text-danger">$-108.36</td>
+            <td class="text-danger">-23.90%</td>
+            <td class="text-danger">-1.51%</td>
+            <td class="text-danger">R$ -603.99</td>
+            <td>475</td>
+        </tr>
+        
+        <tr data-symbol="NVDY" data-type="Swing Trade">
+            <td>2025-07-16</td>
+            <td><strong>NVDY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>3</td>
+            <td>$22.6679</td>
+            <td>$17.7500</td>
+            <td class="text-danger">$-14.75</td>
+            <td class="text-danger">-21.70%</td>
+            <td class="text-danger">-1.37%</td>
+            <td class="text-danger">R$ -82.24</td>
+            <td>475</td>
+        </tr>
+        
+        <tr data-symbol="NVDY" data-type="Swing Trade">
+            <td>2025-07-16</td>
+            <td><strong>NVDY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>5</td>
+            <td>$22.6679</td>
+            <td>$17.7500</td>
+            <td class="text-danger">$-24.59</td>
+            <td class="text-danger">-21.70%</td>
+            <td class="text-danger">-1.37%</td>
+            <td class="text-danger">R$ -137.07</td>
+            <td>475</td>
+        </tr>
+        
+        <tr data-symbol="NVDY" data-type="Swing Trade">
+            <td>2025-07-16</td>
+            <td><strong>NVDY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>1066</td>
+            <td>$22.6679</td>
+            <td>$17.7500</td>
+            <td class="text-danger">$-5,242.43</td>
+            <td class="text-danger">-21.70%</td>
+            <td class="text-danger">-2.39%</td>
+            <td class="text-danger">R$ -29,223.22</td>
+            <td>272</td>
+        </tr>
+        
+        <tr data-symbol="MSTY" data-type="Swing Trade">
+            <td>2025-07-16</td>
+            <td><strong>MSTY</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>904</td>
+            <td>$26.8169</td>
+            <td>$22.7200</td>
+            <td class="text-danger">$-3,703.58</td>
+            <td class="text-danger">-15.28%</td>
+            <td class="text-danger">-2.03%</td>
+            <td class="text-danger">R$ -20,649.41</td>
+            <td>225</td>
+        </tr>
+        
+        <tr data-symbol="PYPL" data-type="Swing Trade">
+            <td>2025-10-30</td>
+            <td><strong>PYPL</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>22.08</td>
+            <td>$88.6960</td>
+            <td>$69.7200</td>
+            <td class="text-danger">$-418.99</td>
+            <td class="text-danger">-21.39%</td>
+            <td class="text-danger">-2.04%</td>
+            <td class="text-danger">R$ -2,257.19</td>
+            <td>314</td>
+        </tr>
+        
+        <tr data-symbol="QCOM" data-type="Swing Trade">
+            <td>2025-10-30</td>
+            <td><strong>QCOM</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>20.74</td>
+            <td>$169.3629</td>
+            <td>$177.7700</td>
+            <td class="text-success">+$174.36</td>
+            <td class="text-success">+4.96%</td>
+            <td class="text-success">+0.25%</td>
+            <td class="text-success">+R$ 936.74</td>
+            <td>593</td>
+        </tr>
+        
+        <tr data-symbol="GOOGL" data-type="Swing Trade">
+            <td>2026-03-23</td>
+            <td><strong>GOOGL</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>17</td>
+            <td>$159.6110</td>
+            <td>$304.3500</td>
+            <td class="text-success">+$2,450.56</td>
+            <td class="text-success">+90.31%</td>
+            <td class="text-success">+3.24%</td>
+            <td class="text-success">+R$ 12,847.66</td>
+            <td>837</td>
+        </tr>
+        
+        <tr data-symbol="AVGO" data-type="Swing Trade">
+            <td>2026-03-23</td>
+            <td><strong>AVGO</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>15</td>
+            <td>$150.2834</td>
+            <td>$324.3200</td>
+            <td class="text-success">+$2,600.55</td>
+            <td class="text-success">+115.36%</td>
+            <td class="text-success">+4.13%</td>
+            <td class="text-success">+R$ 13,634.36</td>
+            <td>837</td>
+        </tr>
+        
+        <tr data-symbol="FI" data-type="Swing Trade">
+            <td>2026-03-23</td>
+            <td><strong>FI</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>137.53</td>
+            <td>$130.8625</td>
+            <td>$58.3100</td>
+            <td class="text-danger">$-9,988.15</td>
+            <td class="text-danger">-55.50%</td>
+            <td class="text-danger">-7.11%</td>
+            <td class="text-danger">R$ -52,382.64</td>
+            <td>234</td>
+        </tr>
+        
+        <tr data-symbol="NFLX" data-type="Swing Trade">
+            <td>2026-03-23</td>
+            <td><strong>NFLX</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>7</td>
+            <td>$1,261.7286</td>
+            <td>$93.2100</td>
+            <td class="text-danger">$-8,180.63</td>
+            <td class="text-danger">-92.62%</td>
+            <td class="text-danger">-11.11%</td>
+            <td class="text-danger">R$ -42,899.61</td>
+            <td>250</td>
+        </tr>
+        
+        <tr data-symbol="IBM" data-type="Swing Trade">
+            <td>2026-03-23</td>
+            <td><strong>IBM</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>35</td>
+            <td>$246.6318</td>
+            <td>$250.4300</td>
+            <td class="text-success">+$132.94</td>
+            <td class="text-success">+1.54%</td>
+            <td class="text-success">+0.12%</td>
+            <td class="text-success">+R$ 691.87</td>
+            <td>374</td>
+        </tr>
+        
+        <tr data-symbol="CRWD" data-type="Swing Trade">
+            <td>2026-03-23</td>
+            <td><strong>CRWD</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>20</td>
+            <td>$471.1300</td>
+            <td>$415.8700</td>
+            <td class="text-danger">$-1,105.20</td>
+            <td class="text-danger">-11.73%</td>
+            <td class="text-danger">-1.41%</td>
+            <td class="text-danger">R$ -5,800.66</td>
+            <td>250</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-03-25</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$52.0000</td>
+            <td>$183.0000</td>
+            <td class="text-success">+$255.09</td>
+            <td class="text-success">+237.40%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,333.27</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-03-25</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$4.0000</td>
+            <td>$3.0000</td>
+            <td class="text-danger">$-4.91</td>
+            <td class="text-danger">-51.96%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -25.67</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-03-25</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$266.0000</td>
+            <td>$710.0000</td>
+            <td class="text-success">+$881.09</td>
+            <td class="text-success">+164.55%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 4,605.05</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-03-25</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$61.0000</td>
+            <td>$7.0000</td>
+            <td class="text-danger">$-110.91</td>
+            <td class="text-danger">-89.84%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -579.79</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-03-26</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$75.0000</td>
+            <td>$260.0000</td>
+            <td class="text-success">+$181.56</td>
+            <td class="text-success">+236.65%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 949.55</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-03-26</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$75.0000</td>
+            <td>$260.0000</td>
+            <td class="text-success">+$181.56</td>
+            <td class="text-success">+236.65%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 949.55</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-03-26</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$0.0000</td>
+            <td>$0.0000</td>
+            <td class="text-success">+$0.00</td>
+            <td class="text-success">+0.00%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 0.00</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-03-26</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$60.0000</td>
+            <td>$325.0000</td>
+            <td class="text-success">+$261.56</td>
+            <td class="text-success">+423.78%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,367.97</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-03-26</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$60.0000</td>
+            <td>$325.0000</td>
+            <td class="text-success">+$261.56</td>
+            <td class="text-success">+423.78%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,367.97</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-03-26</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$1,397.0000</td>
+            <td>$192.0000</td>
+            <td class="text-danger">$-2,412.91</td>
+            <td class="text-danger">-86.32%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -12,621.68</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-03-27</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$122.0000</td>
+            <td>$327.0000</td>
+            <td class="text-success">+$201.56</td>
+            <td class="text-success">+162.92%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,055.50</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-03-27</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$122.0000</td>
+            <td>$327.0000</td>
+            <td class="text-success">+$201.56</td>
+            <td class="text-success">+162.92%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,055.50</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-03-27</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$406.0000</td>
+            <td>$82.0000</td>
+            <td class="text-danger">$-650.91</td>
+            <td class="text-danger">-80.02%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -3,409.30</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-03-27</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$132.0000</td>
+            <td>$287.0000</td>
+            <td class="text-success">+$303.09</td>
+            <td class="text-success">+113.33%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,587.12</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-03-27</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$38.0000</td>
+            <td>$22.0000</td>
+            <td class="text-danger">$-34.91</td>
+            <td class="text-danger">-45.07%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -182.87</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-07</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$137.0000</td>
+            <td>$407.0000</td>
+            <td class="text-success">+$533.09</td>
+            <td class="text-success">+192.14%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 2,751.59</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-07</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$22.0000</td>
+            <td>$12.0000</td>
+            <td class="text-danger">$-22.91</td>
+            <td class="text-danger">-50.41%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -118.29</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-07</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$133.0000</td>
+            <td>$393.0000</td>
+            <td class="text-success">+$513.09</td>
+            <td class="text-success">+190.42%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 2,648.36</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-07</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$225.0000</td>
+            <td>$60.0000</td>
+            <td class="text-danger">$-332.91</td>
+            <td class="text-danger">-73.74%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,718.72</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-08</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$303.0000</td>
+            <td>$593.0000</td>
+            <td class="text-success">+$286.56</td>
+            <td class="text-success">+94.04%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,458.21</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-08</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$303.0000</td>
+            <td>$593.0000</td>
+            <td class="text-success">+$286.56</td>
+            <td class="text-success">+94.04%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,458.21</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-08</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$462.0000</td>
+            <td>$172.0000</td>
+            <td class="text-danger">$-582.91</td>
+            <td class="text-danger">-62.99%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -2,967.16</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$87.0000</td>
+            <td>$227.0000</td>
+            <td class="text-success">+$273.09</td>
+            <td class="text-success">+153.90%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,387.60</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$82.0000</td>
+            <td>$312.0000</td>
+            <td class="text-success">+$453.09</td>
+            <td class="text-success">+270.58%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 2,302.28</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$47.0000</td>
+            <td>$27.0000</td>
+            <td class="text-danger">$-21.44</td>
+            <td class="text-danger">-44.93%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -108.98</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$47.0000</td>
+            <td>$27.0000</td>
+            <td class="text-danger">$-21.44</td>
+            <td class="text-danger">-44.93%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -108.98</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$107.0000</td>
+            <td>$47.0000</td>
+            <td class="text-danger">$-122.91</td>
+            <td class="text-danger">-57.05%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -624.70</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$42.0000</td>
+            <td>$187.0000</td>
+            <td class="text-success">+$283.09</td>
+            <td class="text-success">+323.72%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,438.47</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$312.0000</td>
+            <td>$47.0000</td>
+            <td class="text-danger">$-266.44</td>
+            <td class="text-danger">-85.20%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,354.10</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$312.0000</td>
+            <td>$47.0000</td>
+            <td class="text-danger">$-266.44</td>
+            <td class="text-danger">-85.20%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,354.10</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$37.0000</td>
+            <td>$157.0000</td>
+            <td class="text-success">+$233.09</td>
+            <td class="text-success">+300.96%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,184.40</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$367.0000</td>
+            <td>$82.0000</td>
+            <td class="text-danger">$-286.44</td>
+            <td class="text-danger">-77.90%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,455.77</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$367.0000</td>
+            <td>$82.0000</td>
+            <td class="text-danger">$-286.44</td>
+            <td class="text-danger">-77.90%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,455.77</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$62.0000</td>
+            <td>$227.0000</td>
+            <td class="text-success">+$161.56</td>
+            <td class="text-success">+253.55%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 820.93</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$70.0000</td>
+            <td>$255.0000</td>
+            <td class="text-success">+$181.56</td>
+            <td class="text-success">+253.15%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 922.55</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$372.0000</td>
+            <td>$107.0000</td>
+            <td class="text-danger">$-266.44</td>
+            <td class="text-danger">-71.49%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,354.14</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-09</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$372.0000</td>
+            <td>$107.0000</td>
+            <td class="text-danger">$-266.44</td>
+            <td class="text-danger">-71.49%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,354.14</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-14</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$170.0000</td>
+            <td>$395.0000</td>
+            <td class="text-success">+$221.56</td>
+            <td class="text-success">+129.02%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,103.27</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-14</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$170.0000</td>
+            <td>$395.0000</td>
+            <td class="text-success">+$221.56</td>
+            <td class="text-success">+129.02%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,103.27</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-14</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$370.0000</td>
+            <td>$160.0000</td>
+            <td class="text-danger">$-211.44</td>
+            <td class="text-danger">-57.03%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,053.19</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-14</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$367.0000</td>
+            <td>$157.0000</td>
+            <td class="text-danger">$-211.44</td>
+            <td class="text-danger">-57.50%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,053.19</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-14</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$492.0000</td>
+            <td>$162.0000</td>
+            <td class="text-danger">$-333.44</td>
+            <td class="text-danger">-67.54%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,660.83</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-14</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$75.0000</td>
+            <td>$460.0000</td>
+            <td class="text-success">+$383.56</td>
+            <td class="text-success">+506.55%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,910.08</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-15</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$82.0000</td>
+            <td>$235.0000</td>
+            <td class="text-success">+$299.09</td>
+            <td class="text-success">+178.61%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,493.02</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-15</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$375.0000</td>
+            <td>$130.0000</td>
+            <td class="text-danger">$-246.44</td>
+            <td class="text-danger">-65.59%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,230.50</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-15</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$375.0000</td>
+            <td>$130.0000</td>
+            <td class="text-danger">$-246.44</td>
+            <td class="text-danger">-65.59%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,230.50</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-15</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$28.0000</td>
+            <td>$150.0000</td>
+            <td class="text-success">+$237.09</td>
+            <td class="text-success">+398.81%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,183.57</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-15</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$67.0000</td>
+            <td>$12.0000</td>
+            <td class="text-danger">$-56.44</td>
+            <td class="text-danger">-83.34%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -281.80</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-15</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$67.0000</td>
+            <td>$12.0000</td>
+            <td class="text-danger">$-56.44</td>
+            <td class="text-danger">-83.34%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -281.80</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-17</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$1,269.0000</td>
+            <td>$1,034.0000</td>
+            <td class="text-danger">$-238.44</td>
+            <td class="text-danger">-18.76%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,185.55</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-17</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$4,300.0000</td>
+            <td>$4,780.0000</td>
+            <td class="text-success">+$478.56</td>
+            <td class="text-success">+11.13%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 2,375.34</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-17</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$663.0000</td>
+            <td>$463.0000</td>
+            <td class="text-danger">$-203.44</td>
+            <td class="text-danger">-30.61%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,011.27</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-17</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$663.0000</td>
+            <td>$463.0000</td>
+            <td class="text-danger">$-203.44</td>
+            <td class="text-danger">-30.61%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,011.27</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-17</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$27.0000</td>
+            <td>$47.0000</td>
+            <td class="text-success">+$37.09</td>
+            <td class="text-success">+66.89%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 184.26</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="RCL" data-type="Swing Trade">
+            <td>2026-04-20</td>
+            <td><strong>RCL</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>7.5</td>
+            <td>$308.7485</td>
+            <td>$275.2900</td>
+            <td class="text-danger">$-250.94</td>
+            <td class="text-danger">-10.84%</td>
+            <td class="text-danger">-0.65%</td>
+            <td class="text-danger">R$ -1,252.02</td>
+            <td>503</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-24</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$826.0000</td>
+            <td>$651.0000</td>
+            <td class="text-danger">$-356.91</td>
+            <td class="text-danger">-21.56%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,788.29</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-24</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$2,135.0000</td>
+            <td>$2,620.0000</td>
+            <td class="text-success">+$483.56</td>
+            <td class="text-success">+22.64%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 2,420.24</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-24</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$2,135.0000</td>
+            <td>$2,620.0000</td>
+            <td class="text-success">+$483.56</td>
+            <td class="text-success">+22.64%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 2,420.24</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-27</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$548.0000</td>
+            <td>$413.0000</td>
+            <td class="text-danger">$-138.44</td>
+            <td class="text-danger">-25.18%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -688.29</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-27</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$168.0000</td>
+            <td>$228.0000</td>
+            <td class="text-success">+$58.56</td>
+            <td class="text-success">+34.71%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 290.91</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-28</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$1,208.0000</td>
+            <td>$1,033.0000</td>
+            <td class="text-danger">$-356.91</td>
+            <td class="text-danger">-14.75%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,781.43</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-28</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$673.0000</td>
+            <td>$983.0000</td>
+            <td class="text-success">+$617.09</td>
+            <td class="text-success">+45.80%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 3,076.74</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-29</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$1,178.0000</td>
+            <td>$1,003.0000</td>
+            <td class="text-danger">$-356.91</td>
+            <td class="text-danger">-15.13%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,785.22</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-29</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$2,184.0000</td>
+            <td>$2,534.0000</td>
+            <td class="text-success">+$348.56</td>
+            <td class="text-success">+15.95%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,740.76</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-04-29</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$286.0000</td>
+            <td>$451.0000</td>
+            <td class="text-success">+$163.56</td>
+            <td class="text-success">+57.05%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 817.28</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-30</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$918.0000</td>
+            <td>$1,372.0000</td>
+            <td class="text-success">+$450.55</td>
+            <td class="text-success">+48.99%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 2,246.79</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-30</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$1,936.0000</td>
+            <td>$1,372.0000</td>
+            <td class="text-danger">$-567.45</td>
+            <td class="text-danger">-29.28%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -2,831.60</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-30</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$1,113.0000</td>
+            <td>$644.0000</td>
+            <td class="text-danger">$-472.45</td>
+            <td class="text-danger">-42.38%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -2,357.25</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-30</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$335.0000</td>
+            <td>$644.0000</td>
+            <td class="text-success">+$305.55</td>
+            <td class="text-success">+90.74%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,523.88</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-30</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$4,639.0000</td>
+            <td>$5,622.0000</td>
+            <td class="text-success">+$981.55</td>
+            <td class="text-success">+21.16%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 4,893.21</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-30</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$4,639.0000</td>
+            <td>$3,666.0000</td>
+            <td class="text-danger">$-974.45</td>
+            <td class="text-danger">-21.00%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -4,863.32</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-30</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$2,615.0000</td>
+            <td>$1,775.0000</td>
+            <td class="text-danger">$-841.45</td>
+            <td class="text-danger">-32.17%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -4,198.70</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-04-30</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$2,615.0000</td>
+            <td>$3,525.0000</td>
+            <td class="text-success">+$908.55</td>
+            <td class="text-success">+34.73%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 4,530.30</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-01</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$356.0000</td>
+            <td>$656.0000</td>
+            <td class="text-success">+$296.56</td>
+            <td class="text-success">+82.90%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 1,479.03</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-05-01</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$668.0000</td>
+            <td>$483.0000</td>
+            <td class="text-danger">$-188.44</td>
+            <td class="text-danger">-28.14%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -940.34</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_CALL" data-type="Day Trade">
+            <td>2026-05-01</td>
+            <td><strong>SPX_CALL</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$640.0000</td>
+            <td>$830.0000</td>
+            <td class="text-success">+$188.56</td>
+            <td class="text-success">+29.43%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 940.15</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-04</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$737.0000</td>
+            <td>$242.0000</td>
+            <td class="text-danger">$-496.44</td>
+            <td class="text-danger">-67.29%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -2,461.84</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-07</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$890.0000</td>
+            <td>$730.0000</td>
+            <td class="text-danger">$-326.90</td>
+            <td class="text-danger">-18.33%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -1,608.24</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-07</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$407.0000</td>
+            <td>$502.0000</td>
+            <td class="text-success">+$187.10</td>
+            <td class="text-success">+22.94%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 919.37</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-11</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$1,022.0000</td>
+            <td>$847.0000</td>
+            <td class="text-danger">$-178.44</td>
+            <td class="text-danger">-17.43%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -874.38</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-11</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$302.0000</td>
+            <td>$252.0000</td>
+            <td class="text-danger">$-53.44</td>
+            <td class="text-danger">-17.60%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -261.86</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-11</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>2</td>
+            <td>$115.0000</td>
+            <td>$165.0000</td>
+            <td class="text-success">+$97.10</td>
+            <td class="text-success">+41.95%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 475.33</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-13</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$495.0000</td>
+            <td>$375.0000</td>
+            <td class="text-danger">$-123.44</td>
+            <td class="text-danger">-24.85%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-danger">R$ -606.54</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="SPX_PUT" data-type="Day Trade">
+            <td>2026-05-13</td>
+            <td><strong>SPX_PUT</strong></td>
+            <td><span class="badge badge-dt">Day Trade</span></td>
+            <td>1</td>
+            <td>$0.0000</td>
+            <td>$0.0000</td>
+            <td class="text-success">+$0.00</td>
+            <td class="text-success">+0.00%</td>
+            <td class="text-muted">N/A</td>
+            <td class="text-success">+R$ 0.00</td>
+            <td>0</td>
+        </tr>
+        
+        <tr data-symbol="LITE" data-type="Swing Trade">
+            <td>2026-06-01</td>
+            <td><strong>LITE</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>16</td>
+            <td>$974.7912</td>
+            <td>$905.1900</td>
+            <td class="text-danger">$-1,113.94</td>
+            <td class="text-danger">-7.14%</td>
+            <td class="text-danger">-10.81%</td>
+            <td class="text-danger">R$ -5,612.14</td>
+            <td>20</td>
+        </tr>
+        
+        <tr data-symbol="ETHA" data-type="Swing Trade">
+            <td>2026-06-02</td>
+            <td><strong>ETHA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>119</td>
+            <td>$34.4500</td>
+            <td>$14.3500</td>
+            <td class="text-danger">$-2,391.90</td>
+            <td class="text-danger">-58.35%</td>
+            <td class="text-danger">-5.99%</td>
+            <td class="text-danger">R$ -11,998.79</td>
+            <td>292</td>
+        </tr>
+        
+        <tr data-symbol="ETHA" data-type="Swing Trade">
+            <td>2026-06-02</td>
+            <td><strong>ETHA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>2</td>
+            <td>$34.4500</td>
+            <td>$14.3500</td>
+            <td class="text-danger">$-40.20</td>
+            <td class="text-danger">-58.35%</td>
+            <td class="text-danger">-5.99%</td>
+            <td class="text-danger">R$ -201.66</td>
+            <td>292</td>
+        </tr>
+        
+        <tr data-symbol="ETHA" data-type="Swing Trade">
+            <td>2026-06-02</td>
+            <td><strong>ETHA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>1</td>
+            <td>$34.4500</td>
+            <td>$14.3500</td>
+            <td class="text-danger">$-20.10</td>
+            <td class="text-danger">-58.35%</td>
+            <td class="text-danger">-5.99%</td>
+            <td class="text-danger">R$ -100.83</td>
+            <td>292</td>
+        </tr>
+        
+        <tr data-symbol="ETHA" data-type="Swing Trade">
+            <td>2026-06-02</td>
+            <td><strong>ETHA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>2</td>
+            <td>$34.4500</td>
+            <td>$14.3500</td>
+            <td class="text-danger">$-40.20</td>
+            <td class="text-danger">-58.35%</td>
+            <td class="text-danger">-5.99%</td>
+            <td class="text-danger">R$ -201.66</td>
+            <td>292</td>
+        </tr>
+        
+        <tr data-symbol="ETHA" data-type="Swing Trade">
+            <td>2026-06-03</td>
+            <td><strong>ETHA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>0.66</td>
+            <td>$34.4500</td>
+            <td>$13.8200</td>
+            <td class="text-danger">$-16.12</td>
+            <td class="text-danger">-70.88%</td>
+            <td class="text-danger">-7.26%</td>
+            <td class="text-danger">R$ -81.25</td>
+            <td>293</td>
+        </tr>
+        
+        <tr data-symbol="PLTR" data-type="Swing Trade">
+            <td>2026-06-03</td>
+            <td><strong>PLTR</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>15</td>
+            <td>$149.7718</td>
+            <td>$144.5900</td>
+            <td class="text-danger">$-87.73</td>
+            <td class="text-danger">-3.90%</td>
+            <td class="text-danger">-0.36%</td>
+            <td class="text-danger">R$ -443.57</td>
+            <td>322</td>
+        </tr>
+        
+        <tr data-symbol="PLTR" data-type="Swing Trade">
+            <td>2026-06-03</td>
+            <td><strong>PLTR</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>6</td>
+            <td>$149.7718</td>
+            <td>$144.6000</td>
+            <td class="text-danger">$-31.03</td>
+            <td class="text-danger">-3.45%</td>
+            <td class="text-danger">-0.32%</td>
+            <td class="text-danger">R$ -156.96</td>
+            <td>322</td>
+        </tr>
+        
+        <tr data-symbol="PLTR" data-type="Swing Trade">
+            <td>2026-06-03</td>
+            <td><strong>PLTR</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>2</td>
+            <td>$149.7718</td>
+            <td>$144.6000</td>
+            <td class="text-danger">$-10.34</td>
+            <td class="text-danger">-3.45%</td>
+            <td class="text-danger">-0.32%</td>
+            <td class="text-danger">R$ -52.32</td>
+            <td>322</td>
+        </tr>
+        
+        <tr data-symbol="PLTR" data-type="Swing Trade">
+            <td>2026-06-03</td>
+            <td><strong>PLTR</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>11</td>
+            <td>$149.7718</td>
+            <td>$144.6000</td>
+            <td class="text-danger">$-56.89</td>
+            <td class="text-danger">-3.45%</td>
+            <td class="text-danger">-0.32%</td>
+            <td class="text-danger">R$ -287.77</td>
+            <td>322</td>
+        </tr>
+        
+        <tr data-symbol="PLTR" data-type="Swing Trade">
+            <td>2026-06-03</td>
+            <td><strong>PLTR</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>10</td>
+            <td>$149.7718</td>
+            <td>$144.6000</td>
+            <td class="text-danger">$-51.72</td>
+            <td class="text-danger">-3.45%</td>
+            <td class="text-danger">-0.32%</td>
+            <td class="text-danger">R$ -261.60</td>
+            <td>322</td>
+        </tr>
+        
+        <tr data-symbol="PLTR" data-type="Swing Trade">
+            <td>2026-06-03</td>
+            <td><strong>PLTR</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>11</td>
+            <td>$149.7718</td>
+            <td>$144.6000</td>
+            <td class="text-danger">$-56.89</td>
+            <td class="text-danger">-3.45%</td>
+            <td class="text-danger">-0.32%</td>
+            <td class="text-danger">R$ -287.77</td>
+            <td>322</td>
+        </tr>
+        
+        <tr data-symbol="AVGO" data-type="Swing Trade">
+            <td>2026-06-04</td>
+            <td><strong>AVGO</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>18</td>
+            <td>$150.2834</td>
+            <td>$412.8100</td>
+            <td class="text-success">+$4,715.48</td>
+            <td class="text-success">+174.32%</td>
+            <td class="text-success">+5.84%</td>
+            <td class="text-success">+R$ 23,768.63</td>
+            <td>895</td>
+        </tr>
+        
+        <tr data-symbol="AVGO" data-type="Swing Trade">
+            <td>2026-06-04</td>
+            <td><strong>AVGO</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>17</td>
+            <td>$150.2834</td>
+            <td>$412.1400</td>
+            <td class="text-success">+$4,451.56</td>
+            <td class="text-success">+174.24%</td>
+            <td class="text-success">+12.72%</td>
+            <td class="text-success">+R$ 22,438.34</td>
+            <td>411</td>
+        </tr>
+        
+        <tr data-symbol="SNDK" data-type="Swing Trade">
+            <td>2026-06-05</td>
+            <td><strong>SNDK</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>9</td>
+            <td>$1,406.0011</td>
+            <td>$1,670.0000</td>
+            <td class="text-success">+$2,375.67</td>
+            <td class="text-success">+18.77%</td>
+            <td class="text-success">+25.60%</td>
+            <td class="text-success">+R$ 12,164.87</td>
+            <td>22</td>
+        </tr>
+        
+        <tr data-symbol="RCL" data-type="Swing Trade">
+            <td>2026-06-08</td>
+            <td><strong>RCL</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>0.5</td>
+            <td>$308.7485</td>
+            <td>$276.0300</td>
+            <td class="text-danger">$-28.86</td>
+            <td class="text-danger">-18.69%</td>
+            <td class="text-danger">-1.02%</td>
+            <td class="text-danger">R$ -149.26</td>
+            <td>550</td>
+        </tr>
+        
+        <tr data-symbol="RCL" data-type="Swing Trade">
+            <td>2026-06-08</td>
+            <td><strong>RCL</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>21.99</td>
+            <td>$308.7485</td>
+            <td>$276.5200</td>
+            <td class="text-danger">$-708.71</td>
+            <td class="text-danger">-10.44%</td>
+            <td class="text-danger">-0.90%</td>
+            <td class="text-danger">R$ -3,667.30</td>
+            <td>348</td>
+        </tr>
+        
+        <tr data-symbol="NVDA" data-type="Swing Trade">
+            <td>2026-06-09</td>
+            <td><strong>NVDA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>39</td>
+            <td>$97.6327</td>
+            <td>$201.6800</td>
+            <td class="text-success">+$4,047.85</td>
+            <td class="text-success">+106.31%</td>
+            <td class="text-success">+3.70%</td>
+            <td class="text-success">+R$ 20,919.82</td>
+            <td>861</td>
+        </tr>
+        
+        <tr data-symbol="NVDA" data-type="Swing Trade">
+            <td>2026-06-09</td>
+            <td><strong>NVDA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>20</td>
+            <td>$97.6327</td>
+            <td>$201.6800</td>
+            <td class="text-success">+$2,080.95</td>
+            <td class="text-success">+106.57%</td>
+            <td class="text-success">+7.94%</td>
+            <td class="text-success">+R$ 10,754.62</td>
+            <td>403</td>
+        </tr>
+        
+        <tr data-symbol="NVDA" data-type="Swing Trade">
+            <td>2026-06-09</td>
+            <td><strong>NVDA</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>1</td>
+            <td>$97.6327</td>
+            <td>$201.6700</td>
+            <td class="text-success">+$104.04</td>
+            <td class="text-success">+106.56%</td>
+            <td class="text-success">+9.75%</td>
+            <td class="text-success">+R$ 537.68</td>
+            <td>328</td>
+        </tr>
+        
+        <tr data-symbol="STX" data-type="Swing Trade">
+            <td>2026-06-09</td>
+            <td><strong>STX</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>24</td>
+            <td>$418.4200</td>
+            <td>$829.8400</td>
+            <td class="text-success">+$9,874.08</td>
+            <td class="text-success">+98.33%</td>
+            <td class="text-success">+37.82%</td>
+            <td class="text-success">+R$ 51,030.13</td>
+            <td>78</td>
+        </tr>
+        
+        <tr data-symbol="STX" data-type="Swing Trade">
+            <td>2026-06-09</td>
+            <td><strong>STX</strong></td>
+            <td><span class="badge badge-st">Swing Trade</span></td>
+            <td>1</td>
+            <td>$418.4200</td>
+            <td>$829.0000</td>
+            <td class="text-success">+$410.58</td>
+            <td class="text-success">+98.13%</td>
+            <td class="text-success">+37.74%</td>
+            <td class="text-success">+R$ 2,121.91</td>
+            <td>78</td>
+        </tr>
+        
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'all';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if (btn.innerText.includes(tab) || (tab === 'all' && btn.innerText.includes('Todas'))) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            filterTable();
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById('tradesTable');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                const tdSymbol = tr[i].getElementsByTagName('td')[1];
+                const type = tr[i].getAttribute('data-type');
+                
+                if (tdSymbol) {
+                    const symbolText = tdSymbol.textContent || tdSymbol.innerText;
+                    const matchesSymbol = symbolText.toUpperCase().indexOf(filter) > -1;
+                    const matchesTab = (currentTab === 'all' || type === currentTab);
+                    
+                    if (matchesSymbol && matchesTab) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // Render Chart.js
+        const ctx = document.getElementById('operationsChart').getContext('2d');
+        const chartDates = ["2023-11-27", "2023-12-07", "2023-12-13", "2023-12-20", "2024-01-22", "2024-03-04", "2024-03-11", "2024-03-28", "2024-04-19", "2024-05-14", "2024-05-15", "2024-06-10", "2024-06-18", "2024-06-20", "2024-07-02", "2024-07-05", "2024-08-16", "2024-09-05", "2024-09-24", "2024-09-25", "2024-09-26", "2024-10-21", "2024-10-31", "2024-11-18", "2024-12-03", "2024-12-10", "2024-12-16", "2024-12-23", "2025-01-21", "2025-02-03", "2025-02-10", "2025-02-18", "2025-03-04", "2025-03-05", "2025-03-14", "2025-03-20", "2025-03-24", "2025-04-03", "2025-04-07", "2025-04-14", "2025-04-22", "2025-04-28", "2025-05-06", "2025-05-12", "2025-05-19", "2025-05-27", "2025-06-02", "2025-06-09", "2025-06-16", "2025-06-24", "2025-06-30", "2025-07-16", "2025-08-14", "2025-10-30", "2026-03-23", "2026-03-25", "2026-03-26", "2026-03-27", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-14", "2026-04-15", "2026-04-17", "2026-04-20", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-07", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09"];
+        const chartVolumes = [5977.95, 9685.46, 131.94, 3964.33, 9992.85, 22299.22, 8621.04, 5707.44, 444.59, 17037.45, 1144.53, 1022.0, 7328.78, 18610.98, 8579.49, 4184.13, 1838.48, 19830.63, 1480.0, 2000.0, 2450.0, 2520.0, 3500.0, 2110.0, 24195.73, 577.72, 839.81, 1111.43, 1740.93, 429.25, 639.71, 724.8, 10150.88, 29918.98, 721.56, 701.25, 568.56, 532.08, 1571.17, 716.8, 826.02, 450.24, 869.89, 1319.56, 1093.8, 1117.27, 1052.8, 880.97, 602.28, 496.57, 828.25, 155152.99, 4294.61, 10576.47, 63005.18, 2571.96, 4617.99, 2831.97, 2777.96, 3059.99, 5905.95, 3373.0, 2157.98, 13782.99, 2064.34, 12463.99, 1357.0, 7793.98, 9816.99, 37429.98, 3633.0, 979.0, 5058.0, 2983.0, 14653.51, 870.0, 12654.01, 943.15, 14482.72, 1779.4, 7962.02, 14436.96, 15029.68, 6220.5, 32845.76];
+        const chartProfits = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 198.87, 0.0, 0.0, -543.4, 270.79, 0.0, 52.13, 0.0, -1615.0, 0.0, -14.8, 0.0, -9.3, 0.0, 0.0, -18.88, -22.89, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -17237.45, 0.0, -244.63, -14089.93, 1020.36, -1526.67, 20.39, 690.36, -9.79, -218.95, 70.36, -69.58, -129.67, -250.94, 610.21, -79.88, 260.18, 155.21, -209.58, 296.68, -496.44, -139.8, -134.78, 0.0, -123.44, 0.0, 0.0, -1113.94, -2492.4, -310.72, 9167.04, 2375.67, -737.56, 16517.49];
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartDates,
+                datasets: [
+                    {
+                        label: 'Resultado Realizado (USD)',
+                        data: chartProfits,
+                        backgroundColor: chartProfits.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
+                        borderColor: chartProfits.map(v => v >= 0 ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)'),
+                        borderWidth: 1,
+                        yAxisID: 'yProfit'
+                    },
+                    {
+                        label: 'Volume de Negociação (USD)',
+                        data: chartVolumes,
+                        type: 'line',
+                        fill: false,
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        tension: 0.1,
+                        yAxisID: 'yVolume'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                family: 'Inter',
+                                size: 10
+                            }
+                        }
+                    },
+                    yProfit: {
+                        type: 'linear',
+                        position: 'left',
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                family: 'Inter',
+                                size: 10
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Resultado Realizado ($)',
+                            color: '#94a3b8',
+                            font: {
+                                family: 'Inter',
+                                size: 11
+                            }
+                        }
+                    },
+                    yVolume: {
+                        type: 'linear',
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                family: 'Inter',
+                                size: 10
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Volume de Negociação ($)',
+                            color: '#94a3b8',
+                            font: {
+                                family: 'Inter',
+                                size: 11
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#f8fafc',
+                            font: {
+                                family: 'Inter',
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#f8fafc',
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

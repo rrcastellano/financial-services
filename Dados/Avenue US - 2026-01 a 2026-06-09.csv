@@ -1,0 +1,90 @@
+﻿Data transação,Data liquidação,Descrição,Valor,Saldo
+09/06/2026,10/06/2026,"Venda de 39 NVDA a $ 201,68 cada",7865.33,59005.67
+09/06/2026,10/06/2026,"Venda de 20 NVDA a $ 201,68 cada",4033.60,51140.34
+09/06/2026,10/06/2026,Cobrança de taxa de corretagem de NVDA,-10.00,47106.74
+09/06/2026,10/06/2026,"Venda de 1 NVDA a $ 201,67 cada",201.67,47116.74
+09/06/2026,10/06/2026,"Venda de 24 STX a $ 829,84 cada",19916.16,46915.07
+09/06/2026,10/06/2026,"Venda de 1 STX a $ 829,00 cada",829.00,26998.91
+08/06/2026,09/06/2026,Cobrança de taxa de corretagem de RCL,-2.50,26169.91
+08/06/2026,09/06/2026,"Venda de 0,5 RCL a $ 276,03 cada",136.99,26172.41
+08/06/2026,09/06/2026,Cobrança de taxa de corretagem de RCL,-10.00,26035.42
+08/06/2026,09/06/2026,"Venda de 22 RCL a $ 276,52 cada",6083.51,26045.42
+08/06/2026,08/06/2026,Transferência para Conta corrente,-4318.92,19961.91
+04/06/2026,05/06/2026,"Venda de 18 AVGO a $ 412,81 cada",7430.58,24280.83
+04/06/2026,05/06/2026,Cobrança de taxa de corretagem de AVGO,-10.00,16850.25
+04/06/2026,05/06/2026,"Venda de 17 AVGO a $ 412,14 cada",7006.38,16860.25
+03/06/2026,04/06/2026,Cobrança de taxa de corretagem de ETHA,-2.50,9853.87
+03/06/2026,04/06/2026,"Venda de 0,66 ETHA a $ 13,82 cada",9.15,9856.37
+03/06/2026,04/06/2026,"Venda de 15 PLTR a $ 144,59 cada",2168.87,9847.22
+03/06/2026,04/06/2026,"Venda de 6 PLTR a $ 144,60 cada",867.60,7678.35
+03/06/2026,04/06/2026,"Venda de 2 PLTR a $ 144,60 cada",289.20,6810.75
+03/06/2026,04/06/2026,"Venda de 11 PLTR a $ 144,60 cada",1590.60,6521.55
+03/06/2026,04/06/2026,"Venda de 10 PLTR a $ 144,60 cada",1446.00,4930.95
+03/06/2026,04/06/2026,Cobrança de taxa de corretagem de PLTR,-10.00,3484.95
+03/06/2026,04/06/2026,"Venda de 11 PLTR a $ 144,60 cada",1590.60,3494.95
+02/06/2026,03/06/2026,"Venda de 119 ETHA a $ 14,35 cada",1707.65,1904.35
+02/06/2026,03/06/2026,"Venda de 2 ETHA a $ 14,35 cada",28.70,196.70
+02/06/2026,03/06/2026,"Venda de 1 ETHA a $ 14,35 cada",14.35,168.00
+02/06/2026,03/06/2026,"Venda de 2 ETHA a $ 14,35 cada",28.70,153.65
+16/05/2026,18/05/2026,Imposto sobre dividendo de OMF,-53.55,124.95
+16/05/2026,18/05/2026,Dividendos de OMF,178.50,178.50
+21/04/2026,21/04/2026,Transferência para Conta corrente,-3585.05,0.00
+20/04/2026,21/04/2026,"Venda de 7,5 RCL a $ 275,29 cada",2064.34,3585.05
+15/04/2026,15/04/2026,Dividendos de G035920,7.50,1520.71
+15/04/2026,15/04/2026,Imposto sobre dividendo de G035920,-2.25,1513.21
+14/04/2026,14/04/2026,Rentabilidade de aluguel de ativo,0.01,1515.46
+09/04/2026,09/04/2026,Dividendos de STX,18.50,1515.45
+07/04/2026,07/04/2026,Dividendos de RCL,44.99,1496.95
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T044366,258.98,1451.96
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T044366,175.04,1192.98
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T044366,34.11,1017.94
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T044366,19.15,983.83
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T042403,0.07,964.68
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T042403,0.18,964.61
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T042403,0.16,964.43
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T042403,0.04,964.27
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T042403,123.81,964.23
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T042403,0.02,840.42
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de T042403,0.02,840.40
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de NVDY,112.84,840.38
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de NVDY,254.50,727.54
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de NVDY,101.89,473.04
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de NVDY,165.47,371.15
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de NVDY,85.15,205.68
+07/04/2026,07/04/2026,Estorno de imposto sobre dividendo de NVDY,92.22,120.53
+02/04/2026,02/04/2026,Imposto sobre dividendo de NVDA,-0.18,28.31
+02/04/2026,02/04/2026,Dividendos de NVDA,0.60,28.49
+01/04/2026,01/04/2026,Imposto sobre dividendo de AVGO,-9.75,27.89
+01/04/2026,01/04/2026,Dividendos de AVGO,32.50,37.64
+27/03/2026,27/03/2026,Dividendos de META,7.35,5.14
+27/03/2026,27/03/2026,Imposto sobre dividendo de META,-2.21,-2.21
+24/03/2026,24/03/2026,Transferência para Conta corrente,-20506.74,0.00
+23/03/2026,24/03/2026,Cobrança de taxa de corretagem de STX,-10.00,20506.74
+23/03/2026,24/03/2026,"Compra de 25 STX a $ 418,02 cada",-10450.53,20516.74
+23/03/2026,24/03/2026,Cobrança de taxa de corretagem de HSBC,-10.00,30967.27
+23/03/2026,24/03/2026,"Compra de 135 HSBC a $ 80,66 cada",-10889.10,30977.27
+23/03/2026,24/03/2026,Cobrança de taxa de corretagem de GOOGL,-10.00,41866.37
+23/03/2026,24/03/2026,"Venda de 17 GOOGL a $ 304,35 cada",5173.87,41876.37
+23/03/2026,24/03/2026,Cobrança de taxa de corretagem de AVGO,-10.00,36702.50
+23/03/2026,24/03/2026,"Venda de 15 AVGO a $ 324,32 cada",4864.81,36712.50
+23/03/2026,24/03/2026,Cobrança de taxa de corretagem de FISV,-10.00,31847.69
+23/03/2026,24/03/2026,"Venda de 137,53 FISV a $ 58,31 cada",8019.58,31857.69
+23/03/2026,24/03/2026,Cobrança de taxa de corretagem de NFLX,-10.00,23838.11
+23/03/2026,24/03/2026,"Venda de 70 NFLX a $ 93,21 cada",6524.70,23848.11
+23/03/2026,24/03/2026,"Venda de 35 IBM a $ 250,43 cada",8765.19,17323.41
+23/03/2026,24/03/2026,"Venda de 20 CRWD a $ 415,87 cada",8317.40,8558.22
+17/03/2026,17/03/2026,Imposto sobre dividendo de GOOGL,-3.28,240.82
+17/03/2026,17/03/2026,Dividendos de GOOGL,10.92,244.10
+12/03/2026,12/03/2026,Rentabilidade de aluguel de ativo,0.01,233.18
+11/03/2026,11/03/2026,Dividendos de LLY,20.76,233.17
+11/03/2026,11/03/2026,Imposto sobre dividendo de LLY,-6.23,212.41
+11/03/2026,11/03/2026,Dividendos de IBM,58.80,218.64
+11/03/2026,11/03/2026,Imposto sobre dividendo de IBM,-17.64,159.84
+24/02/2026,24/02/2026,Dividendos de OMF,178.50,177.48
+24/02/2026,24/02/2026,Imposto sobre dividendo de OMF,-53.55,-1.02
+03/02/2026,03/02/2026,Dividendos de G035920,7.50,52.53
+03/02/2026,03/02/2026,Imposto sobre dividendo de G035920,-2.25,45.03
+15/01/2026,15/01/2026,Dividendos de RCL,30.00,47.28
+06/01/2026,06/01/2026,Transferência para Conta corrente,-200.00,17.28
+01/01/2026,02/01/2026,Imposto sobre dividendo de AVGO,-9.75,217.28
+01/01/2026,02/01/2026,Dividendos de AVGO,32.50,227.03
