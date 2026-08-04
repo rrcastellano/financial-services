@@ -1313,7 +1313,7 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
         const defaultPrice = baseCompany ? baseCompany.price : (100 + (symbol.charCodeAt(0) % 50) * 5);
         
         const isBrl = /\d$/.test(symbol) || symbol.includes('.SA');
-        const fallbackProvider = isBrl ? 'brapi' : (activeProvider === 'simulated' ? 'simulated' : activeProvider);
+        const fallbackProvider = isBrl ? 'brapi' : (activeProvider === 'simulated' ? 'simulated' : 'simulated');
 
         if (activeProvider === 'simulated') {
           // Na simulação, aplica uma flutuação controlada de +- 1% para dar vida ao painel
@@ -1328,23 +1328,33 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
           const fluctuation = 1 + (Math.random() * 0.02 - 0.01);
           const newPrice = parseFloat((currentPrice * fluctuation).toFixed(2));
           setCachePrice(priceMap, symbol, newPrice, 'simulated');
+          updatedTickers.add(symbol);
         } else {
-          // API real: se o fetch falhou (rate limit, CORS, timeout), preserva o cache existente.
-          // Não aplicar flutuação artificial — apenas inicializa com o preço base se ainda não há cache.
+          // API real: se o fetch falhou (rate limit, CORS, timeout ou ticker customizado como SKNY não encontrado na API real):
           const currentCached = getCachePrice(priceMap, symbol);
-          if (currentCached === undefined || currentCached === null) {
-            // Sem cache algum: inicializa com preço base da base de dados local
-            setCachePrice(priceMap, symbol, defaultPrice, fallbackProvider);
+          let priceToUse = currentCached;
+
+          if (priceToUse === undefined || priceToUse === null) {
+            priceToUse = defaultPrice;
+          }
+
+          if (!baseCompany) {
+            // Ticker customizado sem cadastro no REAL_TICKERS (ex: SKNY): aplica flutuação e atualiza timestamp
+            const fluctuation = 1 + (Math.random() * 0.02 - 0.01);
+            priceToUse = parseFloat((priceToUse * fluctuation).toFixed(2));
           } else {
             const entry = getCacheEntry(priceMap, symbol);
-            if (entry && (entry.provider === 'simulated' || !entry.provider) && baseCompany) {
+            if (entry && (entry.provider === 'simulated' || !entry.provider)) {
               const deviation = Math.abs(entry.price - defaultPrice) / defaultPrice;
               if (deviation > 0.10) {
                 console.log(`[Finance API Cache Update Healing Real API Fallback] Ticker ${symbol} simulated price (${entry.price}) deviated >10% from registry (${defaultPrice}). Healing.`);
-                setCachePrice(priceMap, symbol, defaultPrice, 'simulated');
+                priceToUse = defaultPrice;
               }
             }
           }
+
+          setCachePrice(priceMap, symbol, priceToUse, fallbackProvider);
+          updatedTickers.add(symbol);
         }
       }
     });
@@ -1368,34 +1378,15 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
         const defaultPrice = baseCompany ? baseCompany.price : (100 + (symbol.charCodeAt(0) % 50) * 5);
         
         const isBrl = /\d$/.test(symbol) || symbol.includes('.SA');
-        const fallbackProvider = isBrl ? 'brapi' : (activeProvider === 'simulated' ? 'simulated' : activeProvider);
+        const fallbackProvider = isBrl ? 'brapi' : 'simulated';
 
-        if (activeProvider === 'simulated') {
-          let currentPrice = getCachePrice(priceMap, symbol) || defaultPrice;
-          if (baseCompany) {
-            const deviation = Math.abs(currentPrice - defaultPrice) / defaultPrice;
-            if (deviation > 0.10) {
-              currentPrice = defaultPrice;
-            }
-          }
+        let currentPrice = getCachePrice(priceMap, symbol) || defaultPrice;
+        if (!baseCompany) {
           const fluctuation = 1 + (Math.random() * 0.02 - 0.01);
-          const newPrice = parseFloat((currentPrice * fluctuation).toFixed(2));
-          setCachePrice(priceMap, symbol, newPrice, 'simulated');
-        } else {
-          // API real sob erro catastrófico: preserva o cache existente sem flutuação artificial
-          const currentCached = getCachePrice(priceMap, symbol);
-          if (currentCached === undefined || currentCached === null) {
-            setCachePrice(priceMap, symbol, defaultPrice, fallbackProvider);
-          } else {
-            const entry = getCacheEntry(priceMap, symbol);
-            if (entry && (entry.provider === 'simulated' || !entry.provider) && baseCompany) {
-              const deviation = Math.abs(entry.price - defaultPrice) / defaultPrice;
-              if (deviation > 0.10) {
-                setCachePrice(priceMap, symbol, defaultPrice, 'simulated');
-              }
-            }
-          }
+          currentPrice = parseFloat((currentPrice * fluctuation).toFixed(2));
         }
+        setCachePrice(priceMap, symbol, currentPrice, fallbackProvider);
+        updatedTickers.add(symbol);
       });
       localStorage.setItem('fsi_prices_cache', JSON.stringify(priceMap));
     } catch (innerError) {

@@ -29,7 +29,7 @@ import {
   Sparkles,
   Layers
 } from 'lucide-react';
-import { fetchCompanyData, updateLivePricesCache, formatDateTime } from '../utils/financeApi';
+import { fetchCompanyData, updateLivePricesCache, formatDateTime, fetchCompanyFundamentalsViaGemini, REAL_TICKERS } from '../utils/financeApi';
 
 // Helper to robustly parse JSON from Gemini AI, removing code blocks and trailing explanations or non-whitespace garbage
 function cleanAndParseJSON(text) {
@@ -1122,6 +1122,24 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     }
     
     try {
+      // Para ativos customizados sem metadados locais, busca fundamentos reais via Gemini AI em background
+      const geminiKey = localStorage.getItem('fsi_api_key') || localStorage.getItem('fsi_gemini_api_key') || import.meta.env.VITE_GEMINI || '';
+      if (geminiKey) {
+        tickers.forEach(async (t) => {
+          if (!REAL_TICKERS[t]) {
+            try {
+              const cachedComp = JSON.parse(localStorage.getItem('fsi_companies_cache') || '{}');
+              if (!cachedComp[t]) {
+                await fetchCompanyFundamentalsViaGemini(t, geminiKey);
+                setPriceUpdateTrigger(prev => prev + 1);
+              }
+            } catch (e) {
+              // Silencioso
+            }
+          }
+        });
+      }
+
       const res = await updateLivePricesCache(tickers, provider, apiKey);
       
       // Atualiza o farol de status por ticker
@@ -1433,6 +1451,11 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     setQtyInput('');
     setAvgPriceInput('');
     setDividendsInput('');
+
+    // Dispara a atualização imediata das cotações incluindo o novo ativo recém-adicionado
+    setTimeout(() => {
+      handleRefreshPrices();
+    }, 150);
   };
 
   // Remover ativo

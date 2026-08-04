@@ -1,0 +1,331 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-08-03T19:00:15.259Z",
+  "exchangeRate": "5.0713",
+  "ledgerUs": {
+    "GOOGL": {
+      "ticker": "GOOGL",
+      "qty": 55,
+      "avgPrice": 236,
+      "dividends": 47.4
+    },
+    "FISV": {
+      "ticker": "FISV",
+      "qty": 597.1,
+      "avgPrice": 50,
+      "dividends": 0
+    },
+    "LLY": {
+      "ticker": "LLY",
+      "qty": 27,
+      "avgPrice": 943.89,
+      "dividends": 82.05
+    },
+    "OMF": {
+      "ticker": "OMF",
+      "qty": 320,
+      "avgPrice": 52.9,
+      "dividends": 883.06
+    },
+    "HSBC": {
+      "ticker": "HSBC",
+      "qty": 200,
+      "avgPrice": 85.4,
+      "dividends": 67.5
+    },
+    "NVDA": {
+      "ticker": "NVDA",
+      "qty": 105,
+      "avgPrice": 202.1,
+      "dividends": 13.33
+    },
+    "SNDK": {
+      "ticker": "SNDK",
+      "qty": 16,
+      "avgPrice": 1733.75,
+      "dividends": 0
+    },
+    "SKHY": {
+      "ticker": "SKHY",
+      "qty": 155,
+      "avgPrice": 150.21,
+      "dividends": 0
+    },
+    "INFQ": {
+      "ticker": "INFQ",
+      "qty": 1000,
+      "avgPrice": 10.5,
+      "dividends": 0
+    }
+  },
+  "ledgerBr": {
+    "PETR4": {
+      "ticker": "PETR4",
+      "qty": 5000,
+      "avgPrice": 33.74,
+      "dividends": 51362.38
+    },
+    "VALE3": {
+      "ticker": "VALE3",
+      "qty": 103,
+      "avgPrice": 65.24,
+      "dividends": 1029.39
+    },
+    "BBDC4": {
+      "ticker": "BBDC4",
+      "qty": 700,
+      "avgPrice": 12.09,
+      "dividends": 1246.13
+    },
+    "ITSA4": {
+      "ticker": "ITSA4",
+      "qty": 1041,
+      "avgPrice": 9.47,
+      "dividends": 2895
+    },
+    "BBAS3": {
+      "ticker": "BBAS3",
+      "qty": 400,
+      "avgPrice": 27.17,
+      "dividends": 2710.01
+    },
+    "QBTC11": {
+      "ticker": "QBTC11",
+      "qty": 1000,
+      "avgPrice": 13.11
+    },
+    "KNCA11": {
+      "ticker": "KNCA11",
+      "qty": 650,
+      "avgPrice": 101.65,
+      "dividends": 18153.5
+    },
+    "HGCR11": {
+      "ticker": "HGCR11",
+      "qty": 815,
+      "avgPrice": 103.16,
+      "dividends": 17205.8
+    },
+    "HGLG11": {
+      "ticker": "HGLG11",
+      "qty": 120,
+      "avgPrice": 160.54,
+      "dividends": 5308.5
+    },
+    "HGRU11": {
+      "ticker": "HGRU11",
+      "qty": 130,
+      "avgPrice": 118.83,
+      "dividends": 5443.1
+    },
+    "ITRI11": {
+      "ticker": "ITRI11",
+      "qty": 1500,
+      "avgPrice": 91.11,
+      "dividends": 29765.76
+    },
+    "KNCR11": {
+      "ticker": "KNCR11",
+      "qty": 1031,
+      "avgPrice": 102.97,
+      "dividends": 34907.93
+    },
+    "KNIP11": {
+      "ticker": "KNIP11",
+      "qty": 800,
+      "avgPrice": 89.11,
+      "dividends": 11496
+    },
+    "KNSC11": {
+      "ticker": "KNSC11",
+      "qty": 8670,
+      "avgPrice": 8.8,
+      "dividends": 10326
+    },
+    "MCCI11": {
+      "ticker": "MCCI11",
+      "qty": 965,
+      "avgPrice": 89.11,
+      "dividends": 24767.9
+    },
+    "RZAK11": {
+      "ticker": "RZAK11",
+      "qty": 940,
+      "avgPrice": 84.39,
+      "dividends": 29843.7
+    },
+    "XPML11": {
+      "ticker": "XPML11",
+      "qty": 410,
+      "avgPrice": 115.52,
+      "dividends": 11274.06
+    },
+    "KNRI11": {
+      "ticker": "KNRI11",
+      "qty": 200,
+      "avgPrice": 159.49,
+      "dividends": 496
+    }
+  },
+  "cashTastyTrade": 30.38,
+  "cashAvenue": 1078.23,
+  "riskParams": {
+    "NVDA": {
+      "stopPrice": 185
+    },
+    "GOOGL": {
+      "stopPrice": 315
+    },
+    "AVGO": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "PLTR": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "FISV": {
+      "stopPrice": 48
+    },
+    "GEV": {
+      "stopPrice": 965
+    },
+    "LLY": {
+      "stopPrice": 1005
+    },
+    "META": {
+      "stopPrice": 570.45
+    },
+    "OMF": {
+      "stopPrice": 58
+    },
+    "RCL": {
+      "stopLoss": 9,
+      "takeProfit": 30,
+      "stopBase": "avg"
+    },
+    "HSBC": {
+      "stopPrice": 100
+    },
+    "STX": {
+      "stopPrice": 829.13
+    },
+    "LITE": {
+      "stopLoss": 9,
+      "takeProfit": 30,
+      "stopBase": "avg"
+    },
+    "SNDK": {
+      "stopPrice": 1100
+    },
+    "ETHA": {
+      "stopLoss": 5,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "PETR4": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "VALE3": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "BBDC4": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "ITSA4": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "BBAS3": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "QBTC11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "KNCA11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "HGCR11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "HGLG11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "HGRU11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "ITRI11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "KNCR11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "KNIP11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "KNSC11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "MCCI11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "RZAK11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "XPML11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "KNRI11": {
+      "stopLoss": 10,
+      "takeProfit": 30,
+      "stopBase": "peak"
+    },
+    "MU": {
+      "stopPrice": 935
+    },
+    "WDC": {
+      "stopPrice": 538
+    },
+    "SKHY": {
+      "stopPrice": 125
+    },
+    "INFQ": {
+      "stopPrice": 9
+    }
+  }
+}
