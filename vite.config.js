@@ -29,6 +29,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api-proxy\/gm/, '')
+      },
+      '/api-proxy/sb': {
+        target: 'https://hdcwkoketvqbxzdlpcaw.supabase.co',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api-proxy\/sb/, '')
       }
     }
   }

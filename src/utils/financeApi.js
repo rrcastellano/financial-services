@@ -1071,6 +1071,7 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
 
   let isRateLimited = false;
   let priceMap = {};
+  const updatedTickers = new Set();
 
   try {
     // Self-Healing Cache Cleanup: Detect provider change and clear contaminated cache if switching modes
@@ -1094,9 +1095,6 @@ async function _executeLivePricesCacheUpdate(cleanTickers, provider, apiKey) {
     // Heurística de divisão: Ativos brasileiros (B3) terminam com dígito ou contêm ".SA"
     const brazilianTickers = cleanTickers.filter(t => /\d$/.test(t) || t.includes('.SA'));
     const usTickers = cleanTickers.filter(t => !(/\d$/.test(t) || t.includes('.SA')));
-
-    // Set of successfully updated tickers during this call
-    const updatedTickers = new Set();
 
     // 1. Atualiza ativos do Brasil via BRAPI de forma individual e paralela (para contornar a limitação de 1 ativo por chamada no plano gratuito)
     if (brazilianTickers.length > 0 && brapiKey && brapiKey !== 'undefined') {
@@ -1588,6 +1586,89 @@ export async function fetchHistoricalCandles(tickerSymbol, provider = 'simulated
   return null;
 }
 
+// Bulletproof Gemini GenerateContent helper that safely tries Vite local proxy first, 
+// and falls back to direct API call if proxy returns HTML (e.g. SPA fallback), HTTP errors, or fails.
+export async function safeGeminiGenerateContent(promptText, apiKey) {
+  if (!apiKey) {
+    throw new Error('Chave API do Gemini ausente.');
+  }
+
+  const payload = JSON.stringify({
+    contents: [{ parts: [{ text: promptText }] }],
+    generationConfig: { responseMimeType: "application/json" }
+  });
+
+  const proxyUrl = `/api-proxy/gm/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+  const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+
+  let rawText = null;
+  let isSuccess = false;
+
+  // 1. Tenta o Proxy local primeiramente se window estiver definido
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      });
+
+      if (res.ok) {
+        const text = await res.text();
+        // Garante que a resposta é JSON e não página HTML de fallback SPA (<!DOCTYPE)
+        if (text && !text.trim().startsWith('<')) {
+          rawText = text;
+          isSuccess = true;
+        } else {
+          console.warn('[Gemini Proxy] Response received from proxy was HTML, not JSON. Falling back to direct API call.');
+        }
+      } else {
+        console.warn(`[Gemini Proxy] Proxy returned HTTP status ${res.status}. Falling back to direct API call.`);
+      }
+    } catch (e) {
+      console.warn('[Gemini Proxy] Local proxy fetch failed:', e);
+    }
+  }
+
+  // 2. Fallback direto caso o proxy tenha falhado ou retornado HTML
+  if (!isSuccess) {
+    const res = await fetch(directUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      let errMessage = `HTTP ${res.status}`;
+      try {
+        const errJson = JSON.parse(text);
+        if (errJson.error?.message) {
+          errMessage = errJson.error.message;
+        }
+      } catch (e) {
+        // Ignored
+      }
+      throw new Error(errMessage);
+    }
+
+    if (!text || text.trim().startsWith('<')) {
+      throw new Error('Resposta inválida (HTML em vez de JSON) recebida da API Gemini.');
+    }
+
+    rawText = text;
+  }
+
+  const data = JSON.parse(rawText);
+  const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!resultText) {
+    throw new Error('Formato de resposta inesperado da API Gemini (sem texto em candidates).');
+  }
+
+  return resultText;
+}
+
 // Fetch real-world company profile and peer group fundamentals using Gemini AI
 export async function fetchCompanyFundamentalsViaGemini(ticker, apiKey) {
   const symbol = ticker.toUpperCase().trim();
@@ -1613,20 +1694,27 @@ export async function fetchCompanyFundamentalsViaGemini(ticker, apiKey) {
         "grossProfit": 2620, // Lucro Bruto acumulado LTM em milhões
         "grossMargin": 0.20, // Margem bruta em formato decimal
         "ebitda": 1220, // EBITDA acumulado LTM em milhões
-        "ebitdaMargin": 0.093, // Margem EBITDA em formato decimal
-        "netDebt": 5900, // Dívida Líquida em milhões (Total Debt - Cash. Use valor negativo se possuir Caixa Líquido)
-        "netIncome": -250, // Lucro Líquido acumulado LTM em milhões
-        "description": "Breve descrição institucional real do ativo...",
-        "comps": ["PEER1", "PEER2", "PEER3", "PEER4"], // Lista de tickers de 4 ou 5 concorrentes diretos (preferencialmente listados na mesma moeda/mercado)
-        "growthRateYear1": 0.06, // Projeção realista do crescimento do EBITDA para o Ano 1 (decimal)
-        "growthRateYear2": 0.10,
-        "growthRateYear3": 0.11,
-        "growthRateYear4": 0.09,
+        "price": 100.0,
+        "shares": 500,
+        "revenueLTM": 15000,
+        "revenueGrowth": 0.08,
+        "grossProfit": 6000,
+        "grossMargin": 0.40,
+        "ebitda": 4500,
+        "ebitdaMargin": 0.30,
+        "netDebt": 1200,
+        "netIncome": 2500,
+        "description": "Descrição institucional curta de 2 frases sobre o modelo de negócios.",
+        "comps": ["COMP1", "COMP2", "COMP3", "COMP4"],
+        "growthRateYear1": 0.08,
+        "growthRateYear2": 0.085,
+        "growthRateYear3": 0.08,
+        "growthRateYear4": 0.075,
         "growthRateYear5": 0.07,
-        "ebitdaMarginProj": 0.14, // Margem EBITDA projetada de longo prazo
-        "wacc": 0.09, // Custo médio ponderado de capital (WACC) estimado (ex: 0.09 para 9%)
-        "terminalMultiple": 11.5, // Múltiplo EBITDA terminal de saída sugerido para o DCF (float)
-        "freeCashFlowLTM": 810 // Fluxo de Caixa Livre LTM aproximado em milhões (FCP LTM)
+        "ebitdaMarginProj": 0.31,
+        "wacc": 0.09,
+        "terminalMultiple": 14.0,
+        "freeCashFlowLTM": 2900
       },
       "peers": [
         // A mesma estrutura exata com as informações reais/estimadas para cada concorrente citado em "comps" (ex: PEER1, PEER2, PEER3, etc.)
@@ -1635,21 +1723,7 @@ export async function fetchCompanyFundamentalsViaGemini(ticker, apiKey) {
   `;
 
   try {
-    const res = await fetch(`/api-proxy/gm/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: { responseMimeType: "application/json" }
-      })
-    });
-
-    if (!res.ok) {
-      throw new Error(`Gemini HTTP Error ${res.status}`);
-    }
-
-    const rawData = await res.json();
-    const text = rawData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = await safeGeminiGenerateContent(promptText, apiKey);
     
     // Clean and parse
     let cleaned = text.trim();

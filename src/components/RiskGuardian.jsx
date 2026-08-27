@@ -15,7 +15,7 @@ import {
   ChevronRight,
   ShieldCheck
 } from 'lucide-react';
-import { getCachePrice, fetchHistoricalCandles, updateLivePricesCache } from '../utils/financeApi';
+import { getCachePrice, fetchHistoricalCandles, updateLivePricesCache, safeGeminiGenerateContent } from '../utils/financeApi';
 
 // Helper to robustly parse JSON from Gemini AI, removing code blocks and trailing explanations or non-whitespace garbage
 function cleanAndParseJSON(text) {
@@ -842,18 +842,7 @@ export default function RiskGuardian({ apiKey, apiMode }) {
 
     try {
       if (activeMode === 'gemini') {
-        const res = await fetch(`/api-proxy/gm/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: { responseMimeType: "application/json" }
-          })
-        });
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const rawData = await res.json();
-        const text = rawData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const text = await safeGeminiGenerateContent(promptText, activeKey);
         const parsed = cleanAndParseJSON(text);
         setAdvisorReport(parsed);
       } else {

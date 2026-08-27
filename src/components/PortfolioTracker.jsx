@@ -27,9 +27,13 @@ import {
   Cpu,
   Key,
   Sparkles,
-  Layers
+  Layers,
+  Database,
+  Target
 } from 'lucide-react';
-import { fetchCompanyData, updateLivePricesCache, formatDateTime, fetchCompanyFundamentalsViaGemini, REAL_TICKERS } from '../utils/financeApi';
+import { fetchCompanyData, updateLivePricesCache, formatDateTime, fetchCompanyFundamentalsViaGemini, REAL_TICKERS, safeGeminiGenerateContent } from '../utils/financeApi';
+import { fetchLatestPortfolioData } from '../utils/supabaseClient';
+import { evaluatePortfolioTargets } from '../utils/tenYearPlanTargets';
 
 // Helper to robustly parse JSON from Gemini AI, removing code blocks and trailing explanations or non-whitespace garbage
 function cleanAndParseJSON(text) {
@@ -94,6 +98,179 @@ const DEFAULT_BR_PORTFOLIO_LEDGER = {
   WEGE3: { ticker: 'WEGE3', qty: 150, avgPrice: 35.00, dividends: 150.00 },
   BBDC4: { ticker: 'BBDC4', qty: 90, avgPrice: 13.80, dividends: 45.00 }
 };
+
+const DEFAULT_FIXED_INCOME_PORTFOLIO = [
+  {
+    id: 3062,
+    emissor: "CDB - BANCO BMG S/A",
+    codigo: "CDB2241CTN0",
+    titulo: "CDB - BANCO BMG S/A (CDB2241CTN0)",
+    instituicao: "Itaú",
+    tipo: "Renda Fixa",
+    quantidade: 50,
+    precoMedio: 1000,
+    precoMercado: 1330.7576,
+    investedCost: 50000,
+    currentValuation: 66537.88,
+    profitLoss: 16537.88,
+    profitLossPct: 33.08,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3063,
+    emissor: "CDB - BANCO BTG PACTUAL S A",
+    codigo: "CDB00634BFA",
+    titulo: "CDB - BANCO BTG PACTUAL S A (CDB00634BFA)",
+    instituicao: "BTG",
+    tipo: "Renda Fixa",
+    quantidade: 1,
+    precoMedio: 25752.47,
+    precoMercado: 25752.47,
+    investedCost: 25752.47,
+    currentValuation: 25752.47,
+    profitLoss: 0,
+    profitLossPct: 0,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3064,
+    emissor: "CDB - BANCO C6 CONSIGNADO S.A",
+    codigo: "CDB323QRN2C",
+    titulo: "CDB - BANCO C6 CONSIGNADO S.A (CDB323QRN2C)",
+    instituicao: "Nubank",
+    tipo: "Renda Fixa",
+    quantidade: 40000,
+    precoMedio: 1,
+    precoMercado: 1.5177,
+    investedCost: 40000,
+    currentValuation: 60706.85,
+    profitLoss: 20706.85,
+    profitLossPct: 51.77,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3065,
+    emissor: "CDB - ITAU UNIBANCO S.A.",
+    codigo: "CDB625B2J1G",
+    titulo: "CDB - ITAU UNIBANCO S.A. (CDB625B2J1G)",
+    instituicao: "Itaú",
+    tipo: "Renda Fixa",
+    quantidade: 32000,
+    precoMedio: 1.1759,
+    precoMercado: 1.1759,
+    investedCost: 37630.22,
+    currentValuation: 37630.22,
+    profitLoss: 0,
+    profitLossPct: 0,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3066,
+    emissor: "CDB - ITAU UNIBANCO S.A.",
+    codigo: "CDB625DAYRH",
+    titulo: "CDB - ITAU UNIBANCO S.A. (CDB625DAYRH)",
+    instituicao: "Itaú",
+    tipo: "Renda Fixa",
+    quantidade: 30000,
+    precoMedio: 1.1734,
+    precoMercado: 1.1734,
+    investedCost: 35200.64,
+    currentValuation: 35200.64,
+    profitLoss: 0,
+    profitLossPct: 0,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3067,
+    emissor: "CDB - ITAU UNIBANCO S.A.",
+    codigo: "CDB7250X0QW",
+    titulo: "CDB - ITAU UNIBANCO S.A. (CDB7250X0QW)",
+    instituicao: "Itaú",
+    tipo: "Renda Fixa",
+    quantidade: 10973,
+    precoMedio: 1.1721,
+    precoMercado: 1.1721,
+    investedCost: 12861.04,
+    currentValuation: 12861.04,
+    profitLoss: 0,
+    profitLossPct: 0,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3068,
+    emissor: "CDB - ITAU UNIBANCO S.A.",
+    codigo: "CDB825BQJZ2",
+    titulo: "CDB - ITAU UNIBANCO S.A. (CDB825BQJZ2)",
+    instituicao: "Itaú",
+    tipo: "Renda Fixa",
+    quantidade: 12761,
+    precoMedio: 1,
+    precoMercado: 1.1478,
+    investedCost: 12761,
+    currentValuation: 14646.69,
+    profitLoss: 1885.69,
+    profitLossPct: 14.78,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3069,
+    emissor: "CDB - ITAU UNIBANCO S.A.",
+    codigo: "CDB82691QLS",
+    titulo: "CDB - ITAU UNIBANCO S.A. (CDB82691QLS)",
+    instituicao: "Itaú",
+    tipo: "Renda Fixa",
+    quantidade: 1126691,
+    precoMedio: 0.01,
+    precoMercado: 0.01,
+    investedCost: 11266.91,
+    currentValuation: 11307.71,
+    profitLoss: 40.80,
+    profitLossPct: 0.36,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3070,
+    emissor: "DEB - PRIO FORTE S.A.",
+    codigo: "PEJA12",
+    titulo: "DEB - PRIO FORTE S.A. (PEJA12)",
+    instituicao: "Itaú",
+    tipo: "Renda Fixa",
+    quantidade: 22,
+    precoMedio: 976.1595,
+    precoMercado: 937.44,
+    investedCost: 21475.51,
+    currentValuation: 20623.68,
+    profitLoss: -851.83,
+    profitLossPct: -3.97,
+    currency: "BRL",
+    country: "BR"
+  },
+  {
+    id: 3071,
+    emissor: "Fundo de Investimento",
+    codigo: "Itaú Debêntures Incentivadas CDI RF",
+    titulo: "Itaú Debêntures Incentivadas CDI RF",
+    instituicao: "Itaú",
+    tipo: "Renda Fixa",
+    quantidade: 1,
+    precoMedio: 138899.13,
+    precoMercado: 138899.13,
+    investedCost: 138899.13,
+    currentValuation: 138899.13,
+    profitLoss: 0,
+    profitLossPct: 0,
+    currency: "BRL",
+    country: "BR"
+  }
+];
 
 const SAMPLE_NEWS = [
   {
@@ -553,7 +730,20 @@ export default function PortfolioTracker({
     return DEFAULT_BR_PORTFOLIO_LEDGER;
   });
 
-  const [activePortfolio, setActivePortfolio] = useState('US'); // 'US', 'BR', 'GLOBAL'
+  const [fixedIncomeList, setFixedIncomeList] = useState(() => {
+    const savedRf = localStorage.getItem('fsi_portfolio_fixed_income');
+    if (savedRf) {
+      try {
+        const parsed = JSON.parse(savedRf);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        // Ignored
+      }
+    }
+    return DEFAULT_FIXED_INCOME_PORTFOLIO;
+  });
+
+  const [activePortfolio, setActivePortfolio] = useState('US'); // 'US', 'BR', 'RF', 'GLOBAL'
   const [globalCurrency, setGlobalCurrency] = useState('BRL'); // 'USD', 'BRL'
   const [usdToBrlInput, setUsdToBrlInput] = useState(() => localStorage.getItem('fsi_usd_to_brl') || '5.15');
   const usdToBrl = parseFloat(usdToBrlInput) || 5.15;
@@ -570,6 +760,13 @@ export default function PortfolioTracker({
   const [qtyInput, setQtyInput] = useState('');
   const [avgPriceInput, setAvgPriceInput] = useState('');
   const [dividendsInput, setDividendsInput] = useState('');
+
+  // Inputs para Renda Fixa
+  const [rfEmissorInput, setRfEmissorInput] = useState('');
+  const [rfCodigoInput, setRfCodigoInput] = useState('');
+  const [rfInstInput, setRfInstInput] = useState('Itaú');
+  const [rfCustoInput, setRfCustoInput] = useState('');
+  const [rfSaldoInput, setRfSaldoInput] = useState('');
   
   const [editingKey, setEditingKey] = useState(null);
   const [editQty, setEditQty] = useState('');
@@ -692,6 +889,14 @@ export default function PortfolioTracker({
       : <span style={{ color: '#38bdf8', marginLeft: 4, fontSize: '10px' }}>▼</span>;
   };
 
+  // Supabase Backend Sync States (Modo Sob Demanda / Manual)
+  const [isSyncingSupabase, setIsSyncingSupabase] = useState(false);
+  const [supabaseRefMonth, setSupabaseRefMonth] = useState(() => localStorage.getItem('fsi_supabase_ref_month') || '');
+  const [supabaseLastSync, setSupabaseLastSync] = useState(() => {
+    return localStorage.getItem('fsi_supabase_last_sync_datetime') || localStorage.getItem('fsi_supabase_last_sync') || '';
+  });
+  const [supabaseSyncError, setSupabaseSyncError] = useState('');
+
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -699,6 +904,7 @@ export default function PortfolioTracker({
   const [priceUpdateTrigger, setPriceUpdateTrigger] = useState(0);
   // Farol de status por ticker: { GEV: 'ok', AVGO: 'failed', ... }
   const [tickerStatus, setTickerStatus] = useState({});
+  const [selectedAsset, setSelectedAsset] = useState(null);
 
   // Simulador de Rebalanceamento
   const [simTicker, setSimTicker] = useState('NVDA');
@@ -814,82 +1020,20 @@ Forneça a resposta estritamente no seguinte formato JSON, sem crases de bloco d
 }`;
 
     try {
-      const baseUrl = typeof window !== 'undefined' ? '/api-proxy/gm' : 'https://generativelanguage.googleapis.com';
-      const url = `${baseUrl}/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`;
-      
-      let response;
-      try {
-        response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: promptText }]
-            }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        });
-      } catch (err) {
-        console.warn('[Proxy Fallback] Local proxy failed for Gemini. Falling back to direct URL.', err);
-        const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`;
-        response = await fetch(directUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: promptText }]
-            }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        });
-      }
-      
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error?.message || `HTTP ${response.status}`);
-      }
-      
-      const resData = await response.json();
-      const resText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!resText) {
-        throw new Error('Formato de resposta inválido recebido da API Gemini.');
-      }
-      
+      const resText = await safeGeminiGenerateContent(promptText, activeKey);
       const parsedData = cleanAndParseJSON(resText);
       setAiReport(parsedData);
       setSuccessMessage('Simulação concluída com sucesso (Processada via Gemini AI Ativa)!');
       setTimeout(() => setSuccessMessage(''), 4000);
     } catch (err) {
-      console.error(err);
-      const isConnectionError = err.message.toLowerCase().includes('failed to fetch') || 
-                                 err.message.toLowerCase().includes('network error') ||
-                                 err.message.toLowerCase().includes('cors') ||
-                                 err.message.toLowerCase().includes('load failed') ||
-                                 err.message.toLowerCase().includes('404') ||
-                                 err.message.toLowerCase().includes('not found') ||
-                                 err.message.toLowerCase().includes('not supported for generatecontent');
-
-      const isKeyBlocked = err.message.toLowerCase().includes('leaked') || 
-                           err.message.toLowerCase().includes('invalid key') || 
-                           err.message.toLowerCase().includes('key not valid') ||
-                           err.message.toLowerCase().includes('api_key_invalid') ||
-                           err.message.toLowerCase().includes('api key') ||
-                           (err.message.toLowerCase().includes('403') && !err.message.toLowerCase().includes('model') && !err.message.toLowerCase().includes('quota'));
-      
-      if (isKeyBlocked) {
-        setNewsSimError('A chave API do Gemini foi rejeitada pelo Google (ou relatada como vazada/inválida).');
+      console.warn('[Gemini Simulation Error] Automatic fallback to offline cognitive simulation:', err);
+      try {
+        const fallbackReport = generateMockCognitiveReport(scenarioText, activeHoldings);
+        setAiReport(fallbackReport);
         setShowOfflineFallback(true);
-      } else if (isConnectionError) {
-        setNewsSimError('Falha na simulação: Erro de conexão, erro de roteamento (ex: modelo inexistente no v1beta) ou bloqueio de CORS. Certifique-se de que a aplicação está sendo servida pelo Vite (ex: executando "npm run dev") para que as requisições passem pelo proxy reverso "/api-proxy/gm". Se a aplicação for aberta como arquivo estático ou sem o servidor ativo, o navegador impedirá o acesso direto à API do Google.');
-      } else {
+        setSuccessMessage('Simulação concluída com sucesso (Processada via Simulação Local/Offline)!');
+        setTimeout(() => setSuccessMessage(''), 4000);
+      } catch (fallbackErr) {
         setNewsSimError(`Falha na simulação: ${err.message}`);
       }
     } finally {
@@ -946,54 +1090,7 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
 ]`;
 
       try {
-        const baseUrl = typeof window !== 'undefined' ? '/api-proxy/gm' : 'https://generativelanguage.googleapis.com';
-        const url = `${baseUrl}/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`;
-        
-        let response;
-        try {
-          response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{ text: promptText }]
-              }],
-              generationConfig: {
-                responseMimeType: "application/json"
-              }
-            })
-          });
-        } catch (err) {
-          console.warn('[Proxy Fallback] Local proxy failed for Gemini news. Falling back to direct URL.', err);
-          const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${activeKey}`;
-          response = await fetch(directUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{ text: promptText }]
-              }],
-              generationConfig: {
-                responseMimeType: "application/json"
-              }
-            })
-          });
-        }
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const resData = await response.json();
-        const resText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!resText) {
-          throw new Error('Formato de resposta inválido recebido da API Gemini.');
-        }
-
+        const resText = await safeGeminiGenerateContent(promptText, activeKey);
         const parsedData = cleanAndParseJSON(resText);
         if (Array.isArray(parsedData) && parsedData.length > 0) {
           setNewsFeed(parsedData);
@@ -1069,6 +1166,82 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     localStorage.setItem('fsi_user_portfolio_ledger_br', JSON.stringify(ledgerBr));
     window.dispatchEvent(new CustomEvent('portfolio_updated'));
   }, [ledgerBr]);
+
+  useEffect(() => {
+    localStorage.setItem('fsi_portfolio_fixed_income', JSON.stringify(fixedIncomeList));
+    window.dispatchEvent(new CustomEvent('portfolio_updated'));
+  }, [fixedIncomeList]);
+
+  // Função principal de sincronização com o Supabase (Finance) - Renda Variável & Renda Fixa
+  const syncFromSupabase = React.useCallback(async (isManual = false) => {
+    setIsSyncingSupabase(true);
+    setSupabaseSyncError('');
+    try {
+      const data = await fetchLatestPortfolioData();
+      if (data && data.success) {
+        setLedgerUs(data.ledgerUs);
+        setLedgerBr(data.ledgerBr);
+        localStorage.setItem('fsi_user_portfolio_ledger_us', JSON.stringify(data.ledgerUs));
+        localStorage.setItem('fsi_user_portfolio_ledger_br', JSON.stringify(data.ledgerBr));
+
+        // Atualiza Renda Fixa se presente
+        if (data.fixedIncome && Array.isArray(data.fixedIncome)) {
+          setFixedIncomeList(data.fixedIncome);
+          localStorage.setItem('fsi_portfolio_fixed_income', JSON.stringify(data.fixedIncome));
+        }
+
+        // Atualiza dinheiro disponível (Cash Avenue & TastyTrade)
+        setCashTastyTrade(data.cashTastyTrade);
+        setCashAvenue(data.cashAvenue);
+        localStorage.setItem('fsi_cash_tastytrade', String(data.cashTastyTrade));
+        localStorage.setItem('fsi_cash_avenue', String(data.cashAvenue));
+
+        // Atualiza taxa de câmbio PTAX se encontrada
+        if (data.exchangeRate && data.exchangeRate > 0) {
+          setUsdToBrlInput(String(data.exchangeRate));
+          localStorage.setItem('fsi_usd_to_brl', String(data.exchangeRate));
+        }
+
+        setSupabaseRefMonth(data.latestMonth);
+        localStorage.setItem('fsi_supabase_ref_month', data.latestMonth);
+
+        const formattedTime = data.formattedTimestamp || `${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        setSupabaseLastSync(formattedTime);
+        localStorage.setItem('fsi_supabase_last_sync_datetime', formattedTime);
+        localStorage.setItem('fsi_supabase_last_sync', formattedTime);
+
+        // Dispara atualização de cotações para os ativos recebidos
+        const allTickers = [...Object.keys(data.ledgerUs), ...Object.keys(data.ledgerBr)];
+        if (allTickers.length > 0) {
+          updateLivePricesCache(allTickers);
+        }
+
+        window.dispatchEvent(new CustomEvent('portfolio_updated'));
+
+        if (isManual) {
+          const rfCount = data.fixedIncome?.length || 0;
+          setSuccessMessage(`Supabase sincronizado com sucesso! Mês: ${data.latestMonth} (${data.totalAssetsCount} ativos: ${Object.keys(data.ledgerUs).length} EUA, ${Object.keys(data.ledgerBr).length} RV BR, ${rfCount} Renda Fixa)`);
+          setTimeout(() => setSuccessMessage(''), 4000);
+        }
+      }
+    } catch (err) {
+      console.warn('[PortfolioTracker] Falha na sincronização Supabase:', err.message);
+      setSupabaseSyncError(err.message);
+      if (isManual) {
+        setErrorMessage(`Falha ao conectar com Supabase: ${err.message}`);
+        setTimeout(() => setErrorMessage(''), 5000);
+      }
+    } finally {
+      setIsSyncingSupabase(false);
+    }
+  }, []);
+
+  // Sincronização estritamente sob demanda / manual (sem chamadas automáticas na montagem)
+  useEffect(() => {
+    const handleSbUpdated = () => syncFromSupabase(true);
+    window.addEventListener('fsi_supabase_updated', handleSbUpdated);
+    return () => window.removeEventListener('fsi_supabase_updated', handleSbUpdated);
+  }, [syncFromSupabase]);
 
   const handleRefreshPrices = async () => {
     // Agrega sempre todos os tickers de ambas as carteiras para atualizar tudo simultaneamente
@@ -1227,11 +1400,12 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
       }
 
       const backupData = {
-        version: "1.0",
+        version: "1.1",
         timestamp: new Date().toISOString(),
         exchangeRate: usdToBrlInput,
         ledgerUs,
         ledgerBr,
+        fixedIncome: fixedIncomeList,
         cashTastyTrade,
         cashAvenue,
         riskParams
@@ -1348,6 +1522,11 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
         setLedgerUs(sanitizedUs);
         setLedgerBr(sanitizedBr);
 
+        if (parsed.fixedIncome && Array.isArray(parsed.fixedIncome)) {
+          setFixedIncomeList(parsed.fixedIncome);
+          localStorage.setItem('fsi_portfolio_fixed_income', JSON.stringify(parsed.fixedIncome));
+        }
+
         if (parsed.exchangeRate) {
           const rate = parseFloat(parsed.exchangeRate);
           if (!isNaN(rate) && rate > 0) {
@@ -1458,6 +1637,47 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     }, 150);
   };
 
+  // Adicionar ativo de Renda Fixa
+  const handleAddFixedIncome = (e) => {
+    e.preventDefault();
+    const emissor = rfEmissorInput.trim();
+    const codigo = rfCodigoInput.trim().toUpperCase() || emissor;
+    const inst = rfInstInput.trim() || 'Itaú';
+    const custo = parseFloat(rfCustoInput);
+    const saldo = parseFloat(rfSaldoInput);
+
+    if (!emissor || isNaN(custo) || custo <= 0 || isNaN(saldo) || saldo <= 0) {
+      alert("Por favor, preencha o emissor, o custo aplicado e o saldo atual com valores válidos.");
+      return;
+    }
+
+    const newItem = {
+      id: Date.now(),
+      emissor,
+      codigo,
+      titulo: `${emissor} (${codigo})`,
+      instituicao: inst,
+      tipo: 'Renda Fixa',
+      quantidade: 1,
+      precoMedio: custo,
+      precoMercado: saldo,
+      investedCost: custo,
+      currentValuation: saldo,
+      profitLoss: saldo - custo,
+      profitLossPct: custo > 0 ? ((saldo - custo) / custo) * 100 : 0,
+      currency: 'BRL',
+      country: 'BR'
+    };
+
+    setFixedIncomeList(prev => [...prev, newItem]);
+    setRfEmissorInput('');
+    setRfCodigoInput('');
+    setRfCustoInput('');
+    setRfSaldoInput('');
+    setSuccessMessage(`Título ${emissor} adicionado à carteira de Renda Fixa!`);
+    setTimeout(() => setSuccessMessage(''), 4000);
+  };
+
   // Remover ativo
   const handleRemoveHolding = (symbol) => {
     if (confirm(`Tem certeza de que deseja remover ${symbol} da sua carteira?`)) {
@@ -1465,10 +1685,12 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
         const updated = { ...ledgerUs };
         delete updated[symbol];
         setLedgerUs(updated);
-      } else {
+      } else if (activePortfolio === 'BR') {
         const updated = { ...ledgerBr };
         delete updated[symbol];
         setLedgerBr(updated);
+      } else if (activePortfolio === 'RF') {
+        setFixedIncomeList(prev => prev.filter(item => item.codigo !== symbol && item.titulo !== symbol));
       }
     }
   };
@@ -1476,9 +1698,9 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
   // Ativar modo de edição
   const startEditing = (symbol, item) => {
     setEditingKey(symbol);
-    setEditQty(item.qty.toString());
+    setEditQty(item.qty ? item.qty.toString() : '1');
     const nativePrice = item.avgPriceNative !== undefined ? item.avgPriceNative : item.avgPrice;
-    setEditAvgPrice(nativePrice.toString());
+    setEditAvgPrice(nativePrice ? nativePrice.toString() : (item.investedCost || '0').toString());
     const divsVal = item.dividendsNative !== undefined ? item.dividendsNative : (item.dividends || 0);
     setEditDividends(divsVal.toString());
   };
@@ -1500,24 +1722,42 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
         [symbol]: { ticker: symbol, qty, avgPrice: avg, dividends: divs }
       };
       setLedgerUs(updated);
-    } else {
+    } else if (activePortfolio === 'BR') {
       const updated = {
         ...ledgerBr,
         [symbol]: { ticker: symbol, qty, avgPrice: avg, dividends: divs }
       };
       setLedgerBr(updated);
+    } else if (activePortfolio === 'RF') {
+      setFixedIncomeList(prev => prev.map(item => {
+        if (item.codigo === symbol || item.titulo === symbol) {
+          const newCost = qty * avg;
+          const currentVal = item.currentValuation || newCost;
+          return {
+            ...item,
+            quantidade: qty,
+            precoMedio: avg,
+            investedCost: newCost,
+            profitLoss: currentVal - newCost,
+            profitLossPct: newCost > 0 ? ((currentVal - newCost) / newCost) * 100 : 0
+          };
+        }
+        return item;
+      }));
     }
     setEditingKey(null);
   };
 
   // Limpar toda a carteira ativa
   const handleClearLedger = () => {
-    const pName = activePortfolio === 'US' ? 'EUA (USD)' : 'Brasil (BRL)';
+    const pName = activePortfolio === 'US' ? 'EUA (USD)' : activePortfolio === 'BR' ? 'Brasil (BRL)' : 'Renda Fixa (BRL)';
     if (confirm(`Tem certeza de que deseja limpar todos os ativos da carteira ${pName}?`)) {
       if (activePortfolio === 'US') {
         setLedgerUs({});
-      } else {
+      } else if (activePortfolio === 'BR') {
         setLedgerBr({});
+      } else if (activePortfolio === 'RF') {
+        setFixedIncomeList([]);
       }
     }
   };
@@ -1562,8 +1802,8 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
       rawAvgPrice: rawAvgPrice,
       adjustedAvgPrice: adjustedAvgPrice,
       avgPrice: activeAvgPrice,
-      name: comp.name,
-      sector: comp.sector || 'Outros',
+      name: (comp.name && comp.name !== comp.ticker) ? comp.name : (item.nome || comp.name || item.ticker),
+      sector: item.setor || comp.sector || 'Outros',
       currentPrice: comp.price,
       investedCost: invested,
       currentValuation: currentVal,
@@ -1635,8 +1875,8 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
       rawAvgPrice: rawAvgPrice,
       adjustedAvgPrice: adjustedAvgPrice,
       avgPrice: activeAvgPrice,
-      name: comp.name,
-      sector: comp.sector || 'Outros',
+      name: (comp.name && comp.name !== comp.ticker) ? comp.name : (item.nome || comp.name || item.ticker),
+      sector: item.setor || comp.sector || 'Outros',
       currentPrice: comp.price,
       investedCost: invested,
       currentValuation: currentVal,
@@ -1683,26 +1923,70 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
   const totalProfitLossPctBr = totalInvestedBr > 0 ? (totalProfitLossBr / totalInvestedBr) * 100 : 0;
   const totalDailyChangeValBr = holdingsBr.reduce((acc, h) => acc + h.dailyChangeVal, 0);
 
-  // Unifica dados de carteira global
+  // Renda Fixa Brasil - Nativo em BRL
+  const totalInvestedRfNative = fixedIncomeList.reduce((acc, h) => acc + (h.investedCost || 0), 0);
+  const totalValuationRfNative = fixedIncomeList.reduce((acc, h) => acc + (h.currentValuation || 0), 0);
+  const totalProfitLossRfNative = totalValuationRfNative - totalInvestedRfNative;
+  const totalProfitLossPctRfNative = totalInvestedRfNative > 0 ? (totalProfitLossRfNative / totalInvestedRfNative) * 100 : 0;
+
+  // holdingsRf convertido para visualização na moeda selecionada (USD ou BRL)
+  const holdingsRf = fixedIncomeList.map(item => {
+    const multiplier = globalCurrency === 'USD' ? (1 / USD_TO_BRL) : 1;
+    return {
+      ticker: item.codigo,
+      name: item.titulo,
+      sector: 'Renda Fixa',
+      instituicao: item.instituicao,
+      tipo: 'Renda Fixa',
+      qty: item.quantidade,
+      avgPrice: (item.precoMedio || 0) * multiplier,
+      rawAvgPrice: (item.precoMedio || 0) * multiplier,
+      adjustedAvgPrice: (item.precoMedio || 0) * multiplier,
+      currentPrice: (item.precoMercado || 0) * multiplier,
+      investedCost: (item.investedCost || 0) * multiplier,
+      investedCostGlobal: (item.investedCost || 0) * multiplier,
+      currentValuation: (item.currentValuation || 0) * multiplier,
+      currentValuationGlobal: (item.currentValuation || 0) * multiplier,
+      profitLoss: (item.profitLoss || 0) * multiplier,
+      profitLossGlobal: (item.profitLoss || 0) * multiplier,
+      profitLossPct: item.profitLossPct || 0,
+      dailyChangeVal: 0,
+      dailyChangeValGlobal: 0,
+      dailyChangePct: 0,
+      dividends: 0,
+      country: 'BR (RF)',
+      currency: globalCurrency
+    };
+  });
+
+  const totalInvestedRf = holdingsRf.reduce((acc, h) => acc + h.investedCost, 0);
+  const totalValuationRf = holdingsRf.reduce((acc, h) => acc + h.currentValuation, 0);
+  const totalProfitLossRf = totalValuationRf - totalInvestedRf;
+  const totalProfitLossPctRf = totalInvestedRf > 0 ? (totalProfitLossRf / totalInvestedRf) * 100 : 0;
+
+  // Unifica dados de carteira global (EUA + RV Brasil + RF Brasil)
   const holdingsGlobal = [
-    ...holdingsUs.map(h => {
-      return {
-        ...h,
-        investedCostGlobal: h.investedCost,
-        currentValuationGlobal: h.currentValuation,
-        profitLossGlobal: h.profitLoss,
-        dailyChangeValGlobal: h.dailyChangeVal
-      };
-    }),
-    ...holdingsBr.map(h => {
-      return {
-        ...h,
-        investedCostGlobal: h.investedCost,
-        currentValuationGlobal: h.currentValuation,
-        profitLossGlobal: h.profitLoss,
-        dailyChangeValGlobal: h.dailyChangeVal
-      };
-    })
+    ...holdingsUs.map(h => ({
+      ...h,
+      investedCostGlobal: h.investedCost,
+      currentValuationGlobal: h.currentValuation,
+      profitLossGlobal: h.profitLoss,
+      dailyChangeValGlobal: h.dailyChangeVal
+    })),
+    ...holdingsBr.map(h => ({
+      ...h,
+      investedCostGlobal: h.investedCost,
+      currentValuationGlobal: h.currentValuation,
+      profitLossGlobal: h.profitLoss,
+      dailyChangeValGlobal: h.dailyChangeVal
+    })),
+    ...holdingsRf.map(h => ({
+      ...h,
+      investedCostGlobal: h.investedCost,
+      currentValuationGlobal: h.currentValuation,
+      profitLossGlobal: h.profitLoss,
+      dailyChangeValGlobal: h.dailyChangeVal
+    }))
   ];
 
   const totalInvestedGlobal = holdingsGlobal.reduce((acc, h) => acc + h.investedCostGlobal, 0);
@@ -1717,7 +2001,24 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     ? holdingsUs 
     : activePortfolio === 'BR' 
       ? holdingsBr 
-      : holdingsGlobal;
+      : activePortfolio === 'RF'
+        ? holdingsRf
+        : holdingsGlobal;
+
+  // Comparativo de Metas do Plano de 10 Anos por Classe de Ativo
+  const planTargetsComparison = React.useMemo(() => {
+    const usBrl = totalValuationUsNative * USD_TO_BRL;
+    const rvBr = totalValuationBrNative;
+    const rfBr = totalValuationRfNative;
+    const totalBrl = usBrl + rvBr + rfBr;
+
+    return evaluatePortfolioTargets({
+      usBrl,
+      rvBr,
+      rfBr,
+      totalBrl
+    });
+  }, [totalValuationUsNative, USD_TO_BRL, totalValuationBrNative, totalValuationRfNative]);
 
   // Ordenação de holdings ativos
   const sortedHoldings = React.useMemo(() => {
@@ -1779,37 +2080,49 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     ? totalInvestedUs 
     : activePortfolio === 'BR' 
       ? totalInvestedBr 
-      : totalInvestedGlobal;
+      : activePortfolio === 'RF'
+        ? totalInvestedRf
+        : totalInvestedGlobal;
 
   const totalValuation = activePortfolio === 'US' 
     ? totalValuationUs 
     : activePortfolio === 'BR' 
       ? totalValuationBr 
-      : totalValuationGlobal;
+      : activePortfolio === 'RF'
+        ? totalValuationRf
+        : totalValuationGlobal;
 
   const totalProfitLoss = activePortfolio === 'US' 
     ? totalProfitLossUs 
     : activePortfolio === 'BR' 
       ? totalProfitLossBr 
-      : totalProfitLossGlobal;
+      : activePortfolio === 'RF'
+        ? totalProfitLossRf
+        : totalProfitLossGlobal;
 
   const totalProfitLossPct = activePortfolio === 'US' 
     ? totalProfitLossPctUs 
     : activePortfolio === 'BR' 
       ? totalProfitLossPctBr 
-      : totalProfitLossPctGlobal;
+      : activePortfolio === 'RF'
+        ? totalProfitLossPctRf
+        : totalProfitLossPctGlobal;
 
   const totalDailyChangeVal = activePortfolio === 'US' 
     ? totalDailyChangeValUs 
     : activePortfolio === 'BR' 
       ? totalDailyChangeValBr 
-      : totalDailyChangeValGlobal;
+      : activePortfolio === 'RF'
+        ? 0
+        : totalDailyChangeValGlobal;
 
   const totalDailyChangePct = activePortfolio === 'US' 
     ? (totalValuationUs > 0 ? (totalDailyChangeValUs / totalValuationUs) * 100 : 0)
     : activePortfolio === 'BR' 
       ? (totalValuationBr > 0 ? (totalDailyChangeValBr / totalValuationBr) * 100 : 0)
-      : totalDailyChangePctGlobal;
+      : activePortfolio === 'RF'
+        ? 0
+        : totalDailyChangePctGlobal;
 
   // Dynamic Cash & Liquidity calculations in display currency
   const cashDetails = React.useMemo(() => {
@@ -1817,7 +2130,7 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     const displayTasty = cashTastyTrade * multiplier;
     const displayAvenue = cashAvenue * multiplier;
     const totalCash = displayTasty + displayAvenue;
-    const activeCash = activePortfolio === 'BR' ? 0 : totalCash;
+    const activeCash = (activePortfolio === 'BR' || activePortfolio === 'RF') ? 0 : totalCash;
     const consolidatedWealth = activeCash + totalValuation;
 
     return {
@@ -1885,7 +2198,8 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
       Industrials: '#f59e0b',    // Amber
       'Consumer Cyclical': '#06b6d4', // Cyan
       Energy: '#ec4899',         // Pink
-      'Basic Materials': '#14b8a6' // Teal
+      'Basic Materials': '#14b8a6', // Teal
+      'Renda Fixa': '#a78bfa'    // Purple / Amethyst
     };
     return colors[sectorName] || '#8b5cf6'; // Violet default
   };
@@ -1968,7 +2282,9 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
     ? [...holdingsUs, ...holdingsBr]
     : activePortfolio === 'US'
       ? holdingsUs
-      : holdingsBr;
+      : activePortfolio === 'RF'
+        ? holdingsRf
+        : holdingsBr;
 
   // Donut SVG
   const renderDonutChart = () => {
@@ -2240,6 +2556,24 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
           </button>
 
           <button 
+            onClick={() => syncFromSupabase(true)} 
+            className="btn btn-primary" 
+            style={{ 
+              height: '38px', 
+              gap: 6, 
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              borderColor: '#10b981',
+              color: '#ffffff',
+              boxShadow: '0 0 14px rgba(16, 185, 129, 0.3)'
+            }}
+            disabled={isSyncingSupabase}
+            title="Sincronizar posições de Renda Variável diretamente do Supabase"
+          >
+            <Database size={14} className={isSyncingSupabase ? "spin-animation" : ""} />
+            <span>{isSyncingSupabase ? "Sincronizando..." : "Sincronizar Supabase"}</span>
+          </button>
+
+          <button 
             onClick={handleRefreshPrices} 
             className="btn btn-secondary" 
             style={{ height: '38px', gap: 6 }}
@@ -2260,7 +2594,19 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
             ...(activePortfolio === 'US' ? styles.tabBtnActiveUS : {}) 
           }}
         >
-          🇺🇸 Carteira EUA (USD)
+          <span>🇺🇸 Carteira EUA (USD)</span>
+          <span style={{ 
+            marginLeft: 8, 
+            fontSize: '10px', 
+            padding: '1px 6px', 
+            borderRadius: '8px', 
+            background: planTargetsComparison.us.isBeaten ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', 
+            color: planTargetsComparison.us.isBeaten ? '#34d399' : '#f87171', 
+            fontWeight: '700',
+            fontFamily: 'monospace'
+          }}>
+            {planTargetsComparison.us.isBeaten ? '🟢 Batida' : '🔴 Abaixo'}
+          </span>
         </button>
         <button 
           onClick={() => { setActivePortfolio('BR'); setSelectedNewsFilter('all'); }} 
@@ -2269,7 +2615,40 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
             ...(activePortfolio === 'BR' ? styles.tabBtnActiveBR : {}) 
           }}
         >
-          🇧🇷 Carteira Brasil (BRL)
+          <span>🇧🇷 Carteira Brasil (BRL)</span>
+          <span style={{ 
+            marginLeft: 8, 
+            fontSize: '10px', 
+            padding: '1px 6px', 
+            borderRadius: '8px', 
+            background: planTargetsComparison.rvBr.isBeaten ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', 
+            color: planTargetsComparison.rvBr.isBeaten ? '#34d399' : '#f87171', 
+            fontWeight: '700',
+            fontFamily: 'monospace'
+          }}>
+            {planTargetsComparison.rvBr.isBeaten ? '🟢 Batida' : '🔴 Abaixo'}
+          </span>
+        </button>
+        <button 
+          onClick={() => { setActivePortfolio('RF'); setSelectedNewsFilter('all'); }} 
+          style={{ 
+            ...styles.tabBtn, 
+            ...(activePortfolio === 'RF' ? styles.tabBtnActiveRF : {}) 
+          }}
+        >
+          <span>🏛️ Renda Fixa (BRL)</span>
+          <span style={{ 
+            marginLeft: 8, 
+            fontSize: '10px', 
+            padding: '1px 6px', 
+            borderRadius: '8px', 
+            background: planTargetsComparison.rfBr.isBeaten ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', 
+            color: planTargetsComparison.rfBr.isBeaten ? '#34d399' : '#f87171', 
+            fontWeight: '700',
+            fontFamily: 'monospace'
+          }}>
+            {planTargetsComparison.rfBr.isBeaten ? '🟢 Batida' : '🔴 Abaixo'}
+          </span>
         </button>
         <button 
           onClick={() => { setActivePortfolio('GLOBAL'); setSelectedNewsFilter('all'); }} 
@@ -2278,45 +2657,207 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
             ...(activePortfolio === 'GLOBAL' ? styles.tabBtnActiveGlobal : {}) 
           }}
         >
-          🌐 Visão Consolidada (Global)
+          <span>🌐 Visão Consolidada (Global)</span>
+          <span style={{ 
+            marginLeft: 8, 
+            fontSize: '10px', 
+            padding: '1px 6px', 
+            borderRadius: '8px', 
+            background: planTargetsComparison.beatenClassesCount >= 1 ? 'rgba(56, 189, 248, 0.2)' : 'rgba(239, 68, 68, 0.2)', 
+            color: planTargetsComparison.beatenClassesCount >= 1 ? '#38bdf8' : '#f87171', 
+            fontWeight: '700',
+            fontFamily: 'monospace'
+          }}>
+            {planTargetsComparison.beatenClassesCount}/3 Batidas
+          </span>
         </button>
       </div>
 
-      {/* Global Local Database Status Indicator */}
+      {/* Supabase Database Status Indicator */}
       <div 
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '8px 16px',
+          padding: '10px 16px',
           borderRadius: '8px',
           background: 'rgba(30, 41, 59, 0.4)',
           border: '1px solid rgba(255, 255, 255, 0.05)',
           backdropFilter: 'blur(8px)',
           marginBottom: '16px',
           fontSize: '12px',
-          color: '#cbd5e1'
+          color: '#cbd5e1',
+          flexWrap: 'wrap',
+          gap: 10
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ 
             width: '8px', 
             height: '8px', 
             borderRadius: '50%', 
-            backgroundColor: '#10b981', 
-            boxShadow: '0 0 8px #10b981',
+            backgroundColor: supabaseSyncError ? '#f59e0b' : '#10b981', 
+            boxShadow: supabaseSyncError ? '0 0 8px #f59e0b' : '0 0 8px #10b981',
             display: 'inline-block'
           }}></span>
-          <span style={{ fontWeight: '600', color: '#38bdf8' }}>Base de Dados Local:</span>
-          <span>SQLite/localStorage Engine Ativa</span>
+          <span style={{ fontWeight: '600', color: '#10b981' }}>Base de Dados:</span>
+          <span>Supabase (Finance) — <strong>Renda Variável & Renda Fixa</strong></span>
+          <span style={{ 
+            background: 'rgba(56, 189, 248, 0.1)', 
+            color: '#38bdf8', 
+            border: '1px solid rgba(56, 189, 248, 0.25)',
+            padding: '2px 8px', 
+            borderRadius: '4px',
+            fontSize: '11px'
+          }}>
+            Cache Permanente Ativo
+          </span>
+          {supabaseRefMonth && (
+            <span style={{ 
+              background: 'rgba(16, 185, 129, 0.15)', 
+              color: '#a7f3d0', 
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              padding: '2px 8px', 
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: '600'
+            }}>
+              Mês Ref: {supabaseRefMonth}
+            </span>
+          )}
+          {supabaseSyncError && (
+            <span style={{ color: '#fca5a5', fontSize: '11px' }}>
+              (Offline / Usando cache local)
+            </span>
+          )}
         </div>
-        <div>
-          <span style={{ color: '#94a3b8' }}>Última Sincronização Geral: </span>
-          <strong style={{ color: '#ffffff', fontFamily: 'monospace' }}>
-            {lastGlobalUpdate ? formatDateTime(lastGlobalUpdate) : 'Nenhuma consulta realizada'}
-          </strong>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div>
+            <span style={{ color: '#94a3b8' }}>Última Atualização Supabase: </span>
+            <strong style={{ color: '#ffffff', fontFamily: 'monospace' }}>
+              {supabaseLastSync || 'Posição em cache (clique em Sincronizar)'}
+            </strong>
+          </div>
+          <div>
+            <span style={{ color: '#94a3b8' }}>Última Cotação: </span>
+            <strong style={{ color: '#ffffff', fontFamily: 'monospace' }}>
+              {lastGlobalUpdate ? formatDateTime(lastGlobalUpdate) : 'Nenhuma consulta realizada'}
+            </strong>
+          </div>
         </div>
       </div>
+
+      {/* GLOBAL Status das Metas por Classe (10 Year Plan) */}
+      {activePortfolio === 'GLOBAL' && (
+        <div style={{
+          background: 'rgba(30, 41, 59, 0.45)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(56, 189, 248, 0.25)',
+          borderRadius: '10px',
+          padding: '12px 18px',
+          marginBottom: '16px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 12
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '8px',
+              background: 'rgba(56, 189, 248, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid rgba(56, 189, 248, 0.3)'
+            }}>
+              <Target size={18} color="#38bdf8" />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <strong style={{ fontSize: '13px', color: '#f8fafc' }}>
+                  Plano 10 Anos: Status das Metas por Classe ({planTargetsComparison.refMonthLabel})
+                </strong>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  background: planTargetsComparison.beatenClassesCount >= 1 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  color: planTargetsComparison.beatenClassesCount >= 1 ? '#34d399' : '#f87171',
+                  border: `1px solid ${planTargetsComparison.beatenClassesCount >= 1 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                }}>
+                  {planTargetsComparison.beatenClassesCount} de 3 classes batidas
+                </span>
+              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                Acompanhamento em tempo real do patrimônio realizado versus a meta proporcional do plano de aposentadoria
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{
+              padding: '6px 10px',
+              borderRadius: '6px',
+              background: 'rgba(15, 23, 42, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              fontSize: '11px',
+              fontFamily: 'monospace'
+            }}>
+              <span style={{ color: '#a5b4fc', marginRight: 6 }}>🇺🇸 RV EUA:</span>
+              <strong style={{ color: planTargetsComparison.us.isBeaten ? '#34d399' : '#f87171' }}>
+                {planTargetsComparison.us.isBeaten ? '🟢 Batida' : '🔴 Abaixo'} ({planTargetsComparison.us.diff >= 0 ? '+' : ''}{planTargetsComparison.us.diffPct.toFixed(1)}%)
+              </strong>
+            </div>
+
+            <div style={{
+              padding: '6px 10px',
+              borderRadius: '6px',
+              background: 'rgba(15, 23, 42, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              fontSize: '11px',
+              fontFamily: 'monospace'
+            }}>
+              <span style={{ color: '#6ee7b7', marginRight: 6 }}>🇧🇷 RV Brasil:</span>
+              <strong style={{ color: planTargetsComparison.rvBr.isBeaten ? '#34d399' : '#f87171' }}>
+                {planTargetsComparison.rvBr.isBeaten ? '🟢 Batida' : '🔴 Abaixo'} ({planTargetsComparison.rvBr.diff >= 0 ? '+' : ''}{planTargetsComparison.rvBr.diffPct.toFixed(1)}%)
+              </strong>
+            </div>
+
+            <div style={{
+              padding: '6px 10px',
+              borderRadius: '6px',
+              background: 'rgba(15, 23, 42, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              fontSize: '11px',
+              fontFamily: 'monospace'
+            }}>
+              <span style={{ color: '#c4b5fd', marginRight: 6 }}>🏛️ RF Brasil:</span>
+              <strong style={{ color: planTargetsComparison.rfBr.isBeaten ? '#34d399' : '#f87171' }}>
+                {planTargetsComparison.rfBr.isBeaten ? '🟢 Batida' : '🔴 Abaixo'} ({planTargetsComparison.rfBr.diff >= 0 ? '+' : ''}{planTargetsComparison.rfBr.diffPct.toFixed(1)}%)
+              </strong>
+            </div>
+
+            <div style={{
+              padding: '6px 10px',
+              borderRadius: '6px',
+              background: 'rgba(15, 23, 42, 0.6)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              fontSize: '11px',
+              fontFamily: 'monospace'
+            }}>
+              <span style={{ color: '#38bdf8', marginRight: 6 }}>💰 Total:</span>
+              <strong style={{ color: planTargetsComparison.total.isBeaten ? '#34d399' : '#f87171' }}>
+                {planTargetsComparison.total.isBeaten ? '🟢 Batida' : '🔴 Abaixo'} ({planTargetsComparison.total.diff >= 0 ? '+' : ''}{planTargetsComparison.total.diffPct.toFixed(1)}%)
+              </strong>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* GLOBAL Custody Summary Breakdown Cards */}
       {activePortfolio === 'GLOBAL' && (
@@ -2342,6 +2883,33 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
                 {totalProfitLossUsNative >= 0 ? '+' : ''}{formatVal(totalProfitLossUsNative, 'USD')} ({totalProfitLossPctUsNative.toFixed(2)}%)
               </span>
             </div>
+            {/* Meta 2026 - Plano 10 Anos */}
+            <div style={{ ...styles.custodyRow, borderTop: '1px dashed rgba(255, 255, 255, 0.08)', paddingTop: '8px', marginTop: '6px' }}>
+              <span style={{ ...styles.custodyLabel, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Target size={12} color="#818cf8" />
+                <span>Meta 2026 ({planTargetsComparison.shortLabel}):</span>
+              </span>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  fontFamily: 'monospace',
+                  background: planTargetsComparison.us.isBeaten ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  color: planTargetsComparison.us.isBeaten ? '#34d399' : '#f87171',
+                  border: `1px solid ${planTargetsComparison.us.isBeaten ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                }}>
+                  {planTargetsComparison.us.isBeaten ? '🟢 Meta Batida' : '🔴 Abaixo da Meta'} ({planTargetsComparison.us.diff >= 0 ? '+' : ''}{planTargetsComparison.us.diffPct.toFixed(1)}%)
+                </span>
+                <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: 2, fontFamily: 'monospace' }}>
+                  Meta: {formatVal(planTargetsComparison.us.target, 'BRL')} ({planTargetsComparison.us.diff >= 0 ? '+' : ''}{formatVal(planTargetsComparison.us.diff, 'BRL')})
+                </div>
+              </div>
+            </div>
           </div>
 
           <div style={{ ...styles.custodyCard, borderLeft: '4px solid #10b981' }} className="glass-panel">
@@ -2365,6 +2933,83 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
                 {totalProfitLossBrNative >= 0 ? '+' : ''}{formatVal(totalProfitLossBrNative, 'BRL')} ({totalProfitLossPctBrNative.toFixed(2)}%)
               </span>
             </div>
+            {/* Meta 2026 - Plano 10 Anos */}
+            <div style={{ ...styles.custodyRow, borderTop: '1px dashed rgba(255, 255, 255, 0.08)', paddingTop: '8px', marginTop: '6px' }}>
+              <span style={{ ...styles.custodyLabel, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Target size={12} color="#34d399" />
+                <span>Meta 2026 ({planTargetsComparison.shortLabel}):</span>
+              </span>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  fontFamily: 'monospace',
+                  background: planTargetsComparison.rvBr.isBeaten ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  color: planTargetsComparison.rvBr.isBeaten ? '#34d399' : '#f87171',
+                  border: `1px solid ${planTargetsComparison.rvBr.isBeaten ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                }}>
+                  {planTargetsComparison.rvBr.isBeaten ? '🟢 Meta Batida' : '🔴 Abaixo da Meta'} ({planTargetsComparison.rvBr.diff >= 0 ? '+' : ''}{planTargetsComparison.rvBr.diffPct.toFixed(1)}%)
+                </span>
+                <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: 2, fontFamily: 'monospace' }}>
+                  Meta: {formatVal(planTargetsComparison.rvBr.target, 'BRL')} ({planTargetsComparison.rvBr.diff >= 0 ? '+' : ''}{formatVal(planTargetsComparison.rvBr.diff, 'BRL')})
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ ...styles.custodyCard, borderLeft: '4px solid #a78bfa' }} className="glass-panel">
+            <div style={styles.custodyHeader}>
+              <h4 style={{ color: '#c4b5fd', fontSize: '13px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                🏛️ Custódia Brasil (Renda Fixa)
+              </h4>
+              <span style={{ fontSize: '10px', color: '#64748b' }}>Original em BRL</span>
+            </div>
+            <div style={styles.custodyRow}>
+              <span style={styles.custodyLabel}>Patrimônio:</span>
+              <strong style={{ ...styles.custodyValueBrl, color: '#c4b5fd' }}>{formatVal(totalValuationRfNative, 'BRL')}</strong>
+            </div>
+            <div style={styles.custodyRow}>
+              <span style={styles.custodyLabel}>Custo Aplicado:</span>
+              <span style={styles.custodyText}>{formatVal(totalInvestedRfNative, 'BRL')}</span>
+            </div>
+            <div style={styles.custodyRow}>
+              <span style={styles.custodyLabel}>Retorno Acumulado:</span>
+              <span style={{ color: totalProfitLossRfNative >= 0 ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
+                {totalProfitLossRfNative >= 0 ? '+' : ''}{formatVal(totalProfitLossRfNative, 'BRL')} ({totalProfitLossPctRfNative.toFixed(2)}%)
+              </span>
+            </div>
+            {/* Meta 2026 - Plano 10 Anos */}
+            <div style={{ ...styles.custodyRow, borderTop: '1px dashed rgba(255, 255, 255, 0.08)', paddingTop: '8px', marginTop: '6px' }}>
+              <span style={{ ...styles.custodyLabel, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Target size={12} color="#c084fc" />
+                <span>Meta 2026 ({planTargetsComparison.shortLabel}):</span>
+              </span>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  fontFamily: 'monospace',
+                  background: planTargetsComparison.rfBr.isBeaten ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  color: planTargetsComparison.rfBr.isBeaten ? '#34d399' : '#f87171',
+                  border: `1px solid ${planTargetsComparison.rfBr.isBeaten ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                }}>
+                  {planTargetsComparison.rfBr.isBeaten ? '🟢 Meta Batida' : '🔴 Abaixo da Meta'} ({planTargetsComparison.rfBr.diff >= 0 ? '+' : ''}{planTargetsComparison.rfBr.diffPct.toFixed(1)}%)
+                </span>
+                <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: 2, fontFamily: 'monospace' }}>
+                  Meta: {formatVal(planTargetsComparison.rfBr.target, 'BRL')} ({planTargetsComparison.rfBr.diff >= 0 ? '+' : ''}{formatVal(planTargetsComparison.rfBr.diff, 'BRL')})
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -2374,21 +3019,27 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #6366f1' }} className="glass-panel">
           <div style={styles.kpiMeta}>
             <span style={styles.kpiTitle}>
-              {activePortfolio === 'BR' ? 'Patrimônio da Carteira' : 'Patrimônio Consolidado'}
+              {activePortfolio === 'BR' 
+                ? 'Patrimônio em Renda Variável' 
+                : activePortfolio === 'RF' 
+                  ? 'Patrimônio em Renda Fixa' 
+                  : 'Patrimônio Consolidado'}
             </span>
             <span style={{ color: '#6366f1', background: 'rgba(99, 102, 241, 0.12)', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>Valuation</span>
           </div>
           <span style={styles.kpiValue}>
-            {formatVal(activePortfolio === 'BR' ? totalValuation : cashDetails.consolidatedWealth)}
+            {formatVal((activePortfolio === 'BR' || activePortfolio === 'RF') ? totalValuation : cashDetails.consolidatedWealth)}
           </span>
           <span style={styles.kpiDesc}>
             {activePortfolio === 'BR' 
               ? 'Patrimônio totalizado com base nas cotações de mercado' 
-              : 'Soma de investimentos + caixa total disponível'}
+              : activePortfolio === 'RF'
+                ? 'Patrimônio total aplicado e acumulado em renda fixa'
+                : 'Soma de investimentos (EUA + RV BR + RF BR) + caixa total disponível'}
           </span>
         </div>
 
-        {activePortfolio !== 'BR' && (
+        {activePortfolio !== 'BR' && activePortfolio !== 'RF' && (
           <div style={{ ...styles.kpiCard, borderLeft: '4px solid #38bdf8' }} className="glass-panel">
             <div style={styles.kpiMeta}>
               <span style={styles.kpiTitle}>Caixa Total Disponível</span>
@@ -2407,7 +3058,9 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
             <span style={{ color: '#94a3b8', background: 'rgba(255, 255, 255, 0.05)', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>Invested</span>
           </div>
           <span style={styles.kpiValue}>{formatVal(totalInvested)}</span>
-          <span style={styles.kpiDesc}>Capital desembolsado ($\sum Qty \times Preço Médio$)</span>
+          <span style={styles.kpiDesc}>
+            {activePortfolio === 'RF' ? 'Capital aportado original em CDBs, Debêntures e Fundos' : 'Capital desembolsado (Qty × Preço Médio)'}
+          </span>
         </div>
 
         <div style={{ ...styles.kpiCard, borderLeft: `4px solid ${totalProfitLoss >= 0 ? '#10b981' : '#ef4444'}` }} className="glass-panel">
@@ -2431,31 +3084,110 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
           <span style={{ ...styles.kpiValue, color: totalProfitLoss >= 0 ? '#6ee7b7' : '#fca5a5' }}>
             {totalProfitLoss >= 0 ? '+' : ''}{formatVal(totalProfitLoss)}
           </span>
-          <span style={styles.kpiDesc}>Retorno histórico sobre o custo de aquisição acumulado</span>
+          <span style={styles.kpiDesc}>
+            {activePortfolio === 'RF' ? 'Rendimento de juros acumulados sobre os títulos de renda fixa' : 'Retorno histórico sobre o custo de aquisição acumulado'}
+          </span>
         </div>
 
-        <div style={{ ...styles.kpiCard, borderLeft: `4px solid ${totalDailyChangeVal >= 0 ? '#10b981' : '#ef4444'}` }} className="glass-panel">
-          <div style={styles.kpiMeta}>
-            <span style={styles.kpiTitle}>Resultado Diário (Estimado)</span>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 4, 
-              color: totalDailyChangeVal >= 0 ? '#10b981' : '#ef4444',
-              backgroundColor: totalDailyChangeVal >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-              padding: '2px 6px',
-              borderRadius: '10px',
-              fontSize: '11px',
-              fontWeight: 'bold'
-            }}>
-              {totalDailyChangePct >= 0 ? '+' : ''}{totalDailyChangePct.toFixed(2)}%
+        {activePortfolio === 'RF' ? (
+          <div style={{ ...styles.kpiCard, borderLeft: '4px solid #a78bfa' }} className="glass-panel">
+            <div style={styles.kpiMeta}>
+              <span style={styles.kpiTitle}>Títulos sob Custódia</span>
+              <span style={{ color: '#a78bfa', background: 'rgba(167, 139, 250, 0.12)', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>Títulos</span>
             </div>
+            <span style={{ ...styles.kpiValue, color: '#c4b5fd' }}>{fixedIncomeList.length} posições</span>
+            <span style={styles.kpiDesc}>Distribuídos em Itaú, BTG Pactual e Nubank</span>
           </div>
-          <span style={{ ...styles.kpiValue, color: totalDailyChangeVal >= 0 ? '#6ee7b7' : '#fca5a5' }}>
-            {totalDailyChangeVal >= 0 ? '+' : ''}{formatVal(totalDailyChangeVal)}
-          </span>
-          <span style={styles.kpiDesc}>Ganho ou perda estimado na sessão de hoje</span>
-        </div>
+        ) : (
+          <div style={{ ...styles.kpiCard, borderLeft: `4px solid ${totalDailyChangeVal >= 0 ? '#10b981' : '#ef4444'}` }} className="glass-panel">
+            <div style={styles.kpiMeta}>
+              <span style={styles.kpiTitle}>Resultado Diário (Estimado)</span>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 4, 
+                color: totalDailyChangeVal >= 0 ? '#10b981' : '#ef4444',
+                backgroundColor: totalDailyChangeVal >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                padding: '2px 6px',
+                borderRadius: '10px',
+                fontSize: '11px',
+                fontWeight: 'bold'
+              }}>
+                {totalDailyChangePct >= 0 ? '+' : ''}{totalDailyChangePct.toFixed(2)}%
+              </div>
+            </div>
+            <span style={{ ...styles.kpiValue, color: totalDailyChangeVal >= 0 ? '#6ee7b7' : '#fca5a5' }}>
+              {totalDailyChangeVal >= 0 ? '+' : ''}{formatVal(totalDailyChangeVal)}
+            </span>
+            <span style={styles.kpiDesc}>Ganho ou perda estimado na sessão de hoje</span>
+          </div>
+        )}
+
+        {/* Card de Desempenho vs. Meta 2026 (Plano 10 Anos) */}
+        {(() => {
+          const currentMeta = activePortfolio === 'US' 
+            ? planTargetsComparison.us 
+            : activePortfolio === 'BR' 
+              ? planTargetsComparison.rvBr 
+              : activePortfolio === 'RF' 
+                ? planTargetsComparison.rfBr 
+                : planTargetsComparison.total;
+
+          const isPositive = currentMeta.diff >= 0;
+          const classLabel = activePortfolio === 'US' 
+            ? 'RV EUA' 
+            : activePortfolio === 'BR' 
+              ? 'RV Brasil' 
+              : activePortfolio === 'RF' 
+                ? 'Renda Fixa' 
+                : 'Consolidado';
+
+          return (
+            <div style={{ 
+              ...styles.kpiCard, 
+              borderLeft: `4px solid ${currentMeta.isBeaten ? '#10b981' : '#f43f5e'}` 
+            }} className="glass-panel">
+              <div style={styles.kpiMeta}>
+                <span style={styles.kpiTitle}>Meta {planTargetsComparison.shortLabel} ({classLabel})</span>
+                <span style={{ 
+                  color: '#38bdf8', 
+                  background: 'rgba(56, 189, 248, 0.12)', 
+                  padding: '2px 8px', 
+                  borderRadius: '10px', 
+                  fontSize: '10px', 
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}>
+                  <Target size={10} />
+                  10 Year Plan
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
+                <span style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '800', 
+                  fontFamily: 'monospace',
+                  color: currentMeta.isBeaten ? '#34d399' : '#f87171' 
+                }}>
+                  {currentMeta.isBeaten ? '🟢 Meta Batida' : '🔴 Abaixo da Meta'}
+                </span>
+                <span style={{ 
+                  fontSize: '13px', 
+                  fontWeight: '700', 
+                  fontFamily: 'monospace',
+                  color: isPositive ? '#34d399' : '#f87171' 
+                }}>
+                  {isPositive ? '+' : ''}{currentMeta.diffPct.toFixed(1)}%
+                </span>
+              </div>
+              <span style={styles.kpiDesc}>
+                Meta: {formatVal(currentMeta.target, 'BRL')} ({isPositive ? '+' : ''}{formatVal(currentMeta.diff, 'BRL')})
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Cash Management Panel */}
@@ -2649,12 +3381,14 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
           <div style={styles.sectionHeader}>
             <div>
               <h3 style={{ fontSize: '15px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: 6 }}>
-                📋 Cadastro de Ativos e Lançamentos (Custódia)
+                📋 {activePortfolio === 'RF' ? 'Custódia de Renda Fixa (CDBs, Debêntures & Fundos)' : 'Cadastro de Ativos e Lançamentos (Custódia)'}
               </h3>
               <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: 2 }}>
                 {activePortfolio === 'GLOBAL' 
-                  ? "Visualização consolidada de todos os seus ativos domésticos e internacionais."
-                  : "Dê um duplo clique nos valores de Quantidade ou Preço Médio para editá-los diretamente na planilha."}
+                  ? "Visualização consolidada de todos os seus investimentos (EUA, RV Brasil e Renda Fixa)."
+                  : activePortfolio === 'RF'
+                    ? "Títulos ativos de renda fixa sincronizados do Supabase com custo aplicado e valor de mercado atualizado."
+                    : "Dê um duplo clique nos valores de Quantidade ou Preço Médio para editá-los diretamente na planilha."}
               </p>
             </div>
             
@@ -2665,280 +3399,141 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
             )}
           </div>
 
-          {/* Holdings Ledger Table */}
-          <div className="spreadsheet-container" style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', overflow: 'hidden', marginTop: 12 }}>
-            <table className="spreadsheet-table">
-              <thead>
-                <tr>
-                  <th className="spreadsheet-th" style={{ width: '35px' }}></th>
-                  {activePortfolio === 'GLOBAL' && (
-                    <th 
-                      className="spreadsheet-th" 
-                      style={{ width: '70px', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
-                      onClick={() => handleSort('country')}
-                    >
-                      Carteira{renderSortIndicator('country')}
-                    </th>
-                  )}
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none' }}
-                    onClick={() => handleSort('ticker')}
-                  >
-                    Ticker{renderSortIndicator('ticker')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none' }}
-                    onClick={() => handleSort('name')}
-                  >
-                    Empresa{renderSortIndicator('name')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-                    onClick={() => handleSort('qty')}
-                  >
-                    Qtde.{renderSortIndicator('qty')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-                    onClick={() => handleSort('avgPrice')}
-                  >
-                    {adjustWithDividends ? 'Custo Médio (Líq.)' : 'Custo Médio'}{renderSortIndicator('avgPrice')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-                    onClick={() => handleSort('dividends')}
-                  >
-                    Div. Recebidos{renderSortIndicator('dividends')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-                    onClick={() => handleSort('investedCost')}
-                  >
-                    {adjustWithDividends ? 'Custo Total (Líq.)' : 'Custo Total'}{renderSortIndicator('investedCost')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-                    onClick={() => handleSort('currentPrice')}
-                  >
-                    Preço Mercado{renderSortIndicator('currentPrice')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-                    onClick={() => handleSort('currentValuation')}
-                  >
-                    {activePortfolio === 'GLOBAL' ? `Valuation (${globalCurrency})` : 'Valor de Mercado'}{renderSortIndicator('currentValuation')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right', width: '75px' }}
-                    onClick={() => handleSort('share')}
-                  >
-                    Part. (%){renderSortIndicator('share')}
-                  </th>
-                  <th 
-                    className="spreadsheet-th" 
-                    style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-                    onClick={() => handleSort('profitLossPct')}
-                  >
-                    Retorno{renderSortIndicator('profitLossPct')}
-                  </th>
-
-                  {activePortfolio !== 'GLOBAL' && <th className="spreadsheet-th" style={{ width: '80px', textAlign: 'center' }}>Ações</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedHoldings.length === 0 ? (
+          {activePortfolio === 'RF' ? (
+            /* TABELA DEDICADA DE RENDA FIXA */
+            <div className="spreadsheet-container" style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', overflow: 'hidden', marginTop: 12 }}>
+              <table className="spreadsheet-table">
+                <thead>
                   <tr>
-                    <td colSpan={12} style={{ textAlign: 'center', padding: '30px', color: '#64748b', fontSize: '13px' }}>
-                      Nenhum ativo cadastrado. Utilize as abas de portfólio para adicionar ações!
-                    </td>
+                    <th className="spreadsheet-th" style={{ width: '35px', textAlign: 'center' }}>#</th>
+                    <th className="spreadsheet-th" style={{ cursor: 'pointer' }} onClick={() => handleSort('name')}>
+                      Título / Emissor{renderSortIndicator('name')}
+                    </th>
+                    <th className="spreadsheet-th" style={{ cursor: 'pointer' }} onClick={() => handleSort('ticker')}>
+                      Código / Ativo{renderSortIndicator('ticker')}
+                    </th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'center' }}>Instituição</th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => handleSort('qty')}>
+                      Qtde.{renderSortIndicator('qty')}
+                    </th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => handleSort('avgPrice')}>
+                      Preço Médio{renderSortIndicator('avgPrice')}
+                    </th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => handleSort('currentPrice')}>
+                      Preço Atual{renderSortIndicator('currentPrice')}
+                    </th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => handleSort('investedCost')}>
+                      Custo Aplicado{renderSortIndicator('investedCost')}
+                    </th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => handleSort('currentValuation')}>
+                      Saldo Atual (Mercado){renderSortIndicator('currentValuation')}
+                    </th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => handleSort('profitLossPct')}>
+                      Rendimento{renderSortIndicator('profitLossPct')}
+                    </th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'right' }}>% da RF</th>
+                    <th className="spreadsheet-th" style={{ textAlign: 'center', width: '60px' }}>Ações</th>
                   </tr>
-                ) : (
-                  sortedHoldings.map((h, idx) => {
-                    const isEditing = editingKey === h.ticker;
-                    const isProfit = h.profitLoss >= 0;
-                    
-                    return (
-                      <tr key={h.ticker} style={styles.trHover}>
-                        <td className="spreadsheet-row-header">{idx + 1}</td>
-                        
-                        {/* GLOBAL country badge */}
-                        {activePortfolio === 'GLOBAL' && (
+                </thead>
+                <tbody>
+                  {sortedHoldings.length === 0 ? (
+                    <tr>
+                      <td colSpan={12} className="spreadsheet-td" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                        Nenhum título de renda fixa cadastrado. Sincronize com o Supabase ou cadastre abaixo.
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedHoldings.map((h, idx) => {
+                      const isEditing = editingKey === h.ticker;
+                      const pctOfRf = totalValuationRf > 0 ? ((h.currentValuation / totalValuationRf) * 100).toFixed(1) : '0.0';
+                      const isProfitable = h.profitLoss >= 0;
+                      return (
+                        <tr key={h.ticker + idx} className="spreadsheet-tr">
+                          <td className="spreadsheet-td" style={{ textAlign: 'center', color: '#64748b', fontSize: '11px' }}>
+                            {idx + 1}
+                          </td>
+                          <td className="spreadsheet-td" style={{ fontWeight: '600', color: '#ffffff' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{
+                                width: '7px',
+                                height: '7px',
+                                borderRadius: '50%',
+                                backgroundColor: '#a78bfa',
+                                boxShadow: '0 0 6px rgba(167,139,250,0.8)',
+                                display: 'inline-block',
+                                flexShrink: 0
+                              }}></span>
+                              <span>{h.name}</span>
+                            </div>
+                          </td>
+                          <td className="spreadsheet-td" style={{ fontFamily: 'monospace', color: '#c4b5fd' }}>
+                            {h.ticker}
+                          </td>
                           <td className="spreadsheet-td" style={{ textAlign: 'center' }}>
-                            <span style={{ 
-                              padding: '2px 8px', 
-                              borderRadius: '10px', 
-                              fontSize: '9px', 
-                              fontWeight: 'bold',
-                              color: h.country === 'US' ? '#a5b4fc' : '#6ee7b7',
-                              background: h.country === 'US' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
-                              border: `1px solid ${h.country === 'US' ? 'rgba(99,102,241,0.25)' : 'rgba(16,185,129,0.25)'}`
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              background: (h.instituicao || '').toLowerCase().includes('btg') 
+                                ? 'rgba(56, 189, 248, 0.15)' 
+                                : (h.instituicao || '').toLowerCase().includes('nubank') 
+                                  ? 'rgba(168, 85, 247, 0.15)' 
+                                  : 'rgba(251, 146, 60, 0.15)',
+                              color: (h.instituicao || '').toLowerCase().includes('btg') 
+                                ? '#38bdf8' 
+                                : (h.instituicao || '').toLowerCase().includes('nubank') 
+                                  ? '#c084fc' 
+                                  : '#fb923c',
+                              border: '1px solid rgba(255,255,255,0.08)'
                             }}>
-                              {h.country === 'US' ? '🇺🇸 EUA' : '🇧🇷 Brasil'}
+                              {h.instituicao || 'Itaú'}
                             </span>
                           </td>
-                        )}
-
-                        <td className="spreadsheet-td" style={{ fontWeight: '800', color: '#ffffff', textAlign: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-                            {/* Farol de status da cotação */}
-                            {tickerStatus[h.ticker] !== undefined ? (
-                              <span 
-                                title={tickerStatus[h.ticker] === 'ok' ? 'Cotação atualizada via API' : 'Não atualizado — usando cache'}
-                                style={{
-                                  width: '7px',
-                                  height: '7px',
-                                  borderRadius: '50%',
-                                  flexShrink: 0,
-                                  display: 'inline-block',
-                                  backgroundColor: tickerStatus[h.ticker] === 'ok' ? '#10b981' : '#ef4444',
-                                  boxShadow: tickerStatus[h.ticker] === 'ok' 
-                                    ? '0 0 6px rgba(16,185,129,0.8)' 
-                                    : '0 0 6px rgba(239,68,68,0.8)'
-                                }}
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', fontFamily: 'monospace' }}>
+                            {isEditing ? (
+                              <input 
+                                type="number" 
+                                value={editQty} 
+                                onChange={(e) => setEditQty(e.target.value)} 
+                                style={styles.inlineInput} 
+                                autoFocus 
                               />
                             ) : (
-                              <span 
-                                title="Aguardando atualização"
-                                style={{
-                                  width: '7px',
-                                  height: '7px',
-                                  borderRadius: '50%',
-                                  flexShrink: 0,
-                                  display: 'inline-block',
-                                  backgroundColor: '#475569'
-                                }}
-                              />
+                              hideValues ? '••••' : (h.qty ? Number(h.qty).toLocaleString('pt-BR') : '-')
                             )}
-                            {h.ticker}
-                          </div>
-                        </td>
-                        <td className="spreadsheet-td" style={{ fontSize: '11px', color: '#cbd5e1', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {h.name}
-                        </td>
-                        
-                        {/* Quantidade Cell */}
-                        <td 
-                          className="spreadsheet-td" 
-                          style={{ 
-                            textAlign: 'right', 
-                            cursor: activePortfolio === 'GLOBAL' ? 'default' : 'pointer', 
-                            backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.1)' : 'transparent' 
-                          }}
-                          onDoubleClick={() => activePortfolio !== 'GLOBAL' && startEditing(h.ticker, h)}
-                        >
-                          {isEditing ? (
-                            <input 
-                              type="number"
-                              value={editQty}
-                              onChange={(e) => setEditQty(e.target.value)}
-                              style={styles.inlineInput}
-                              autoFocus
-                            />
-                          ) : (
-                            hideValues ? '••••' : h.qty.toLocaleString()
-                          )}
-                        </td>
-
-                        {/* Preço de Custo Médio Cell */}
-                        <td 
-                          className="spreadsheet-td" 
-                          style={{ 
-                            textAlign: 'right', 
-                            cursor: activePortfolio === 'GLOBAL' ? 'default' : 'pointer', 
-                            color: '#38bdf8', 
-                            backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.1)' : 'transparent' 
-                          }}
-                          onDoubleClick={() => activePortfolio !== 'GLOBAL' && startEditing(h.ticker, h)}
-                        >
-                          {isEditing ? (
-                            <input 
-                              type="number"
-                              value={editAvgPrice}
-                              onChange={(e) => setEditAvgPrice(e.target.value)}
-                              style={styles.inlineInput}
-                            />
-                          ) : (
-                            formatVal(h.avgPrice, h.currency)
-                          )}
-                        </td>
-
-                        {/* Dividends Cell */}
-                        <td 
-                          className="spreadsheet-td" 
-                          style={{ 
-                            textAlign: 'right', 
-                            cursor: activePortfolio === 'GLOBAL' ? 'default' : 'pointer', 
-                            color: '#10b981', 
-                            backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.1)' : 'transparent' 
-                          }}
-                          onDoubleClick={() => activePortfolio !== 'GLOBAL' && startEditing(h.ticker, h)}
-                        >
-                          {isEditing ? (
-                            <input 
-                              type="number"
-                              value={editDividends}
-                              onChange={(e) => setEditDividends(e.target.value)}
-                              style={styles.inlineInput}
-                            />
-                          ) : (
-                            formatVal(h.dividends || 0, h.currency)
-                          )}
-                        </td>
-
-                        {/* Custo Total */}
-                        <td className="spreadsheet-td" style={{ textAlign: 'right' }}>
-                          {activePortfolio === 'GLOBAL' 
-                            ? formatVal(h.investedCostGlobal, globalCurrency)
-                            : formatVal(h.investedCost, h.currency)}
-                        </td>
-
-                        {/* Preço de Mercado Atual */}
-                        <td className="spreadsheet-td" style={{ textAlign: 'right', fontWeight: '500', color: '#e2e8f0' }}>
-                          {formatVal(h.currentPrice, h.currency)}
-                        </td>
-
-                        {/* Valor de Mercado Atual (Valuation) */}
-                        <td className="spreadsheet-td" style={{ textAlign: 'right', fontWeight: 'bold', color: '#ffffff' }}>
-                          {activePortfolio === 'GLOBAL' 
-                            ? formatVal(h.currentValuationGlobal, globalCurrency)
-                            : formatVal(h.currentValuation, h.currency)}
-                        </td>
-
-                        {/* Part. (%) */}
-                        <td className="spreadsheet-td" style={{ textAlign: 'right', fontWeight: '500', color: '#38bdf8', fontSize: '12px' }}>
-                          {(() => {
-                            const hVal = activePortfolio === 'GLOBAL' ? h.currentValuationGlobal : h.currentValuation;
-                            const share = totalValuation > 0 ? (hVal / totalValuation) * 100 : 0;
-                            return `${share.toFixed(1)}%`;
-                          })()}
-                        </td>
-
-                        {/* Retorno individual */}
-                        <td className="spreadsheet-td" style={{ textAlign: 'right' }}>
-                          <span style={{ color: isProfit ? '#10b981' : '#f43f5e', fontSize: '12px', fontWeight: '600' }}>
-                            {isProfit ? '+' : ''}{h.profitLossPct.toFixed(1)}%
-                          </span>
-                          <div style={{ fontSize: '10px', color: isProfit ? '#6ee7b7' : '#fda4af', marginTop: 1 }}>
-                            {isProfit ? '+' : ''}
-                            {activePortfolio === 'GLOBAL'
-                              ? formatVal(h.profitLossGlobal, globalCurrency)
-                              : formatVal(h.profitLoss, h.currency)}
-                          </div>
-                        </td>
-
-
-
-                        {/* Ações */}
-                        {activePortfolio !== 'GLOBAL' && (
+                          </td>
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', fontFamily: 'monospace', color: '#94a3b8' }}>
+                            {isEditing ? (
+                              <input 
+                                type="number" 
+                                value={editAvgPrice} 
+                                onChange={(e) => setEditAvgPrice(e.target.value)} 
+                                style={styles.inlineInput} 
+                              />
+                            ) : (
+                              hideValues ? '••••' : (h.avgPrice > 0 ? formatVal(h.avgPrice, 'BRL') : '-')
+                            )}
+                          </td>
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', fontFamily: 'monospace', color: '#38bdf8' }}>
+                            {hideValues ? '••••' : (h.currentPrice > 0 ? formatVal(h.currentPrice, 'BRL') : '-')}
+                          </td>
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', fontFamily: 'monospace', color: '#cbd5e1' }}>
+                            {hideValues ? '••••' : formatVal(h.investedCost, 'BRL')}
+                          </td>
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold', color: '#a78bfa' }}>
+                            {hideValues ? '••••' : formatVal(h.currentValuation, 'BRL')}
+                          </td>
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', fontFamily: 'monospace' }}>
+                            {hideValues ? '••••' : (
+                              <span style={{ color: isProfitable ? '#10b981' : '#f43f5e', fontWeight: 'bold' }}>
+                                {isProfitable ? '+' : ''}{formatVal(h.profitLoss, 'BRL')} ({h.profitLossPct >= 0 ? '+' : ''}{h.profitLossPct.toFixed(2)}%)
+                              </span>
+                            )}
+                          </td>
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', fontFamily: 'monospace', color: '#94a3b8' }}>
+                            {pctOfRf}%
+                          </td>
                           <td className="spreadsheet-td" style={{ textAlign: 'center' }}>
                             {isEditing ? (
                               <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
@@ -2960,17 +3555,452 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
                               </div>
                             )}
                           </td>
-                        )}
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: 'rgba(255,255,255,0.03)', fontWeight: 'bold' }}>
+                    <td className="spreadsheet-td" colSpan={7} style={{ textAlign: 'right', color: '#94a3b8' }}>
+                      Total Renda Fixa ({fixedIncomeList.length} títulos):
+                    </td>
+                    <td className="spreadsheet-td" style={{ textAlign: 'right', color: '#cbd5e1', fontFamily: 'monospace' }}>
+                      {hideValues ? '••••' : formatVal(totalInvestedRf, 'BRL')}
+                    </td>
+                    <td className="spreadsheet-td" style={{ textAlign: 'right', color: '#a78bfa', fontFamily: 'monospace', fontSize: '13px' }}>
+                      {hideValues ? '••••' : formatVal(totalValuationRf, 'BRL')}
+                    </td>
+                    <td className="spreadsheet-td" style={{ textAlign: 'right', color: totalProfitLossRf >= 0 ? '#10b981' : '#f43f5e', fontFamily: 'monospace' }}>
+                      {hideValues ? '••••' : `${totalProfitLossRf >= 0 ? '+' : ''}${formatVal(totalProfitLossRf, 'BRL')} (+${totalProfitLossPctRf.toFixed(2)}%)`}
+                    </td>
+                    <td className="spreadsheet-td" style={{ textAlign: 'right', color: '#38bdf8', fontFamily: 'monospace' }}>
+                      100.0%
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          ) : (
+            /* TABELA PADRÃO (US / BR / GLOBAL) */
+            <div className="spreadsheet-container" style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', overflow: 'hidden', marginTop: 12 }}>
+              <table className="spreadsheet-table">
+                <thead>
+                  <tr>
+                    <th className="spreadsheet-th" style={{ width: '35px' }}></th>
+                    {activePortfolio === 'GLOBAL' && (
+                      <th 
+                        className="spreadsheet-th" 
+                        style={{ width: '70px', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => handleSort('country')}
+                      >
+                        Carteira{renderSortIndicator('country')}
+                      </th>
+                    )}
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                      onClick={() => handleSort('ticker')}
+                    >
+                      Ticker{renderSortIndicator('ticker')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none' }}
+                      onClick={() => handleSort('name')}
+                    >
+                      Empresa{renderSortIndicator('name')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                      onClick={() => handleSort('qty')}
+                    >
+                      Qtde.{renderSortIndicator('qty')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                      onClick={() => handleSort('avgPrice')}
+                    >
+                      {adjustWithDividends ? 'Custo Médio (Líq.)' : 'Custo Médio'}{renderSortIndicator('avgPrice')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                      onClick={() => handleSort('dividends')}
+                    >
+                      Div. Recebidos{renderSortIndicator('dividends')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                      onClick={() => handleSort('investedCost')}
+                    >
+                      {adjustWithDividends ? 'Custo Total (Líq.)' : 'Custo Total'}{renderSortIndicator('investedCost')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                      onClick={() => handleSort('currentPrice')}
+                    >
+                      Preço Mercado{renderSortIndicator('currentPrice')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                      onClick={() => handleSort('currentValuation')}
+                    >
+                      {activePortfolio === 'GLOBAL' ? `Valuation (${globalCurrency})` : 'Valor de Mercado'}{renderSortIndicator('currentValuation')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right', width: '75px' }}
+                      onClick={() => handleSort('share')}
+                    >
+                      Share (%){renderSortIndicator('share')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                      onClick={() => handleSort('profitLossPct')}
+                    >
+                      Rentab. (%){renderSortIndicator('profitLossPct')}
+                    </th>
+                    <th 
+                      className="spreadsheet-th" 
+                      style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
+                      onClick={() => handleSort('updatedAt')}
+                    >
+                      Atualizado Em{renderSortIndicator('updatedAt')}
+                    </th>
+                    {activePortfolio !== 'GLOBAL' && (
+                      <th className="spreadsheet-th" style={{ width: '60px', textAlign: 'center' }}>
+                        Ações
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedHoldings.length === 0 ? (
+                    <tr>
+                      <td colSpan={activePortfolio === 'GLOBAL' ? 12 : 11} className="spreadsheet-td" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                        Nenhum ativo cadastrado nesta carteira.
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedHoldings.map((h, idx) => {
+                      const valuation = activePortfolio === 'GLOBAL' ? h.currentValuationGlobal : h.currentValuation;
+                      const sharePct = totalValuation > 0 ? ((valuation / totalValuation) * 100).toFixed(1) : '0.0';
+                      const isEditing = editingKey === h.ticker;
+                      const isSelected = selectedAsset === h.ticker;
+                      const isSimTarget = simTicker === h.ticker;
+
+                      return (
+                        <tr 
+                          key={h.ticker} 
+                          className="spreadsheet-tr"
+                          style={{
+                            backgroundColor: isSimTarget 
+                              ? 'rgba(99, 102, 241, 0.08)' 
+                              : isSelected 
+                                ? 'rgba(255, 255, 255, 0.04)' 
+                                : undefined,
+                            borderLeft: isSimTarget ? '3px solid #6366f1' : undefined
+                          }}
+                        >
+                          <td className="spreadsheet-td" style={{ textAlign: 'center' }}>
+                            <button 
+                              onClick={() => {
+                                setSelectedAsset(isSelected ? null : h.ticker);
+                                setSimTicker(h.ticker);
+                              }}
+                              style={{ 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: isSelected ? '#6366f1' : '#64748b', 
+                                cursor: 'pointer',
+                                padding: 0
+                              }}
+                              title="Selecionar para análise e simulação"
+                            >
+                              <ArrowRight size={14} style={{ transform: isSelected ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                            </button>
+                          </td>
+
+                          {activePortfolio === 'GLOBAL' && (
+                            <td className="spreadsheet-td" style={{ textAlign: 'center' }}>
+                              <span style={{
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                color: h.country === 'US' ? '#a5b4fc' : h.country === 'BR (RF)' ? '#c4b5fd' : '#6ee7b7',
+                                background: h.country === 'US' ? 'rgba(99,102,241,0.12)' : h.country === 'BR (RF)' ? 'rgba(167,139,250,0.12)' : 'rgba(16,185,129,0.12)',
+                                border: `1px solid ${h.country === 'US' ? 'rgba(99,102,241,0.25)' : h.country === 'BR (RF)' ? 'rgba(167,139,250,0.25)' : 'rgba(16,185,129,0.25)'}`
+                              }}>
+                                {h.country === 'US' ? '🇺🇸 EUA' : h.country === 'BR (RF)' ? '🏛️ RF BR' : '🇧🇷 Brasil'}
+                              </span>
+                            </td>
+                          )}
+
+                          <td className="spreadsheet-td" style={{ fontWeight: '800', color: '#ffffff', textAlign: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                              {/* Farol de status da cotação */}
+                              {h.tipo === 'Renda Fixa' ? (
+                                <span 
+                                  title="Posição de Renda Fixa (Supabase)"
+                                  style={{
+                                    width: '7px',
+                                    height: '7px',
+                                    borderRadius: '50%',
+                                    flexShrink: 0,
+                                    display: 'inline-block',
+                                    backgroundColor: '#a78bfa',
+                                    boxShadow: '0 0 6px rgba(167,139,250,0.8)'
+                                  }}
+                                />
+                              ) : tickerStatus[h.ticker] !== undefined ? (
+                                <span 
+                                  title={tickerStatus[h.ticker] === 'ok' ? 'Cotação atualizada via API' : 'Não atualizado — usando cache'}
+                                  style={{
+                                    width: '7px',
+                                    height: '7px',
+                                    borderRadius: '50%',
+                                    flexShrink: 0,
+                                    display: 'inline-block',
+                                    backgroundColor: tickerStatus[h.ticker] === 'ok' ? '#10b981' : '#ef4444',
+                                    boxShadow: tickerStatus[h.ticker] === 'ok' 
+                                      ? '0 0 6px rgba(16,185,129,0.8)' 
+                                      : '0 0 6px rgba(239,68,68,0.8)'
+                                  }}
+                                />
+                              ) : (
+                                <span 
+                                  title="Aguardando atualização"
+                                  style={{
+                                    width: '7px',
+                                    height: '7px',
+                                    borderRadius: '50%',
+                                    flexShrink: 0,
+                                    display: 'inline-block',
+                                    backgroundColor: '#475569'
+                                  }}
+                                />
+                              )}
+                              {h.ticker}
+                            </div>
+                          </td>
+                          <td className="spreadsheet-td" style={{ fontSize: '11px', color: '#cbd5e1', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {h.name}
+                          </td>
+                          
+                          {/* Quantidade Cell */}
+                          <td 
+                            className="spreadsheet-td" 
+                            style={{ 
+                              textAlign: 'right', 
+                              cursor: activePortfolio === 'GLOBAL' ? 'default' : 'pointer', 
+                              backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.1)' : 'transparent' 
+                            }}
+                            onDoubleClick={() => activePortfolio !== 'GLOBAL' && startEditing(h.ticker, h)}
+                          >
+                            {isEditing ? (
+                              <input 
+                                type="number" 
+                                value={editQty} 
+                                onChange={(e) => setEditQty(e.target.value)} 
+                                style={styles.inlineInput} 
+                                autoFocus 
+                              />
+                            ) : (
+                              hideValues ? '••••' : (h.qty ? Number(h.qty).toLocaleString('pt-BR') : '-')
+                            )}
+                          </td>
+
+                          {/* Preço de Custo Médio Cell */}
+                          <td 
+                            className="spreadsheet-td" 
+                            style={{ 
+                              textAlign: 'right', 
+                              cursor: activePortfolio === 'GLOBAL' ? 'default' : 'pointer', 
+                              color: '#38bdf8', 
+                              backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.1)' : 'transparent' 
+                            }}
+                            onDoubleClick={() => activePortfolio !== 'GLOBAL' && startEditing(h.ticker, h)}
+                          >
+                            {isEditing ? (
+                              <input 
+                                type="number" 
+                                value={editAvgPrice} 
+                                onChange={(e) => setEditAvgPrice(e.target.value)} 
+                                style={styles.inlineInput} 
+                              />
+                            ) : (
+                              formatVal(h.avgPrice, h.currency)
+                            )}
+                          </td>
+
+                          {/* Dividends Cell */}
+                          <td 
+                            className="spreadsheet-td" 
+                            style={{ 
+                              textAlign: 'right', 
+                              cursor: activePortfolio === 'GLOBAL' ? 'default' : 'pointer', 
+                              color: '#10b981', 
+                              backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.1)' : 'transparent' 
+                            }}
+                            onDoubleClick={() => activePortfolio !== 'GLOBAL' && startEditing(h.ticker, h)}
+                          >
+                            {isEditing ? (
+                              <input 
+                                type="number" 
+                                value={editDividends} 
+                                onChange={(e) => setEditDividends(e.target.value)} 
+                                style={styles.inlineInput} 
+                              />
+                            ) : (
+                              formatVal(h.dividends || 0, h.currency)
+                            )}
+                          </td>
+
+                          {/* Custo Total */}
+                          <td className="spreadsheet-td" style={{ textAlign: 'right' }}>
+                            {activePortfolio === 'GLOBAL' 
+                              ? formatVal(h.investedCostGlobal, globalCurrency) 
+                              : formatVal(h.investedCost, h.currency)}
+                          </td>
+
+                          {/* Preço Atual */}
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', color: '#ffffff', fontWeight: 'bold' }}>
+                            {formatVal(h.currentPrice, h.currency)}
+                          </td>
+
+                          {/* Valuation Atual */}
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', color: '#6ee7b7', fontWeight: 'bold' }}>
+                            {formatVal(valuation, activePortfolio === 'GLOBAL' ? globalCurrency : h.currency)}
+                          </td>
+
+                          {/* Share % */}
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', color: '#94a3b8' }}>
+                            {sharePct}%
+                          </td>
+
+                          {/* Rentabilidade % */}
+                          <td className="spreadsheet-td" style={{ textAlign: 'right' }}>
+                            <span style={{ 
+                              color: h.profitLossPct >= 0 ? '#10b981' : '#f43f5e', 
+                              fontWeight: 'bold',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '2px'
+                            }}>
+                              {h.profitLossPct >= 0 ? '+' : ''}{h.profitLossPct.toFixed(2)}%
+                            </span>
+                          </td>
+
+                          {/* Data de Atualização */}
+                          <td className="spreadsheet-td" style={{ textAlign: 'right', color: '#64748b', fontSize: '10px' }}>
+                            {h.updatedAt ? formatDateTime(h.updatedAt) : 'Base de dados'}
+                          </td>
+
+                          {/* Ações */}
+                          {activePortfolio !== 'GLOBAL' && (
+                            <td className="spreadsheet-td" style={{ textAlign: 'center' }}>
+                              {isEditing ? (
+                                <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                                  <button onClick={() => saveEditing(h.ticker)} style={{ ...styles.iconBtn, color: '#10b981' }} title="Salvar">
+                                    <Save size={13} />
+                                  </button>
+                                  <button onClick={() => setEditingKey(null)} style={{ ...styles.iconBtn, color: '#ef4444' }} title="Cancelar">
+                                    <X size={13} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                                  <button onClick={() => startEditing(h.ticker, h)} style={{ ...styles.iconBtn, color: '#94a3b8' }} title="Editar">
+                                    <Edit3 size={13} />
+                                  </button>
+                                  <button onClick={() => handleRemoveHolding(h.ticker)} style={{ ...styles.iconBtn, color: '#ef4444' }} title="Remover">
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Add Asset Form */}
-          {activePortfolio !== 'GLOBAL' ? (
+          {activePortfolio === 'RF' ? (
+            <form onSubmit={handleAddFixedIncome} style={styles.addForm}>
+              <h4 style={{ fontSize: '12px', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', gridColumn: 'span 5' }}>
+                ➕ Adicionar Novo Título à Carteira de Renda Fixa (BRL)
+              </h4>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Emissor / Título</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: CDB - BANCO ABC" 
+                  value={rfEmissorInput} 
+                  onChange={(e) => setRfEmissorInput(e.target.value)} 
+                  style={styles.input} 
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Código / Ativo</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: CDB1234" 
+                  value={rfCodigoInput} 
+                  onChange={(e) => setRfCodigoInput(e.target.value)} 
+                  style={styles.input} 
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Instituição</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Itaú, BTG, Nubank" 
+                  value={rfInstInput} 
+                  onChange={(e) => setRfInstInput(e.target.value)} 
+                  style={styles.input} 
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Custo Aplicado (BRL)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="Ex: 50000.00" 
+                  value={rfCustoInput} 
+                  onChange={(e) => setRfCustoInput(e.target.value)} 
+                  style={styles.input} 
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Saldo Atual (BRL)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="Ex: 55000.00" 
+                  value={rfSaldoInput} 
+                  onChange={(e) => setRfSaldoInput(e.target.value)} 
+                  style={styles.input} 
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" style={styles.formBtn}>
+                <Plus size={15} /> Adicionar Título
+              </button>
+            </form>
+          ) : activePortfolio !== 'GLOBAL' ? (
             <form onSubmit={handleAddHolding} style={styles.addForm}>
               <h4 style={{ fontSize: '12px', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', gridColumn: 'span 5' }}>
                 ➕ Adicionar Novo Ativo à Carteira {activePortfolio === 'US' ? 'EUA (USD)' : 'Brasil (BRL)'}
@@ -3001,7 +4031,7 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
                 </label>
                 <input 
                   type="number" 
-                  step="0.01"
+                  step="0.01" 
                   placeholder={activePortfolio === 'US' ? "Ex: 175.50" : "Ex: 34.00"}
                   value={avgPriceInput}
                   onChange={(e) => setAvgPriceInput(e.target.value)}
@@ -3014,7 +4044,7 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
                 </label>
                 <input 
                   type="number" 
-                  step="0.01"
+                  step="0.01" 
                   placeholder="Ex: 150.00"
                   value={dividendsInput}
                   onChange={(e) => setDividendsInput(e.target.value)}
@@ -3029,7 +4059,7 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
             <div style={styles.globalNoticeCard} className="glass-panel">
               <Globe size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
               <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
-                <strong>Gestão Multi-Custódia Ativa:</strong> Para adicionar novos ativos, gerenciar quantidades ou ajustar o preço de custo médio, acesse as abas individuais <strong>🇺🇸 Carteira EUA</strong> ou <strong>🇧🇷 Carteira Brasil</strong> no topo.
+                <strong>Gestão Multi-Custódia Ativa:</strong> Para adicionar novos ativos ou gerenciar suas posições, acesse as abas individuais <strong>🇺🇸 Carteira EUA</strong>, <strong>🇧🇷 Carteira Brasil</strong> ou <strong>🏛️ Renda Fixa</strong> no topo.
               </div>
             </div>
           )}
@@ -3062,6 +4092,7 @@ Exemplo do formato JSON estrito esperado (NÃO inclua marcações de markdown de
                   else if (s.name === 'Consumer Cyclical') ptName = 'Consumo Cíclico';
                   else if (s.name === 'Energy') ptName = 'Energia';
                   else if (s.name === 'Basic Materials') ptName = 'Materiais Básicos';
+                  else if (s.name === 'Renda Fixa') ptName = 'Renda Fixa';
                   
                   return (
                     <div key={s.name} style={styles.sectorRow}>
@@ -4132,6 +5163,12 @@ const styles = {
     boxShadow: '0 0 12px rgba(16, 185, 129, 0.15)',
     border: '1px solid rgba(16, 185, 129, 0.3)',
   },
+  tabBtnActiveRF: {
+    background: 'rgba(167, 139, 250, 0.15)',
+    color: '#ffffff',
+    boxShadow: '0 0 12px rgba(167, 139, 250, 0.15)',
+    border: '1px solid rgba(167, 139, 250, 0.3)',
+  },
   tabBtnActiveGlobal: {
     background: 'rgba(251, 191, 36, 0.15)',
     color: '#ffffff',
@@ -4786,18 +5823,6 @@ const styles = {
   cashStatValue: {
     fontSize: '13px',
     fontWeight: '600',
-  },
-  progressBarBg: {
-    width: '100%',
-    height: '6px',
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '3px',
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: '3px',
-    transition: 'width 0.4s ease-out',
   },
   progressLabels: {
     display: 'flex',

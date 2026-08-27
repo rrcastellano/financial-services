@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  FileSpreadsheet, 
-  Globe, 
-  Newspaper, 
-  Layers, 
-  UserCheck, 
   Settings, 
   Activity, 
   Cpu, 
@@ -12,21 +7,23 @@ import {
   TrendingUp,
   Sparkles,
   Briefcase,
-  ShieldAlert
+  ShieldAlert,
+  Target
 } from 'lucide-react';
 
-import PitchAgent from './components/PitchAgent';
-import MarketResearcher from './components/MarketResearcher';
-import EarningsReviewer from './components/EarningsReviewer';
-import GLReconciler from './components/GLReconciler';
-import KYCScreener from './components/KYCScreener';
 import SettingsModal from './components/SettingsModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import PortfolioTracker from './components/PortfolioTracker';
 import RiskGuardian from './components/RiskGuardian';
+import TenYearPlan from './components/TenYearPlan';
+import { testSupabaseConnection } from './utils/supabaseClient';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('pitch');
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = localStorage.getItem('fsi_active_tab');
+    if (saved === 'risk' || saved === 'portfolio' || saved === 'tenyearplan') return saved;
+    return 'portfolio';
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   // API Key State (loaded from localStorage by default)
@@ -70,6 +67,35 @@ export default function App() {
     return defaultFinnhub;
   });
 
+  const [supabaseStatus, setSupabaseStatus] = useState('checking');
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const checkSupabase = async () => {
+      const hasKey = localStorage.getItem('fsi_supabase_key');
+      const hasSync = localStorage.getItem('fsi_supabase_last_sync_datetime') || localStorage.getItem('fsi_supabase_last_sync');
+      if (hasKey && hasSync) {
+        if (isMounted) setSupabaseStatus('connected');
+        return;
+      }
+      try {
+        const res = await testSupabaseConnection();
+        if (isMounted) {
+          setSupabaseStatus(res.success ? 'connected' : 'offline');
+        }
+      } catch (e) {
+        if (isMounted) setSupabaseStatus('offline');
+      }
+    };
+    checkSupabase();
+    const handleUpdate = () => checkSupabase();
+    window.addEventListener('fsi_supabase_updated', handleUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('fsi_supabase_updated', handleUpdate);
+    };
+  }, []);
+
   // Forceful API Connection Migration & Pre-populating of real keys on mount
   React.useEffect(() => {
     const keys = {
@@ -77,13 +103,15 @@ export default function App() {
       fsi_gemini_api_key: import.meta.env.VITE_GEMINI || '',
       fsi_finnhub_api_key: import.meta.env.VITE_FINHUB || '',
       fsi_twelvedata_api_key: import.meta.env.VITE_TWELVEDATA || '',
-      fsi_brapi_api_key: import.meta.env.VITE_BRAPI || ''
+      fsi_brapi_api_key: import.meta.env.VITE_BRAPI || '',
+      fsi_supabase_url: import.meta.env.VITE_SUPABASE_URL || 'https://hdcwkoketvqbxzdlpcaw.supabase.co',
+      fsi_supabase_key: import.meta.env.VITE_SUPABASE_KEY || 'sb_publishable_dtvL2ls9DXYmegFvdjcqDQ_mcTPDb_J'
     };
 
-    // Pre-populate keys if empty, unset, or contain the old leaked/expired keys
+    // Pre-populate keys if empty, unset, or contain the old leaked/expired keys, or if supabase key is secret
     Object.entries(keys).forEach(([key, val]) => {
       const current = localStorage.getItem(key);
-      if (!current || current === 'undefined' || current === '' || current === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' || current === 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw') {
+      if (!current || current === 'undefined' || current === '' || current === 'AIzaSyA1xH6yLCDnzb4DQTakG-QL04HHV_5JNN8' || current === 'AIzaSyBLs097x8ty9nuj5sJYtp_7FOq5xLt-Mnw' || (key === 'fsi_supabase_key' && current.startsWith('sb_secret_'))) {
         localStorage.setItem(key, val);
       }
     });
@@ -117,14 +145,6 @@ export default function App() {
 
   const agents = [
     {
-      id: 'pitch',
-      name: 'Pitch & Valuation Builder',
-      desc: 'Builds live DCF/LBO models & branded client pitch books.',
-      icon: FileSpreadsheet,
-      component: PitchAgent,
-      color: '#6366f1' // Indigo
-    },
-    {
       id: 'portfolio',
       name: 'My Portfolio Tracker',
       desc: 'Tracks stock quantity, average costs, real-time returns & correlated news.',
@@ -141,36 +161,12 @@ export default function App() {
       color: '#f43f5e' // Rose/Coral
     },
     {
-      id: 'research',
-      name: 'Market & Peer Researcher',
-      desc: 'Aggregates sector multiples and strategic competitive intelligence.',
-      icon: Globe,
-      component: MarketResearcher,
-      color: '#06b6d4' // Cyan
-    },
-    {
-      id: 'earnings',
-      name: 'Earnings Reviewer',
-      desc: 'Ingests transcripts and outputs automated morning research notes.',
-      icon: Newspaper,
-      component: EarningsReviewer,
-      color: '#ec4899' // Pink
-    },
-    {
-      id: 'reconciliation',
-      name: 'Ledger Break Reconciler',
-      desc: 'Audits month-end general ledger files for transaction mismatches.',
-      icon: Layers,
-      component: GLReconciler,
-      color: '#f59e0b' // Amber
-    },
-    {
-      id: 'compliance',
-      name: 'KYC Onboarding Screener',
-      desc: 'Executes sanctions list checking and AML onboarding grids.',
-      icon: UserCheck,
-      component: KYCScreener,
-      color: '#ef4444' // Rose
+      id: 'tenyearplan',
+      name: '10 Year Plan',
+      desc: 'Plano e acompanhamento da aposentadoria em Dez/2036 (R$ 50k/mês).',
+      icon: Target,
+      component: TenYearPlan,
+      color: '#8b5cf6' // Violet
     }
   ];
 
@@ -253,6 +249,23 @@ export default function App() {
                 </span>
               </div>
             </div>
+
+            {/* Supabase Database Status */}
+            <div style={styles.apiStatusRow}>
+              <span 
+                style={{
+                  ...styles.apiStatusDot,
+                  background: supabaseStatus === 'connected' ? '#10b981' : '#f59e0b',
+                  boxShadow: supabaseStatus === 'connected' ? '0 0 8px #10b981' : '0 0 8px #f59e0b'
+                }}
+              ></span>
+              <div style={styles.apiStatusMeta}>
+                <span style={styles.apiName}>Supabase (Finance)</span>
+                <span style={styles.apiDesc}>
+                  {supabaseStatus === 'connected' ? '🟢 Conectado' : '🟡 Offline / Local'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -267,7 +280,10 @@ export default function App() {
               return (
                 <div
                   key={a.id}
-                  onClick={() => setActiveTab(a.id)}
+                  onClick={() => {
+                    setActiveTab(a.id);
+                    localStorage.setItem('fsi_active_tab', a.id);
+                  }}
                   onMouseDown={(e) => e.preventDefault()}
                   className="sidebar-nav-btn"
                   role="button"

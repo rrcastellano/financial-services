@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Key, ShieldCheck, Cpu, Info, Check } from 'lucide-react';
+import { X, Key, ShieldCheck, Cpu, Info, Check, Database, RefreshCw } from 'lucide-react';
+import { testSupabaseConnection } from '../utils/supabaseClient';
 
 export default function SettingsModal({ 
   isOpen, 
@@ -19,6 +20,18 @@ export default function SettingsModal({
   // Real-Time Finance API Local States
   const [tempFinProvider, setTempFinProvider] = useState(financeApiProvider);
   const [tempFinKey, setTempFinKey] = useState(financeApiKey);
+
+  // Supabase Backend States
+  const [tempSupabaseUrl, setTempSupabaseUrl] = useState(() => {
+    return localStorage.getItem('fsi_supabase_url') || import.meta.env.VITE_SUPABASE_URL || 'https://hdcwkoketvqbxzdlpcaw.supabase.co';
+  });
+  const [tempSupabaseKey, setTempSupabaseKey] = useState(() => {
+    const saved = localStorage.getItem('fsi_supabase_key');
+    if (saved && !saved.startsWith('sb_secret_')) return saved;
+    return import.meta.env.VITE_SUPABASE_KEY || 'sb_publishable_dtvL2ls9DXYmegFvdjcqDQ_mcTPDb_J';
+  });
+  const [testingSupabase, setTestingSupabase] = useState(false);
+  const [supabaseTestStatus, setSupabaseTestStatus] = useState(null);
   
   const [saved, setSaved] = useState(false);
 
@@ -35,6 +48,25 @@ export default function SettingsModal({
       setTempFinKey(localStorage.getItem('fsi_brapi_api_key') || import.meta.env.VITE_BRAPI || '');
     } else {
       setTempFinKey('');
+    }
+  };
+
+  const handleTestSupabase = async () => {
+    setTestingSupabase(true);
+    setSupabaseTestStatus(null);
+    try {
+      localStorage.setItem('fsi_supabase_url', tempSupabaseUrl);
+      localStorage.setItem('fsi_supabase_key', tempSupabaseKey);
+      const res = await testSupabaseConnection();
+      if (res.success) {
+        setSupabaseTestStatus({ success: true, msg: 'Conexão com Supabase bem-sucedida!' });
+      } else {
+        setSupabaseTestStatus({ success: false, msg: `Falha: ${res.error}` });
+      }
+    } catch (e) {
+      setSupabaseTestStatus({ success: false, msg: `Erro: ${e.message}` });
+    } finally {
+      setTestingSupabase(false);
     }
   };
 
@@ -59,6 +91,11 @@ export default function SettingsModal({
     } else if (tempFinProvider === 'brapi') {
       localStorage.setItem('fsi_brapi_api_key', tempFinKey);
     }
+
+    // Save Supabase Backend Config
+    localStorage.setItem('fsi_supabase_url', tempSupabaseUrl);
+    localStorage.setItem('fsi_supabase_key', tempSupabaseKey);
+    window.dispatchEvent(new Event('fsi_supabase_updated'));
     
     // Dispara evento global para notificar alteração de cache
     window.dispatchEvent(new Event('fsi_prices_updated'));
@@ -300,6 +337,77 @@ export default function SettingsModal({
               </div>
             </div>
           )}
+
+          {/* Supabase Database Backend Section */}
+          <div style={styles.section}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label style={styles.label}>
+                <Database size={16} style={{ marginRight: 6, color: '#10b981' }} />
+                Supabase Finance Backend (My Portfolio Tracker)
+              </label>
+              <button 
+                type="button" 
+                onClick={handleTestSupabase} 
+                disabled={testingSupabase}
+                style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: '#10b981',
+                  borderRadius: 6,
+                  padding: '4px 10px',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                {testingSupabase ? <RefreshCw size={12} className="spin" /> : <Check size={12} />}
+                Testar Conexão
+              </button>
+            </div>
+
+            {supabaseTestStatus && (
+              <div style={{
+                padding: '8px 12px',
+                borderRadius: 6,
+                fontSize: 12,
+                background: supabaseTestStatus.success ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                border: `1px solid ${supabaseTestStatus.success ? '#10b981' : '#ef4444'}`,
+                color: supabaseTestStatus.success ? '#a7f3d0' : '#fca5a5'
+              }}>
+                {supabaseTestStatus.msg}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div>
+                <span style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4, display: 'block' }}>Supabase URL:</span>
+                <input
+                  type="text"
+                  value={tempSupabaseUrl}
+                  onChange={(e) => setTempSupabaseUrl(e.target.value)}
+                  placeholder="https://xyz.supabase.co"
+                  style={styles.keyInput}
+                  className="form-input"
+                />
+              </div>
+              <div>
+                <span style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4, display: 'block' }}>Supabase Key (Publishable / Anon):</span>
+                <input
+                  type="password"
+                  value={tempSupabaseKey}
+                  onChange={(e) => setTempSupabaseKey(e.target.value)}
+                  placeholder="sb_publishable_... ou token anon"
+                  style={styles.keyInput}
+                  className="form-input"
+                />
+              </div>
+            </div>
+            <span style={{ fontSize: 11, color: '#64748b' }}>
+              Fornece as posições de Renda Variável, saldos de caixa (Avenue e TastyTrade) e proventos consolidados.
+            </span>
+          </div>
 
           {/* Notice on safety */}
           <div style={styles.securityAlert}>
